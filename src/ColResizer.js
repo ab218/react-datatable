@@ -42,7 +42,7 @@ export default function ColumnResizer({content}) {
   const style = {
     userSelect: 'none',
     cursor: 'e-resize',
-    width: originalCellWidth + offset,
+    width: (originalCellWidth || 80) + offset,
   };
 
   return (
