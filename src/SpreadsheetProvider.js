@@ -14,7 +14,7 @@ function getRangeBoundaries({startRangeRow, startRangeColumn, endRangeRow, endRa
 
 function spreadsheetReducer(state, action) {
   const {type, activeCell, row, column, cellID, cellValue, endRangeRow, endRangeColumn} = action;
-  console.log('action:', action);
+  // console.log('action:', action);
   switch (type) {
     case 'activateCell': {
       return {...state, activeCell, activeCellCoords: {row, column}, currentCellSelectionRange: {top: row, left: column}};
@@ -41,11 +41,11 @@ function spreadsheetReducer(state, action) {
     }
     case 'add-current-selection-to-cell-selections': {
       const {currentCellSelectionRange, cellSelectionRanges} = state;
-      return {...state, cellSelectionRanges: cellSelectionRanges.concat(currentCellSelectionRange), currentCellSelectionRange: {}};
+      return {...state, cellSelectionRanges: cellSelectionRanges.concat(currentCellSelectionRange), currentCellSelectionRange: null};
     }
     case 'modify-current-selection-cell-range': {
       const {currentCellSelectionRange, activeCellCoords} = state;
-      return Object.keys(currentCellSelectionRange).length > 0 ? {
+      return currentCellSelectionRange ? {
         ...state,
         currentCellSelectionRange: getRangeBoundaries({
           startRangeRow: activeCellCoords.row,
@@ -83,7 +83,7 @@ export function SpreadsheetProvider({children, rowCount, colCount}) {
   const [state, changeSpreadsheet] = useReducer(spreadsheetReducer, {
     cells: {}, activeCell: null, cellPositions: initialModel, multiCellSelectionIDs: [], cellSelectionRanges: [{
       top: 5, bottom: 10, left: 3, right: 6
-    }], currentCellSelectionRange: {}
+    }], currentCellSelectionRange: null
   });
   return (
     <SpreadsheetStateContext.Provider value={state}>

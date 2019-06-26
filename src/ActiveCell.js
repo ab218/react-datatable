@@ -31,6 +31,7 @@ function ActiveCell({cell, value, setActiveCell, row: someRow, col: someColumn})
   onBlur={updateCell} onKeyDown={(event) => {
     console.log('event key:', event.key);
   switch (event.key) {
+    // TODO: implement key shortcuts from: https://www.ddmcomputing.com/excel/keys/xlsk05.html
     case 'Meta':
     case 'Shift':
       // At the moment, multi-cell-selection is not disabled on key up
@@ -43,7 +44,7 @@ function ActiveCell({cell, value, setActiveCell, row: someRow, col: someColumn})
       event.preventDefault();
       const {row, column} = cursorKeyToRowColMapper[event.key](someRow, someColumn);
       setActiveCell(row, column, event.ctrlKey || event.shiftKey || event.metaKey);
-      if (multiCellSelectionIDs && multiCellSelectionIDs.length) {
+      if (event.shiftKey && multiCellSelectionIDs && multiCellSelectionIDs.length) {
         dispatchSpreadsheetAction({type: 'add-cellID-to-cell-selection', row, column});
       } else {
         updateCell(event);
