@@ -29,6 +29,7 @@ function ActiveCell({cell, value, setActiveCell, row: someRow, col: someColumn})
 
   return (<td style={{color: 'red'}}><input ref={inputEl} type="text" defaultValue={value}
   onBlur={updateCell} onKeyDown={(event) => {
+    event.preventDefault();
     console.log('event key:', event.key);
   switch (event.key) {
     case 'Meta':
