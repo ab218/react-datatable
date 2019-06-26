@@ -5,19 +5,19 @@ const SpreadsheetStateContext = React.createContext();
 const SpreadsheetDispatchContext = React.createContext();
 
 function getRangeBoundaries({startRangeRow, startRangeColumn, endRangeRow, endRangeColumn}) {
-  const top = Math.min(startRangeRow === undefined ? endRangeRow : startRangeRow, endRangeRow === undefined ? startRangeRow : endRangeRow);
-  const bottom = Math.max(startRangeRow === undefined ? endRangeRow : startRangeRow, endRangeRow === undefined ? startRangeRow : endRangeRow);
-  const left = Math.min(startRangeColumn === undefined ? endRangeColumn : startRangeColumn, endRangeColumn === undefined ? startRangeColumn : endRangeColumn);
-  const right = Math.max(startRangeColumn === undefined ? endRangeColumn : startRangeColumn, endRangeColumn === undefined ? startRangeColumn : endRangeColumn);
+  const top = Math.min(startRangeRow, endRangeRow);
+  const bottom = Math.max(startRangeRow, endRangeRow);
+  const left = Math.min(startRangeColumn, endRangeColumn);
+  const right = Math.max(startRangeColumn, endRangeColumn);
   return {top, left, bottom, right};
 }
 
 function spreadsheetReducer(state, action) {
-  const {type, activeCell, row, column, cellID, cellValue, startRangeRow, startRangeColumn, endRangeRow, endRangeColumn} = action;
+  const {type, activeCell, row, column, cellID, cellValue, endRangeRow, endRangeColumn} = action;
   console.log('action:', action);
   switch (type) {
     case 'activateCell': {
-      return {...state, activeCell, currentCellSelectionRange: {top: row, left: column}};
+      return {...state, activeCell, activeCellCoords: {row, column}, currentCellSelectionRange: {top: row, left: column}};
     }
     case 'setCellPosition': {
       const rowArray = state.cellPositions[row];
@@ -44,14 +44,15 @@ function spreadsheetReducer(state, action) {
       return {...state, cellSelectionRanges: cellSelectionRanges.concat(currentCellSelectionRange), currentCellSelectionRange: {}};
     }
     case 'modify-current-selection-cell-range': {
-      const {currentCellSelectionRange} = state;
-
-      return Object.keys(currentCellSelectionRange).length > 0 ? {...state,
+      const {currentCellSelectionRange, activeCellCoords} = state;
+      return Object.keys(currentCellSelectionRange).length > 0 ? {
+        ...state,
         currentCellSelectionRange: getRangeBoundaries({
-          startRangeRow: startRangeRow || currentCellSelectionRange.top,
-          startRangeColumn: startRangeColumn || currentCellSelectionRange.left,
-          endRangeRow: endRangeRow || currentCellSelectionRange.bottom,
-          endRangeColumn: endRangeColumn || currentCellSelectionRange.right
+          startRangeRow: activeCellCoords.row,
+          startRangeColumn: activeCellCoords.column,
+          endRangeRow,
+          endRangeColumn,
+          state
         })
       } : state;
     }

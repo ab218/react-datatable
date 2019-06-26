@@ -29,17 +29,18 @@ function ActiveCell({cell, value, setActiveCell, row: someRow, col: someColumn})
 
   return (<td style={{color: 'red'}}><input ref={inputEl} type="text" defaultValue={value}
   onBlur={updateCell} onKeyDown={(event) => {
-    event.preventDefault();
     console.log('event key:', event.key);
   switch (event.key) {
     case 'Meta':
     case 'Shift':
+      // At the moment, multi-cell-selection is not disabled on key up
       dispatchSpreadsheetAction({type: 'multi-cell-selection-started', cellID: cell});
       break;
     case 'ArrowDown':
     case 'ArrowUp':
     case 'ArrowLeft':
     case 'ArrowRight':
+      event.preventDefault();
       const {row, column} = cursorKeyToRowColMapper[event.key](someRow, someColumn);
       setActiveCell(row, column, event.ctrlKey || event.shiftKey || event.metaKey);
       if (multiCellSelectionIDs && multiCellSelectionIDs.length) {
