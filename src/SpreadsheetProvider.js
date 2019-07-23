@@ -12,16 +12,27 @@ function getRangeBoundaries({startRangeRow, startRangeColumn, endRangeRow, endRa
   return {top, left, bottom, right};
 }
 
+function createRandomID() {
+  let result = '';
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  for (let i = 0; i < 10; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
+}
+
 function spreadsheetReducer(state, action) {
-  const {type, activeCell, row, column, cellID, cellValue, endRangeRow, endRangeColumn, selectionActive } = action;
+  const { type, row, rowCount, column, columnCount, cellValue, endRangeRow, endRangeColumn } = action;
+  console.log('dispatched:', type, 'with action:', action);
   switch (type) {
     case 'activateCell': {
-      const {activeCell: oldActiveCell, multiCellSelectionIDs: oldCellSelectionIDs, cellSelectionRanges: oldCellSelectionRanges, deselectedCells} = state;
-      // If there is a current selection (accumulated by the arrow keys), add to it; otherwise reset the selection
-      const multiCellSelectionIDs = selectionActive ? oldCellSelectionIDs.concat(!oldCellSelectionIDs.includes(oldActiveCell) ? oldActiveCell : []).concat(activeCell) : [];
-      // Ditto for the current selection (accumulated by mouse movements)
-      const cellSelectionRanges = selectionActive ? oldCellSelectionRanges : [];
-      return {...state, activeCell, deselectedCells: selectionActive ? deselectedCells : [], activeCellCoords: {row, column}, multiCellSelectionIDs, cellSelectionRanges, currentCellSelectionRange: {top: row, left: column}};
+      return {...state, activeCell: {row, column}}
+      // const {activeCell: oldActiveCell, multiCellSelectionIDs: oldCellSelectionIDs, cellSelectionRanges: oldCellSelectionRanges, deselectedCells} = state;
+      // // If there is a current selection (accumulated by the arrow keys), add to it; otherwise reset the selection
+      // const multiCellSelectionIDs = selectionActive ? oldCellSelectionIDs.concat(!oldCellSelectionIDs.includes(oldActiveCell) ? oldActiveCell : []).concat(activeCell) : [];
+      // // Ditto for the current selection (accumulated by mouse movements)
+      // const cellSelectionRanges = selectionActive ? oldCellSelectionRanges : [];
+      // return {...state, activeCell, deselectedCells: selectionActive ? deselectedCells : [], activeCellCoords: {row, column}, multiCellSelectionIDs, cellSelectionRanges, currentCellSelectionRange: {top: row, left: column}};
     }
     case 'add-cell-to-deselect-list': {
       const { activeCell, deselectedCells: oldDeselectedCells = [] } = state;
@@ -47,17 +58,32 @@ function spreadsheetReducer(state, action) {
 
       return {...state, cells: newCells }
     }
-    case 'setCellPosition': {
-      const rowArray = state.cellPositions[row];
-      const changedRow = rowArray.slice(0, column).concat(cellID).concat(rowArray.slice(column +  1));
-      const newPositions = state.cellPositions.slice(0, row).concat([changedRow]).concat(state.cellPositions.slice(row + 1));
-      return {...state, cellPositions: newPositions};
+    case 'setRowPosition': {
+      return {...state, rowPositions: {...state.rowPositions, [action.rowID]: action.row} };
     }
-    case 'createCell': {
-      return {...state, cells: {...state.cells, [cellID]: {value: null}}};
+    case 'createRows': {
+      const newRows = Array(rowCount).fill(undefined).map(_ => {
+        return {id: createRandomID()};
+      });
+      const newRowPositions = newRows.reduce((acc, {id}, index) => {
+        return {...acc, [id]: state.rows.length + index};
+      }, state.rowPositions);
+      return {...state, rows: state.rows.concat(newRows), rowPositions: newRowPositions};
+    }
+    case 'createColumns': {
+      const newColumns = Array(columnCount).fill(undefined).map(_ => {
+        const id = createRandomID();
+        return {id, type: 'String', label: `Column ${id}`};
+      });
+      return {...state, columns: state.columns.concat(newColumns)};
     }
     case 'updateCell': {
-      return  {...state, cells: {...state.cells, [cellID]: {value: cellValue}}};
+      const { rows } = state;
+      const newRows = [...rows];
+      let rowCopy = {...row};
+      rowCopy[column.id] = cellValue;
+      const changedRows = newRows.filter(newRow => newRow.id !== row.id).concat([rowCopy])
+      return  {...state, rows: changedRows };
     }
     case 'add-cellID-to-cell-selection': {
       const {multiCellSelectionIDs = [], cellPositions} = state;
@@ -102,11 +128,13 @@ export function useSpreadsheetDispatch() {
   return context;
 }
 
-export function SpreadsheetProvider({children, rowCount, colCount}) {
-  const initialArray = Array(colCount).fill(undefined);
-  const initialModel = Array(rowCount).fill(undefined).map(() => initialArray.slice());
+export function SpreadsheetProvider({children}) {
+
   const [state, changeSpreadsheet] = useReducer(spreadsheetReducer, {
-    cells: {}, activeCell: null, cellPositions: initialModel, multiCellSelectionIDs: [], cellSelectionRanges: [{
+    rowPositions: {"HITFiTNG8l": 1, "r0aWTL1Fae": 0},
+    rows: [{id: "HITFiTNG8l", age123: 25, gender456: 'M', name321: 'John Smith'}, {id: "r0aWTL1Fae", age123: 24, gender456: 'F', name321: 'Jane Smith'}],
+    columns: [{id: 'name321', type: 'String', label: 'Name'}, {id: 'age123', type: 'Number', label: 'Age'}, {id: 'gender456', type: 'String', label: 'Gender'}],
+    cells: {}, activeCell: null, cellPositions: [], multiCellSelectionIDs: [], cellSelectionRanges: [{
       top: 1, bottom: 1, left: 1, right: 1
     }], currentCellSelectionRange: null
   });

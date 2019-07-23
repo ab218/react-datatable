@@ -16,7 +16,7 @@ const cursorKeyToRowColMapper = {
   }
 };
 
-function ActiveCell({cell, value, setActiveCell, row: someRow, col: someColumn}) {
+function ActiveCell({ value, columns, createNewColumns, changeActiveCell, rowIndex, columnIndex, row: someRow, column: someColumn}) {
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
   const onKeyDown = (event) => {
@@ -28,8 +28,8 @@ function ActiveCell({cell, value, setActiveCell, row: someRow, col: someColumn})
       case 'ArrowLeft':
       case 'ArrowRight':
         event.preventDefault();
-        const {row, column} = cursorKeyToRowColMapper[event.key](someRow, someColumn);
-        setActiveCell(row, column, event.ctrlKey || event.shiftKey || event.metaKey);
+        const {row, column} = cursorKeyToRowColMapper[event.key](rowIndex, columnIndex);
+        changeActiveCell(row, column, event.ctrlKey || event.shiftKey || event.metaKey);
         if (event.shiftKey) {
           dispatchSpreadsheetAction({type: 'add-cellID-to-cell-selection', row, column});
         } else {
@@ -50,10 +50,10 @@ function ActiveCell({cell, value, setActiveCell, row: someRow, col: someColumn})
   }, [])
 
   function updateCell(event) {
-    dispatchSpreadsheetAction({type: 'updateCell', cellID: cell, cellValue: event.target.value});
+    dispatchSpreadsheetAction({type: 'updateCell', row: someRow, column: someColumn, cellValue: event.target.value});
   }
 
-  return (<td style={{color: 'red'}}><input ref={inputEl} type="text" value={value} onChange={updateCell} onKeyDown={onKeyDown}/></td>);
+  return (<td><input ref={inputEl} type="text" value={value} onChange={updateCell} onKeyDown={onKeyDown}/></td>);
 }
 
 export default ActiveCell;
