@@ -78,11 +78,12 @@ function spreadsheetReducer(state, action) {
       return {...state, columns: state.columns.concat(newColumns)};
     }
     case 'updateCell': {
-      const { rows } = state;
-      const newRows = [...rows];
-      let rowCopy = {...row};
-      rowCopy[column.id] = cellValue;
-      const changedRows = newRows.filter(newRow => newRow.id !== row.id).concat([rowCopy])
+      const { rows, columns } = state;
+      const newRows = rows.slice();
+      const {id: columnID} = column || columns[columns.length - 1];
+      const rowCopy = Object.assign({}, row || rows[rows.length - 1], {[columnID]: cellValue});
+      const changedRows = newRows.filter(newRow => newRow.id !== rowCopy.id).concat(rowCopy)
+      console.log('changedRows:', changedRows, 'rowCopy: ', rowCopy, 'column ID:', columnID);
       return  {...state, rows: changedRows };
     }
     case 'add-cellID-to-cell-selection': {

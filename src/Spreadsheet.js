@@ -18,70 +18,82 @@ function FormulaBar() {
   )
 }
 
-function BlankRow({cellCount, changeActiveCell, createNewRows, createNewColumns, rowIndex, rows, columns}) {
+function BlankRow({activeCell, row, column, cellCount, changeActiveCell, createNewRows, createNewColumns, rowIndex, rows, columns}) {
   return (
     <tr>
       {Array(cellCount).fill(undefined).map((_, columnIndex) => {
+        const column = columns[columnIndex - 1];
+        if (activeCell && activeCell.column > 0 && activeCell.row === rowIndex && activeCell.column === columnIndex) {
+          return (
+          <ActiveCell
+            key={`row${rowIndex}col${columnIndex}`}
+            rowIndex={rowIndex}
+            columnIndex={columnIndex}
+            rows={rows}
+            row={row}
+            column={column}
+            columns={columns}
+            value={''}
+            changeActiveCell={changeActiveCell}
+            createNewColumns={createNewColumns}
+            createNewRows={createNewRows}
+            />
+          )
+        }
         return <td key={`blank_cell${rowIndex}_${columnIndex}`} onClick={() => {
+          console.log('blankrow rows', rows)
           // JMP allows creation of a row at most 2 from the last one
-          if (rows > 0 && rows <= 2) {
-            console.log('creating', rows, 'new rows');
-            createNewRows(rows);
-            if (columnIndex > columns.length) {
-              createNewColumns(columnIndex - columns.length);
-            }
+          // if (rows > 0 && rows <= 2) {
+          //   console.log('creating', rows, 'new rows');
+            // createNewRows(rows);
+            // if (columnIndex > columns.length) {
+            //   createNewColumns(columnIndex - columns.length);
+            // }
             changeActiveCell(rowIndex, columnIndex)
-          } else {
-            alert('not allowed');
-          }
+          // } else {
+          //   alert('not allowed');
+          // }
         }}></td>
       })}
     </tr>
   );
 }
 
-function Row({activeCell, cellCount, columns, row, rowIndex, createNewColumns, changeActiveCell}) {
-  console.log('row arguments:', arguments);
-  if (row) {
-    return (
-      <tr>
-        {Array(cellCount).fill(undefined).map((_, columnIndex) => {
-          const column = columns[columnIndex - 1];
-          if (columnIndex === 0) {
-            // The row # on the left side
-            return <td key={`row${rowIndex}col${columnIndex}`}>{rowIndex + 1}</td>
-          }
-          if (activeCell && activeCell.row === rowIndex && activeCell.column === columnIndex) {
-            return (
-            <ActiveCell
-              key={`row${rowIndex}col${columnIndex}`}
-              rowIndex={rowIndex}
-              columnIndex={columnIndex}
-              row={row}
-              column={column}
-              columns={columns}
-              value={row[column.id]}
-              changeActiveCell={changeActiveCell}
-              createNewColumns={createNewColumns}
-              />
-            )
-          } else if (column) {
-            return (<td key={`row${rowIndex}col${columnIndex}`} onClick={() => changeActiveCell(rowIndex, columnIndex)}>{row[column.id]}</td>)
-          } else {
-            // The rest of the cells in the row that aren't in a defined column
-            return (<td key={`row${rowIndex}col${columnIndex}`} onClick={() => {
-              if (columnIndex > columns.length) {
-                createNewColumns(columnIndex - columns.length);
-              }
-              changeActiveCell(rowIndex, columnIndex)
-            }}>.</td>)
-          }
-        })}
-      </tr>
-    );
-    } else {
-      return null;
-    }
+function Row({activeCell, cellCount, columns, row, rows, rowIndex, createNewColumns, createNewRows, changeActiveCell}) {
+  return (
+    <tr>
+      {Array(cellCount).fill(undefined).map((_, columnIndex) => {
+        const column = columns[columnIndex - 1];
+        if (columnIndex === 0) {
+          // The row # on the left side
+          return <td key={`row${rowIndex}col${columnIndex}`}>{rowIndex + 1}</td>
+        }
+        // console.log('ahoyhoy', activeCell, rowIndex, columnIndex)
+        if (activeCell && activeCell.row === rowIndex && activeCell.column === columnIndex) {
+          return (
+          <ActiveCell
+            key={`row${rowIndex}col${columnIndex}`}
+            rowIndex={rowIndex}
+            columnIndex={columnIndex}
+            rows={rows}
+            row={row}
+            column={column}
+            columns={columns}
+            value={column ? row[column.id] : ''}
+            changeActiveCell={changeActiveCell}
+            createNewColumns={createNewColumns}
+            createNewRows={createNewRows}
+            />
+          )
+        } else if (column) {
+          return (<td key={`row${rowIndex}col${columnIndex}`} onClick={() => changeActiveCell(rowIndex, columnIndex)}>{row[column.id]}</td>)
+        } else {
+          // The rest of the cells in the row that aren't in a defined column
+          return (<td key={`row${rowIndex}col${columnIndex}`} onClick={() => changeActiveCell(rowIndex, columnIndex)}>.</td>)
+        }
+      })}
+    </tr>
+  );
 }
 
 function Spreadsheet({eventBus}) {
@@ -113,25 +125,28 @@ function Spreadsheet({eventBus}) {
       return rowIDs[index]
       ? <Row
           activeCell={activeCell}
-          rowIDs={rowIDs}
-          createNewColumns={createNewColumns}
-          changeActiveCell={changeActiveCell}
-          key={'Row'+index}
-          rowIndex={index}
           cellCount={visibleColumnCount + 1}
+          changeActiveCell={changeActiveCell}
           columns={columns}
+          createNewColumns={createNewColumns}
+          createNewRows={createNewRows}
+          key={'Row'+index}
+          rows={index - rowCount + 1}
           row={rows.find(({id}) => id === rowIDs[index])}
+          rowIndex={index}
+          rowIDs={rowIDs}
       />
       : <BlankRow
+          activeCell={activeCell}
+          cellCount={visibleColumnCount + 1}
           changeActiveCell={changeActiveCell}
+          columns={columns}
           createNewRows={createNewRows}
           createNewColumns={createNewColumns}
-          rowIDs={rowIDs}
           key={'Row'+ index}
+          rowIDs={rowIDs}
           rows={index - rowCount + 1}
-          columns={columns}
           rowIndex={index}
-          cellCount={visibleColumnCount + 1}
         />
   });
   console.log('visibleRows:', visibleRows);
@@ -208,8 +223,6 @@ function Spreadsheet({eventBus}) {
   // });
 
   // const columnCount = cellPositions.length ? Math.max(...(cellPositions.map((row) => row.length))) : 0;
-
-
 
   // function modifyCellSelectionRange(row, col) {
   //   dispatchSpreadsheetAction({type: 'modify-current-selection-cell-range', endRangeRow: row, endRangeColumn: col});

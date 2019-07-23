@@ -16,7 +16,7 @@ const cursorKeyToRowColMapper = {
   }
 };
 
-function ActiveCell({ value, columns, createNewColumns, changeActiveCell, rowIndex, columnIndex, row: someRow, column: someColumn}) {
+function ActiveCell({ value, columns, createNewColumns, createNewRows, changeActiveCell, rowIndex, columnIndex, rows, row: someRow, column: someColumn}) {
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
   const onKeyDown = (event) => {
@@ -50,9 +50,17 @@ function ActiveCell({ value, columns, createNewColumns, changeActiveCell, rowInd
   }, [])
 
   function updateCell(event) {
-    dispatchSpreadsheetAction({type: 'updateCell', row: someRow, column: someColumn, cellValue: event.target.value});
+    console.log('updateCell rows:', rows)
+    if (event.target.value) {
+      if (rows === 1 ) {
+        createNewRows(rows);
+      }
+      if (columnIndex > columns.length) {
+        createNewColumns(columnIndex - columns.length);
+      }
+      dispatchSpreadsheetAction({type: 'updateCell', row: someRow, column: someColumn, cellValue: event.target.value});
+    }
   }
-
   return (<td><input ref={inputEl} type="text" value={value} onChange={updateCell} onKeyDown={onKeyDown}/></td>);
 }
 
