@@ -18,7 +18,7 @@ function FormulaBar() {
   )
 }
 
-function BlankRow({activeCell, row, column, cellCount, changeActiveCell, createNewRows, createNewColumns, rowIndex, rows, columns}) {
+function BlankRow({activeCell, row, cellCount, changeActiveCell, createNewRows, createNewColumns, rowIndex, rows, numberOfRows, columns}) {
   return (
     <tr>
       {Array(cellCount).fill(undefined).map((_, columnIndex) => {
@@ -31,6 +31,7 @@ function BlankRow({activeCell, row, column, cellCount, changeActiveCell, createN
             columnIndex={columnIndex}
             rows={rows}
             row={row}
+            numberOfRows={numberOfRows}
             column={column}
             columns={columns}
             value={''}
@@ -41,15 +42,11 @@ function BlankRow({activeCell, row, column, cellCount, changeActiveCell, createN
           )
         }
         return <td key={`blank_cell${rowIndex}_${columnIndex}`} onClick={() => {
-          console.log('blankrow rows', rows)
           // JMP allows creation of a row at most 2 from the last one
-          // if (rows > 0 && rows <= 2) {
-          //   console.log('creating', rows, 'new rows');
-            // createNewRows(rows);
-            // if (columnIndex > columns.length) {
-            //   createNewColumns(columnIndex - columns.length);
-            // }
+          // If the row is only one space away from the last row
+          if (rows === 1) {
             changeActiveCell(rowIndex, columnIndex)
+          }
           // } else {
           //   alert('not allowed');
           // }
@@ -59,7 +56,7 @@ function BlankRow({activeCell, row, column, cellCount, changeActiveCell, createN
   );
 }
 
-function Row({activeCell, cellCount, columns, row, rows, rowIndex, createNewColumns, createNewRows, changeActiveCell}) {
+function Row({activeCell, cellCount, columns, row, rows, rowIndex, createNewColumns, createNewRows, changeActiveCell, numberOfRows}) {
   return (
     <tr>
       {Array(cellCount).fill(undefined).map((_, columnIndex) => {
@@ -77,6 +74,7 @@ function Row({activeCell, cellCount, columns, row, rows, rowIndex, createNewColu
             columnIndex={columnIndex}
             rows={rows}
             row={row}
+            numberOfRows={numberOfRows}
             column={column}
             columns={columns}
             value={column ? row[column.id] : ''}
@@ -103,24 +101,20 @@ function Spreadsheet({eventBus}) {
     rowPositions,
     rows,
    } = useSpreadsheetState();
+  const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
   const rowMap = Object.entries(rowPositions).reduce((acc, [id, position]) => {
     return {...acc, [position]: id};
   }, {});
   const rowCount = rowMap ? Math.max(...Object.keys(rowMap)) + 1 : 0;
-  const visibleRowCount = Math.max(rowCount, 10); // 50 rows should be enough to fill the screen
+  const visibleRowCount = Math.max(rowCount, 20); // 50 rows should be enough to fill the screen
   const rowIDs = Array(rowCount).fill(undefined).map((_, index) => {
     return rowMap[index];
   });
 
   // We add one more column header as the capstone for the column of row headers
-  const dispatchSpreadsheetAction = useSpreadsheetDispatch();
   const visibleColumnCount = Math.max(26, columns.length);
-  console.log('visibleColumnCount:', visibleColumnCount);
   const headers = Array(visibleColumnCount).fill(undefined).map((_, index) => (<ColResizer key={index} minWidth={60} content={String.fromCharCode(index + 'A'.charCodeAt(0))}/>))
-  console.log('headers length:', headers.length);
-  console.log('visibleRowCount:', visibleRowCount);
-  console.log('rows:', rows);
   const visibleRows = Array(visibleRowCount).fill(undefined).map((_, index) => {
       return rowIDs[index]
       ? <Row
@@ -131,6 +125,7 @@ function Spreadsheet({eventBus}) {
           createNewColumns={createNewColumns}
           createNewRows={createNewRows}
           key={'Row'+index}
+          numberOfRows={rowCount}
           rows={index - rowCount + 1}
           row={rows.find(({id}) => id === rowIDs[index])}
           rowIndex={index}
@@ -144,12 +139,11 @@ function Spreadsheet({eventBus}) {
           createNewRows={createNewRows}
           createNewColumns={createNewColumns}
           key={'Row'+ index}
-          rowIDs={rowIDs}
+          numberOfRows={rowCount}
           rows={index - rowCount + 1}
           rowIndex={index}
         />
   });
-  console.log('visibleRows:', visibleRows);
 
   function createNewRows(rowCount) {
     dispatchSpreadsheetAction({type: 'createRows', rowCount});
