@@ -3,33 +3,34 @@ import { useSpreadsheetDispatch } from './SpreadsheetProvider';
 
 const cursorKeyToRowColMapper = {
   ArrowUp: function (row, column) {
-    if (row > 0) {
-      return {row: row - 1, column};
-    } else {
-      return {row, column}
-    }
+    // rows should never go less than index 0 (top row header)
+    return {row: Math.max(row - 1, 0), column};
   },
   ArrowDown: function (row, column, numberOfRows) {
-    console.log(row, numberOfRows)
-    if (row === numberOfRows) {
-      return {row, column}
-    } else {
-      return {row: row + 1, column};
-    }
+    return {row: Math.min(row + 1, numberOfRows), column};
   },
   ArrowLeft: function (row, column) {
-    if (row >= 0 && column > 1) {
-      return {row, column: column - 1};
-    } else {
-      return {row, column}
-    }
+    // Column should be minimum of 1 due to side row header
+    return {row, column: Math.max(column - 1, 1)};
   },
   ArrowRight: function (row, column) {
     return {row, column: column + 1};
   }
 };
 
-function ActiveCell({ value, columns, createNewColumns, createNewRows, changeActiveCell, rowIndex, numberOfRows, columnIndex, rows, row: someRow, column: someColumn}) {
+function ActiveCell({
+  changeActiveCell,
+  columns,
+  columnIndex,
+  createNewColumns,
+  createNewRows,
+  numberOfRows,
+  value,
+  rowIndex,
+  rows,
+  column: someColumn,
+  row: someRow,
+}) {
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
   const onKeyDown = (event) => {

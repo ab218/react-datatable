@@ -18,7 +18,9 @@ function FormulaBar() {
   )
 }
 
-function BlankRow({activeCell, row, cellCount, changeActiveCell, createNewRows, createNewColumns, rowIndex, rows, numberOfRows, columns}) {
+function BlankRow({cellCount}) { return <tr>{Array(cellCount).fill(undefined).map((_, columnIndex) => <td key={'blankcol' + columnIndex}></td>)}</tr> }
+
+function BlankClickableRow({activeCell, row, cellCount, changeActiveCell, createNewRows, createNewColumns, rowIndex, rows, numberOfRows, columns}) {
   return (
     <tr>
       {Array(cellCount).fill(undefined).map((_, columnIndex) => {
@@ -34,23 +36,13 @@ function BlankRow({activeCell, row, cellCount, changeActiveCell, createNewRows, 
             numberOfRows={numberOfRows}
             column={column}
             columns={columns}
-            value={''}
             changeActiveCell={changeActiveCell}
             createNewColumns={createNewColumns}
             createNewRows={createNewRows}
             />
           )
         }
-        return <td key={`blank_cell${rowIndex}_${columnIndex}`} onClick={() => {
-          // JMP allows creation of a row at most 2 from the last one
-          // If the row is only one space away from the last row
-          if (rows === 1) {
-            changeActiveCell(rowIndex, columnIndex)
-          }
-          // } else {
-          //   alert('not allowed');
-          // }
-        }}></td>
+        return <td key={`blank_cell${rowIndex}_${columnIndex}`} onClick={() => changeActiveCell(rowIndex, columnIndex)}></td>
       })}
     </tr>
   );
@@ -63,9 +55,8 @@ function Row({activeCell, cellCount, columns, row, rows, rowIndex, createNewColu
         const column = columns[columnIndex - 1];
         if (columnIndex === 0) {
           // The row # on the left side
-          return <td key={`row${rowIndex}col${columnIndex}`}>{rowIndex + 1}</td>
+          return <td key={`RowNumber${rowIndex}`}>{rowIndex + 1}</td>
         }
-        // console.log('ahoyhoy', activeCell, rowIndex, columnIndex)
         if (activeCell && activeCell.row === rowIndex && activeCell.column === columnIndex) {
           return (
           <ActiveCell
@@ -116,8 +107,9 @@ function Spreadsheet({eventBus}) {
   const visibleColumnCount = Math.max(26, columns.length);
   const headers = Array(visibleColumnCount).fill(undefined).map((_, index) => (<ColResizer key={index} minWidth={60} content={String.fromCharCode(index + 'A'.charCodeAt(0))}/>))
   const visibleRows = Array(visibleRowCount).fill(undefined).map((_, index) => {
-      return rowIDs[index]
-      ? <Row
+      if (rowIDs[index]) {
+        return (
+        <Row
           activeCell={activeCell}
           cellCount={visibleColumnCount + 1}
           changeActiveCell={changeActiveCell}
@@ -130,19 +122,24 @@ function Spreadsheet({eventBus}) {
           row={rows.find(({id}) => id === rowIDs[index])}
           rowIndex={index}
           rowIDs={rowIDs}
-      />
-      : <BlankRow
-          activeCell={activeCell}
-          cellCount={visibleColumnCount + 1}
-          changeActiveCell={changeActiveCell}
-          columns={columns}
-          createNewRows={createNewRows}
-          createNewColumns={createNewColumns}
-          key={'Row'+ index}
-          numberOfRows={rowCount}
-          rows={index - rowCount + 1}
-          rowIndex={index}
-        />
+      />)} else if (rowIDs[index-1]) {
+        return (
+          <BlankClickableRow
+            activeCell={activeCell}
+            cellCount={visibleColumnCount + 1}
+            changeActiveCell={changeActiveCell}
+            columns={columns}
+            createNewRows={createNewRows}
+            createNewColumns={createNewColumns}
+            key={'Row'+ index}
+            numberOfRows={rowCount}
+            rows={index - rowCount + 1}
+            rowIndex={index}
+          />
+        )
+      } else {
+        return <BlankRow key={'BlankRow'+ index} cellCount={visibleColumnCount + 1} />
+      }
   });
 
   function createNewRows(rowCount) {
