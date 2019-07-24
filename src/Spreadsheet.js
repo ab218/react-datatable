@@ -29,16 +29,16 @@ function BlankClickableRow({activeCell, row, cellCount, changeActiveCell, create
           return (
           <ActiveCell
             key={`row${rowIndex}col${columnIndex}`}
-            rowIndex={rowIndex}
+            changeActiveCell={changeActiveCell}
             columnIndex={columnIndex}
-            rows={rows}
-            row={row}
-            numberOfRows={numberOfRows}
             column={column}
             columns={columns}
-            changeActiveCell={changeActiveCell}
             createNewColumns={createNewColumns}
             createNewRows={createNewRows}
+            numberOfRows={numberOfRows}
+            row={row}
+            rowIndex={rowIndex}
+            rows={rows}
             />
           )
         }
@@ -61,17 +61,17 @@ function Row({activeCell, cellCount, columns, row, rows, rowIndex, createNewColu
           return (
           <ActiveCell
             key={`row${rowIndex}col${columnIndex}`}
-            rowIndex={rowIndex}
-            columnIndex={columnIndex}
-            rows={rows}
-            row={row}
-            numberOfRows={numberOfRows}
-            column={column}
-            columns={columns}
-            value={column ? row[column.id] : ''}
             changeActiveCell={changeActiveCell}
+            column={column}
+            columnIndex={columnIndex}
+            columns={columns}
             createNewColumns={createNewColumns}
             createNewRows={createNewRows}
+            numberOfRows={numberOfRows}
+            row={row}
+            rowIndex={rowIndex}
+            rows={rows}
+            value={column ? row[column.id] : ''}
             />
           )
         } else if (column) {
@@ -110,34 +110,33 @@ function Spreadsheet({eventBus}) {
       if (rowIDs[index]) {
         return (
         <Row
+          key={'Row'+index}
           activeCell={activeCell}
           cellCount={visibleColumnCount + 1}
           changeActiveCell={changeActiveCell}
           columns={columns}
           createNewColumns={createNewColumns}
           createNewRows={createNewRows}
-          key={'Row'+index}
           numberOfRows={rowCount}
-          rows={index - rowCount + 1}
           row={rows.find(({id}) => id === rowIDs[index])}
-          rowIndex={index}
           rowIDs={rowIDs}
+          rowIndex={index}
+          rows={index - rowCount + 1}
       />)} else if (rowIDs[index-1]) {
         return (
           <BlankClickableRow
-            activeCell={activeCell}
+            key={'Row'+ index}
             cellCount={visibleColumnCount + 1}
+            activeCell={activeCell}
             changeActiveCell={changeActiveCell}
             columns={columns}
             createNewRows={createNewRows}
             createNewColumns={createNewColumns}
-            key={'Row'+ index}
             numberOfRows={rowCount}
-            rows={index - rowCount + 1}
             rowIndex={index}
+            rows={index - rowCount + 1}
           />
-        )
-      } else {
+        )} else {
         return <BlankRow key={'BlankRow'+ index} cellCount={visibleColumnCount + 1} />
       }
   });

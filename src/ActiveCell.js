@@ -50,9 +50,9 @@ function ActiveCell({
         }
         changeActiveCell(row, column, event.ctrlKey || event.shiftKey || event.metaKey);
         break;
-      case 'Backspace':
-        dispatchSpreadsheetAction({type: 'delete-values'})
-        break;
+      // case 'Backspace':
+      //   dispatchSpreadsheetAction({type: 'delete-values'})
+      //   break;
       default:
         break;
     }
