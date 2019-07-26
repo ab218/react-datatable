@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 // import { Parser } from 'hot-formula-parser';
 import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
@@ -19,6 +19,8 @@ function FormulaBar() {
 }
 
 function BlankRow({cellCount}) { return <tr>{Array(cellCount).fill(undefined).map((_, columnIndex) => <td key={'blankcol' + columnIndex}></td>)}</tr> }
+
+function RowNumberCell({rowIndex}) { return <td key={`RowNumber${rowIndex}`}>{rowIndex + 1}</td> }
 
 function BlankClickableRow({activeCell, row, cellCount, changeActiveCell, createNewRows, createNewColumns, rowIndex, rows, numberOfRows, columns}) {
   return (
@@ -42,20 +44,53 @@ function BlankClickableRow({activeCell, row, cellCount, changeActiveCell, create
             />
           )
         }
-        return <td key={`blank_cell${rowIndex}_${columnIndex}`} onClick={() => changeActiveCell(rowIndex, columnIndex)}></td>
+        return <td key={`blank_cell${rowIndex}_${columnIndex}`}></td>
       })}
     </tr>
   );
 }
 
-function Row({activeCell, cellCount, columns, row, rows, rowIndex, createNewColumns, createNewRows, changeActiveCell, numberOfRows}) {
+function SelectedCell({changeActiveCell, modifyCellSelectionRange, row, rowIndex, column, columnIndex}) {
+  return <td
+  key={`row${rowIndex}col${columnIndex}`}
+  style={{backgroundColor: '#f0f0f0'}}
+  onMouseDown={(event) => {
+    changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
+  }}
+  onMouseMove={(event) => {
+    if (typeof event.buttons === 'number' && event.buttons > 0) {
+      console.log('NormalCell onMouseMove', event.buttons)
+      modifyCellSelectionRange(rowIndex, columnIndex, true);
+    }
+  }}
+  >
+  {row[column.id]}</td>
+}
+
+function NormalCell({changeActiveCell, modifyCellSelectionRange, row, rowIndex, column, columnIndex}) {
+  return (
+  <td
+    key={`row${rowIndex}col${columnIndex}`}
+    onMouseDown={(event) => {
+      changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
+    }}
+    onMouseMove={(event) => {
+      if (typeof event.buttons === 'number' && event.buttons > 0) {
+        console.log('NormalCell onMouseMove', event.buttons)
+        modifyCellSelectionRange(rowIndex, columnIndex, true);
+      }
+    }}>
+  {row[column.id]}</td>
+  )}
+
+function Row({activeCell, modifyCellSelectionRange, multiCellSelectionIDs, cellCount, columns, row, rows, rowIndex, createNewColumns, createNewRows, changeActiveCell, numberOfRows}) {
   return (
     <tr>
       {Array(cellCount).fill(undefined).map((_, columnIndex) => {
         const column = columns[columnIndex - 1];
         if (columnIndex === 0) {
           // The row # on the left side
-          return <td key={`RowNumber${rowIndex}`}>{rowIndex + 1}</td>
+          return <RowNumberCell rowIndex={rowIndex}/>
         }
         if (activeCell && activeCell.row === rowIndex && activeCell.column === columnIndex) {
           return (
@@ -74,8 +109,25 @@ function Row({activeCell, cellCount, columns, row, rows, rowIndex, createNewColu
             value={column ? row[column.id] : ''}
             />
           )
+        } else if (multiCellSelectionIDs.some(id => id.row === rowIndex && id.column === columnIndex)) {
+          return (
+          <SelectedCell
+            changeActiveCell={changeActiveCell}
+            modifyCellSelectionRange={modifyCellSelectionRange}
+            row={row} column={column}
+            rowIndex={rowIndex}
+            columnIndex={columnIndex}
+            />)
         } else if (column) {
-          return (<td key={`row${rowIndex}col${columnIndex}`} onClick={() => changeActiveCell(rowIndex, columnIndex)}>{row[column.id]}</td>)
+          return (
+            <NormalCell
+              changeActiveCell={changeActiveCell}
+              modifyCellSelectionRange={modifyCellSelectionRange}
+              row={row}
+              column={column}
+              rowIndex={rowIndex}
+              columnIndex={columnIndex}
+            />)
         } else {
           // The rest of the cells in the row that aren't in a defined column
           return (<td key={`row${rowIndex}col${columnIndex}`} onClick={() => changeActiveCell(rowIndex, columnIndex)}>.</td>)
@@ -89,10 +141,15 @@ function Spreadsheet({eventBus}) {
   const {
     activeCell,
     columns,
+    multiCellSelectionIDs,
     rowPositions,
     rows,
    } = useSpreadsheetState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+
+  useEffect(() => {
+    console.log(multiCellSelectionIDs)
+  })
 
   const rowMap = Object.entries(rowPositions).reduce((acc, [id, position]) => {
     return {...acc, [position]: id};
@@ -102,6 +159,7 @@ function Spreadsheet({eventBus}) {
   const rowIDs = Array(rowCount).fill(undefined).map((_, index) => {
     return rowMap[index];
   });
+
 
   // We add one more column header as the capstone for the column of row headers
   const visibleColumnCount = Math.max(26, columns.length);
@@ -117,6 +175,9 @@ function Spreadsheet({eventBus}) {
           columns={columns}
           createNewColumns={createNewColumns}
           createNewRows={createNewRows}
+          modifyCellSelectionRange={modifyCellSelectionRange}
+          finishCurrentSelectionRange={finishCurrentSelectionRange}
+          multiCellSelectionIDs={multiCellSelectionIDs}
           numberOfRows={rowCount}
           row={rows.find(({id}) => id === rowIDs[index])}
           rowIDs={rowIDs}
@@ -149,8 +210,16 @@ function Spreadsheet({eventBus}) {
     dispatchSpreadsheetAction({type: 'createColumns', columnCount});
   }
 
-  function changeActiveCell(row, column) {
-    dispatchSpreadsheetAction({type: 'activateCell', row, column});
+  function changeActiveCell(row, column, selectionActive) {
+    dispatchSpreadsheetAction({type: 'activateCell', row, column, selectionActive});
+  }
+
+  function modifyCellSelectionRange(row, col) {
+    dispatchSpreadsheetAction({type: 'modify-current-selection-cell-range', endRangeRow: row, endRangeColumn: col});
+  }
+
+  function finishCurrentSelectionRange() {
+    dispatchSpreadsheetAction({type: 'add-current-selection-to-cell-selections'});
   }
 
   return (
