@@ -4,6 +4,7 @@ import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import ColResizer from './ColResizer';
 import ActiveCell from './ActiveCell';
+import Row from './Row';
 
 // function isFormula(value) {
 //   return typeof value === 'string' && value.charAt(0) === '=';
@@ -19,8 +20,6 @@ function FormulaBar() {
 }
 
 function BlankRow({cellCount}) { return <tr>{Array(cellCount).fill(undefined).map((_, columnIndex) => <td key={'blankcol' + columnIndex}></td>)}</tr> }
-
-function RowNumberCell({rowIndex}) { return <td key={`RowNumber${rowIndex}`}>{rowIndex + 1}</td> }
 
 function BlankClickableRow({activeCell, finishCurrentSelectionRange, modifyCellSelectionRange, row, cellCount, changeActiveCell, createNewRows, createNewColumns, rowIndex, rows, numberOfRows, columns}) {
   return (
@@ -63,97 +62,6 @@ function BlankClickableRow({activeCell, finishCurrentSelectionRange, modifyCellS
   );
 }
 
-function SelectedCell({changeActiveCell, finishCurrentSelectionRange, modifyCellSelectionRange, row, rowIndex, column, columnIndex}) {
-  return <td
-  key={`row${rowIndex}col${columnIndex}`}
-  style={{backgroundColor: '#f0f0f0'}}
-  onMouseDown={(event) => {
-    changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
-  }}
-  onMouseMove={(event) => {
-    if (typeof event.buttons === 'number' && event.buttons > 0) {
-      modifyCellSelectionRange(rowIndex, columnIndex, true);
-    }
-  }}
-  onMouseUp={() => {finishCurrentSelectionRange()}}
-  >
-  {row[column.id]}</td>
-}
-
-function NormalCell({changeActiveCell, finishCurrentSelectionRange, modifyCellSelectionRange, row, rowIndex, column, columnIndex}) {
-  return (
-  <td
-    key={`row${rowIndex}col${columnIndex}`}
-    onMouseDown={(event) => {
-      changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
-    }}
-    onMouseMove={(event) => {
-      if (typeof event.buttons === 'number' && event.buttons > 0) {
-        modifyCellSelectionRange(rowIndex, columnIndex, true);
-      }
-    }}
-    onMouseUp={() => {finishCurrentSelectionRange()}}
-    >
-  {row[column.id]}</td>
-  )}
-
-function Row({activeCell, finishCurrentSelectionRange, modifyCellSelectionRange, multiCellSelectionIDs, isSelectedCell, cellCount, columns, row, rows, rowIndex, createNewColumns, createNewRows, changeActiveCell, numberOfRows}) {
-  return (
-    <tr>
-      {Array(cellCount).fill(undefined).map((_, columnIndex) => {
-        const column = columns[columnIndex - 1];
-
-        if (columnIndex === 0) {
-          // The row # on the left side
-          return <RowNumberCell rowIndex={rowIndex}/>
-        }
-        if (activeCell && activeCell.row === rowIndex && activeCell.column === columnIndex) {
-          return (
-          <ActiveCell
-            key={`row${rowIndex}col${columnIndex}`}
-            changeActiveCell={changeActiveCell}
-            column={column}
-            columnIndex={columnIndex}
-            columns={columns}
-            createNewColumns={createNewColumns}
-            createNewRows={createNewRows}
-            numberOfRows={numberOfRows}
-            row={row}
-            rowIndex={rowIndex}
-            rows={rows}
-            value={column ? row[column.id] : ''}
-            />
-          )
-        } else if (isSelectedCell(rowIndex, columnIndex)) {
-          return (
-          <SelectedCell
-            changeActiveCell={changeActiveCell}
-            finishCurrentSelectionRange={finishCurrentSelectionRange}
-            modifyCellSelectionRange={modifyCellSelectionRange}
-            row={row} column={column}
-            rowIndex={rowIndex}
-            columnIndex={columnIndex}
-            />)
-        } else if (column) {
-          return (
-            <NormalCell
-              changeActiveCell={changeActiveCell}
-              finishCurrentSelectionRange={finishCurrentSelectionRange}
-              modifyCellSelectionRange={modifyCellSelectionRange}
-              row={row}
-              column={column}
-              rowIndex={rowIndex}
-              columnIndex={columnIndex}
-            />)
-        } else {
-          // The rest of the cells in the row that aren't in a defined column
-          return (<td key={`row${rowIndex}col${columnIndex}`} onClick={() => changeActiveCell(rowIndex, columnIndex)}>.</td>)
-        }
-      })}
-    </tr>
-  );
-}
-
 function Spreadsheet({eventBus}) {
   const {
     activeCell,
@@ -171,9 +79,7 @@ function Spreadsheet({eventBus}) {
       const {top, right, bottom, left} = value;
       return row >= top && row <= bottom && column >= left && column <= right;
     }
-
-    const cell = {row, column}
-    const cellIDFoundinSelection = cell && multiCellSelectionIDs.some(id => cell.row === id.row && cell.column === id.column);
+    const cellIDFoundinSelection = multiCellSelectionIDs.some(cell => row === cell.row && column === cell.column);
     const withinASelectedRange = cellSelectionRanges.some(withinRange);
     return cellIDFoundinSelection || withinASelectedRange || (currentCellSelectionRange && withinRange(currentCellSelectionRange));
   }
@@ -200,27 +106,29 @@ function Spreadsheet({eventBus}) {
   const visibleRows = Array(visibleRowCount).fill(undefined).map((_, index) => {
       if (rowIDs[index]) {
         return (
-        <Row
-          key={'Row'+index}
-          activeCell={activeCell}
-          cellCount={visibleColumnCount + 1}
-          changeActiveCell={changeActiveCell}
-          columns={columns}
-          createNewColumns={createNewColumns}
-          createNewRows={createNewRows}
-          isSelectedCell={isSelectedCell}
-          modifyCellSelectionRange={modifyCellSelectionRange}
-          finishCurrentSelectionRange={finishCurrentSelectionRange}
-          multiCellSelectionIDs={multiCellSelectionIDs}
-          numberOfRows={rowCount}
-          row={rows.find(({id}) => id === rowIDs[index])}
-          rowIDs={rowIDs}
-          rowIndex={index}
-          rows={index - rowCount + 1}
-      />)} else if (rowIDs[index-1]) {
+          <Row
+            key={'Row' + index}
+            activeCell={activeCell}
+            cellCount={visibleColumnCount + 1}
+            changeActiveCell={changeActiveCell}
+            columns={columns}
+            createNewColumns={createNewColumns}
+            createNewRows={createNewRows}
+            isSelectedCell={isSelectedCell}
+            modifyCellSelectionRange={modifyCellSelectionRange}
+            finishCurrentSelectionRange={finishCurrentSelectionRange}
+            multiCellSelectionIDs={multiCellSelectionIDs}
+            numberOfRows={rowCount}
+            row={rows.find(({id}) => id === rowIDs[index])}
+            rowIDs={rowIDs}
+            rowIndex={index}
+            rows={index - rowCount + 1}
+          />
+        )
+      } else if (rowIDs[index-1]) {
         return (
           <BlankClickableRow
-            key={'Row'+ index}
+            key={'Row' + index}
             cellCount={visibleColumnCount + 1}
             activeCell={activeCell}
             changeActiveCell={changeActiveCell}
@@ -233,9 +141,8 @@ function Spreadsheet({eventBus}) {
             rowIndex={index}
             rows={index - rowCount + 1}
           />
-        )} else {
-        return <BlankRow key={'BlankRow'+ index} cellCount={visibleColumnCount + 1} />
-      }
+        )
+      } else { return <BlankRow key={'BlankRow' + index} cellCount={visibleColumnCount + 1} />}
   });
 
   function createNewRows(rowCount) {

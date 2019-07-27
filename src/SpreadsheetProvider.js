@@ -78,6 +78,22 @@ function spreadsheetReducer(state, action) {
       }, state.rowPositions);
       return {...state, rows: state.rows.concat(newRows), rowPositions: newRowPositions};
     }
+    case 'delete-values': {
+      const { cells, cellPositions, cellSelectionRanges, multiCellSelectionIDs, deselectedCells } = state;
+
+      function clearCellValue(acc, selectedCellID) {
+        return {...acc, [selectedCellID]: {value: null}};
+      }
+
+      const selectedRangeIDs = cellSelectionRanges.flatMap(({top, bottom, left, right}) => {
+        // slice the ranges that were selected and filter out the undefined values
+        return cellPositions.slice(top, bottom + 1).flatMap((row) => row.slice(left, right + 1).filter(Boolean));
+      });
+      const clearedCellValues = multiCellSelectionIDs.concat(selectedRangeIDs).filter((cellID) => !deselectedCells.includes(cellID)).reduce(clearCellValue, {});
+      const newCells = Object.assign({}, cells, clearedCellValues);
+
+      return {...state, cells: newCells }
+    }
     // case 'delete-values': {
     //   const { cells, cellPositions, cellSelectionRanges, multiCellSelectionIDs, deselectedCells } = state;
 
