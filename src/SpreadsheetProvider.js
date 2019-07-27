@@ -33,7 +33,7 @@ function spreadsheetReducer(state, action) {
     selectionActive,
     type,
    } = action;
-  console.log('dispatched:', type, 'with action:', action);
+  // console.log('dispatched:', type, 'with action:', action);
   switch (type) {
     case 'activateCell': {
       const {activeCell: oldActiveCell, multiCellSelectionIDs: oldCellSelectionIDs, cellSelectionRanges: oldCellSelectionRanges} = state;
@@ -43,7 +43,7 @@ function spreadsheetReducer(state, action) {
       const multiCellSelectionIDs = selectionActive ? oldCellSelectionIDs.concat(wereCellsAlreadySelected(oldCellSelectionIDs, oldActiveCell) ? oldActiveCell : []) : [];
       // // Ditto for the current selection (accumulated by mouse movements)
       const cellSelectionRanges = selectionActive ? oldCellSelectionRanges : [];
-      return {...state, activeCell, activeCellCoords: {row, column}, multiCellSelectionIDs, cellSelectionRanges, currentCellSelectionRange: {top: row, left: column}}
+      return {...state, activeCell, multiCellSelectionIDs, cellSelectionRanges, currentCellSelectionRange: {top: row, left: column}}
     }
     case 'add-cellID-to-cell-selection': {
       const {multiCellSelectionIDs = []} = state;
@@ -55,10 +55,10 @@ function spreadsheetReducer(state, action) {
     //   const deselectedCells = [...new Set(oldDeselectedCells.concat(activeCell))];
     //   return {...state, deselectedCells };
     // }
-    // case 'add-current-selection-to-cell-selections': {
-    //   const {currentCellSelectionRange, cellSelectionRanges} = state;
-    //   return {...state, cellSelectionRanges: cellSelectionRanges.concat(currentCellSelectionRange), currentCellSelectionRange: null};
-    // }
+    case 'add-current-selection-to-cell-selections': {
+      const {currentCellSelectionRange, cellSelectionRanges} = state;
+      return {...state, cellSelectionRanges: cellSelectionRanges.concat(currentCellSelectionRange), currentCellSelectionRange: null};
+    }
     // case 'clear-deselect-list': {
     //   return {...state, deselectedCells: []}
     // }
@@ -95,12 +95,12 @@ function spreadsheetReducer(state, action) {
     //   return {...state, cells: newCells }
     // }
     case 'modify-current-selection-cell-range': {
-      const {currentCellSelectionRange, activeCellCoords} = state;
+      const {currentCellSelectionRange, activeCell} = state;
       return currentCellSelectionRange ? {
         ...state,
         currentCellSelectionRange: getRangeBoundaries({
-          startRangeRow: activeCellCoords.row,
-          startRangeColumn: activeCellCoords.column,
+          startRangeRow: activeCell.row,
+          startRangeColumn: activeCell.column,
           endRangeRow,
           endRangeColumn,
           state
