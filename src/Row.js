@@ -4,20 +4,22 @@ import ActiveCell from './ActiveCell';
 function RowNumberCell({rowIndex}) { return <td>{rowIndex + 1}</td> }
 
 function SelectedCell({changeActiveCell, finishCurrentSelectionRange, modifyCellSelectionRange, row, rowIndex, column, columnIndex}) {
-  return <td
-  key={`row${rowIndex}col${columnIndex}`}
-  style={{backgroundColor: '#f0f0f0'}}
-  onMouseDown={(event) => {
-    changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
-  }}
-  onMouseMove={(event) => {
-    if (typeof event.buttons === 'number' && event.buttons > 0) {
-      modifyCellSelectionRange(rowIndex, columnIndex, true);
-    }
-  }}
-  onMouseUp={() => {finishCurrentSelectionRange()}}
-  >
-  {row[column.id]}</td>
+
+  return (
+    <td
+      key={`row${rowIndex}col${columnIndex}`}
+      style={{backgroundColor: '#f0f0f0'}}
+      onMouseDown={(event) => {
+        changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
+      }}
+      onMouseEnter={(event) => {
+        if (typeof event.buttons === 'number' && event.buttons > 0) {
+          modifyCellSelectionRange(rowIndex, columnIndex, true);
+        }
+      }}
+      onMouseUp={() => {finishCurrentSelectionRange()}}
+    >{row[column.id]}</td>
+  )
 }
 
 function NormalCell({changeActiveCell, finishCurrentSelectionRange, modifyCellSelectionRange, row, rowIndex, column, columnIndex}) {
@@ -27,7 +29,7 @@ function NormalCell({changeActiveCell, finishCurrentSelectionRange, modifyCellSe
     onMouseDown={(event) => {
       changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
     }}
-    onMouseMove={(event) => {
+    onMouseEnter={(event) => {
       if (typeof event.buttons === 'number' && event.buttons > 0) {
         modifyCellSelectionRange(rowIndex, columnIndex, true);
       }
@@ -40,6 +42,7 @@ function NormalCell({changeActiveCell, finishCurrentSelectionRange, modifyCellSe
 export default function Row({
   activeCell,
   cellCount,
+  columnPositions,
   columns,
   changeActiveCell,
   createNewColumns,
@@ -52,6 +55,9 @@ export default function Row({
   rows,
   rowIndex,
 }) {
+  columns.sort((colA, colB) => {
+    return columnPositions[colA.id] - columnPositions[colB.id];
+  });
   return (
     <tr>
       {Array(cellCount).fill(undefined).map((_, columnIndex) => {
@@ -77,16 +83,17 @@ export default function Row({
               value={column ? row[column.id] : ''}
             />
           )
-        } else if (isSelectedCell(rowIndex, columnIndex)) {
+        } else if (column && isSelectedCell(rowIndex, columnIndex)) {
           return (
             <SelectedCell
               key={`Row${rowIndex}Col${columnIndex}`}
               changeActiveCell={changeActiveCell}
+              column={column}
+              columnIndex={columnIndex}
               finishCurrentSelectionRange={finishCurrentSelectionRange}
               modifyCellSelectionRange={modifyCellSelectionRange}
-              row={row} column={column}
+              row={row}
               rowIndex={rowIndex}
-              columnIndex={columnIndex}
             />
           )
         } else if (column) {

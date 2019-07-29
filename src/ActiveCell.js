@@ -44,15 +44,15 @@ function ActiveCell({
         event.preventDefault();
         const { row, column } = cursorKeyToRowColMapper[event.key](rowIndex, columnIndex, numberOfRows);
         if (event.shiftKey) {
-          dispatchSpreadsheetAction({type: 'add-cellID-to-cell-selection', row, column});
+          dispatchSpreadsheetAction({type: 'ADD_CELL_TO_SELECTIONS', row, column});
         } else {
           updateCell(event);
         }
         changeActiveCell(row, column, event.ctrlKey || event.shiftKey || event.metaKey);
         break;
-      // case 'Backspace':
-      //   dispatchSpreadsheetAction({type: 'delete-values'})
-      //   break;
+      case 'Backspace':
+        dispatchSpreadsheetAction({type: 'DELETE_VALUES'})
+        break;
       default:
         break;
     }
@@ -74,7 +74,7 @@ function ActiveCell({
       dispatchSpreadsheetAction({type: 'updateCell', row: someRow, column: someColumn, cellValue: event.target.value});
     }
   }
-  return (<td><input ref={inputEl} type="text" value={value} onChange={updateCell} onKeyDown={onKeyDown}/></td>);
+  return (<td><input ref={inputEl} type="text" value={value} onKeyDown={onKeyDown} onChange={updateCell}/></td>);
 }
 
 export default ActiveCell;

@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React from 'react';
 // import { Parser } from 'hot-formula-parser';
 import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
@@ -48,7 +48,7 @@ function BlankClickableRow({activeCell, finishCurrentSelectionRange, modifyCellS
             onMouseDown={(event) => {
               changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
             }}
-            onMouseMove={(event) => {
+            onMouseEnter={(event) => {
             if (typeof event.buttons === 'number' && event.buttons > 0) {
               modifyCellSelectionRange(rowIndex, columnIndex, true);
             }
@@ -65,10 +65,10 @@ function BlankClickableRow({activeCell, finishCurrentSelectionRange, modifyCellS
 function Spreadsheet({eventBus}) {
   const {
     activeCell,
+    columnPositions,
     columns,
     cellSelectionRanges,
     currentCellSelectionRange,
-    multiCellSelectionIDs,
     rowPositions,
     rows,
    } = useSpreadsheetState();
@@ -79,9 +79,8 @@ function Spreadsheet({eventBus}) {
       const {top, right, bottom, left} = value;
       return row >= top && row <= bottom && column >= left && column <= right;
     }
-    const cellIDFoundinSelection = multiCellSelectionIDs.some(cell => row === cell.row && column === cell.column);
     const withinASelectedRange = cellSelectionRanges.some(withinRange);
-    return cellIDFoundinSelection || withinASelectedRange || (currentCellSelectionRange && withinRange(currentCellSelectionRange));
+    return withinASelectedRange || (currentCellSelectionRange && withinRange(currentCellSelectionRange));
   }
 
   // useEffect(() => {
@@ -111,13 +110,13 @@ function Spreadsheet({eventBus}) {
             activeCell={activeCell}
             cellCount={visibleColumnCount + 1}
             changeActiveCell={changeActiveCell}
+            columnPositions={columnPositions}
             columns={columns}
             createNewColumns={createNewColumns}
             createNewRows={createNewRows}
             isSelectedCell={isSelectedCell}
             modifyCellSelectionRange={modifyCellSelectionRange}
             finishCurrentSelectionRange={finishCurrentSelectionRange}
-            multiCellSelectionIDs={multiCellSelectionIDs}
             numberOfRows={rowCount}
             row={rows.find(({id}) => id === rowIDs[index])}
             rowIDs={rowIDs}
@@ -154,7 +153,7 @@ function Spreadsheet({eventBus}) {
   }
 
   function changeActiveCell(row, column, selectionActive) {
-    dispatchSpreadsheetAction({type: 'activateCell', row, column, selectionActive});
+    dispatchSpreadsheetAction({type: 'ACTIVATE_CELL', row, column, selectionActive});
   }
 
   function modifyCellSelectionRange(row, col) {
