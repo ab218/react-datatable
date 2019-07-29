@@ -5,6 +5,14 @@ import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvid
 import ColResizer from './ColResizer';
 import ActiveCell from './ActiveCell';
 import Row from './Row';
+import {
+  ACTIVATE_CELL,
+  ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS,
+  CREATE_COLUMNS,
+  CREATE_ROWS,
+  MODIFY_CURRENT_SELECTION_CELL_RANGE,
+  SELECT_CELL,
+} from './constants'
 
 // function isFormula(value) {
 //   return typeof value === 'string' && value.charAt(0) === '=';
@@ -21,7 +29,7 @@ function FormulaBar() {
 
 function BlankRow({cellCount}) { return <tr>{Array(cellCount).fill(undefined).map((_, columnIndex) => <td key={'blankcol' + columnIndex}></td>)}</tr> }
 
-function BlankClickableRow({activeCell, finishCurrentSelectionRange, modifyCellSelectionRange, row, cellCount, changeActiveCell, createNewRows, createNewColumns, rowIndex, rows, numberOfRows, columns}) {
+function BlankClickableRow({activeCell, finishCurrentSelectionRange, modifyCellSelectionRange, row, selectCell, cellCount, changeActiveCell, createNewRows, createNewColumns, rowIndex, rows, numberOfRows, columns}) {
   return (
     <tr>
       {Array(cellCount).fill(undefined).map((_, columnIndex) => {
@@ -46,7 +54,7 @@ function BlankClickableRow({activeCell, finishCurrentSelectionRange, modifyCellS
         return (
           <td
             onMouseDown={(event) => {
-              changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
+              selectCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
             }}
             onMouseEnter={(event) => {
             if (typeof event.buttons === 'number' && event.buttons > 0) {
@@ -122,6 +130,7 @@ function Spreadsheet({eventBus}) {
             rowIDs={rowIDs}
             rowIndex={index}
             rows={index - rowCount + 1}
+            selectCell={selectCell}
           />
         )
       } else if (rowIDs[index-1]) {
@@ -139,29 +148,34 @@ function Spreadsheet({eventBus}) {
             numberOfRows={rowCount}
             rowIndex={index}
             rows={index - rowCount + 1}
+            selectCell={selectCell}
           />
         )
       } else { return <BlankRow key={'BlankRow' + index} cellCount={visibleColumnCount + 1} />}
   });
 
   function createNewRows(rowCount) {
-    dispatchSpreadsheetAction({type: 'createRows', rowCount});
+    dispatchSpreadsheetAction({type: CREATE_ROWS, rowCount});
   }
 
   function createNewColumns(columnCount) {
-    dispatchSpreadsheetAction({type: 'createColumns', columnCount});
+    dispatchSpreadsheetAction({type: CREATE_COLUMNS, columnCount});
   }
 
   function changeActiveCell(row, column, selectionActive) {
-    dispatchSpreadsheetAction({type: 'ACTIVATE_CELL', row, column, selectionActive});
+    dispatchSpreadsheetAction({type: ACTIVATE_CELL, row, column, selectionActive});
+  }
+
+  function selectCell(row, column, selectionActive) {
+    dispatchSpreadsheetAction({type: SELECT_CELL, row, column, selectionActive});
   }
 
   function modifyCellSelectionRange(row, col) {
-    dispatchSpreadsheetAction({type: 'modify-current-selection-cell-range', endRangeRow: row, endRangeColumn: col});
+    dispatchSpreadsheetAction({type: MODIFY_CURRENT_SELECTION_CELL_RANGE, endRangeRow: row, endRangeColumn: col});
   }
 
   function finishCurrentSelectionRange() {
-    dispatchSpreadsheetAction({type: 'add-current-selection-to-cell-selections'});
+    dispatchSpreadsheetAction({type: ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS});
   }
 
   return (

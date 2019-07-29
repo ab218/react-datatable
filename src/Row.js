@@ -22,12 +22,14 @@ function SelectedCell({changeActiveCell, finishCurrentSelectionRange, modifyCell
   )
 }
 
-function NormalCell({changeActiveCell, finishCurrentSelectionRange, modifyCellSelectionRange, row, rowIndex, column, columnIndex}) {
+function NormalCell({selectCell, finishCurrentSelectionRange, modifyCellSelectionRange, row, rowIndex, column, columnIndex}) {
   return (
   <td
     key={`row${rowIndex}col${columnIndex}`}
     onMouseDown={(event) => {
-      changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
+      // prevent text from being highlighted
+      event.preventDefault();
+      selectCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
     }}
     onMouseEnter={(event) => {
       if (typeof event.buttons === 'number' && event.buttons > 0) {
@@ -54,6 +56,7 @@ export default function Row({
   row,
   rows,
   rowIndex,
+  selectCell,
 }) {
   columns.sort((colA, colB) => {
     return columnPositions[colA.id] - columnPositions[colB.id];
@@ -101,12 +104,13 @@ export default function Row({
             <NormalCell
               key={`Row${rowIndex}Col${columnIndex}`}
               changeActiveCell={changeActiveCell}
+              column={column}
+              columnIndex={columnIndex}
               finishCurrentSelectionRange={finishCurrentSelectionRange}
               modifyCellSelectionRange={modifyCellSelectionRange}
               row={row}
-              column={column}
               rowIndex={rowIndex}
-              columnIndex={columnIndex}
+              selectCell={selectCell}
             />
           )
         } else {

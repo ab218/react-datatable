@@ -1,5 +1,10 @@
 import React, { useRef, useEffect } from 'react';
 import { useSpreadsheetDispatch } from './SpreadsheetProvider';
+import {
+  ADD_CELL_TO_SELECTIONS,
+  DELETE_VALUES,
+  UPDATE_CELL
+} from './constants'
 
 const cursorKeyToRowColMapper = {
   ArrowUp: function (row, column) {
@@ -44,14 +49,14 @@ function ActiveCell({
         event.preventDefault();
         const { row, column } = cursorKeyToRowColMapper[event.key](rowIndex, columnIndex, numberOfRows);
         if (event.shiftKey) {
-          dispatchSpreadsheetAction({type: 'ADD_CELL_TO_SELECTIONS', row, column});
+          dispatchSpreadsheetAction({type: ADD_CELL_TO_SELECTIONS, row, column});
         } else {
           updateCell(event);
         }
         changeActiveCell(row, column, event.ctrlKey || event.shiftKey || event.metaKey);
         break;
       case 'Backspace':
-        dispatchSpreadsheetAction({type: 'DELETE_VALUES'})
+        dispatchSpreadsheetAction({type: DELETE_VALUES})
         break;
       default:
         break;
@@ -71,7 +76,7 @@ function ActiveCell({
       if (columnIndex > columns.length) {
         createNewColumns(columnIndex - columns.length);
       }
-      dispatchSpreadsheetAction({type: 'updateCell', row: someRow, column: someColumn, cellValue: event.target.value});
+      dispatchSpreadsheetAction({type: UPDATE_CELL, row: someRow, column: someColumn, cellValue: event.target.value});
     }
   }
   return (<td><input ref={inputEl} type="text" value={value} onKeyDown={onKeyDown} onChange={updateCell}/></td>);

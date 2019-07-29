@@ -1,5 +1,17 @@
 import React, { useReducer } from 'react';
 import './App.css';
+import {
+  ACTIVATE_CELL,
+  ADD_CELL_TO_SELECTIONS,
+  ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS,
+  CREATE_COLUMNS,
+  CREATE_ROWS,
+  DELETE_VALUES,
+  MODIFY_CURRENT_SELECTION_CELL_RANGE,
+  SET_ROW_POSITION,
+  SELECT_CELL,
+  UPDATE_CELL
+} from './constants'
 
 const SpreadsheetStateContext = React.createContext();
 const SpreadsheetDispatchContext = React.createContext();
@@ -35,31 +47,39 @@ function spreadsheetReducer(state, action) {
    } = action;
   // console.log('dispatched:', type, 'with action:', action);
   switch (type) {
-    case 'ACTIVATE_CELL': {
+    case SELECT_CELL: {
+      const {cellSelectionRanges = []} = state;
+      // track lastSelection to know where to begin range selection on drag
+      const lastSelection = {row, column};
+      const selectedCell = {top: row, bottom: row, left: column, right: column};
+      const addSelectedCellToSelectionArray = cellSelectionRanges.concat(cellSelectionRanges.some(cell => (cell.top === selectedCell.top) && (cell.right === selectedCell.right)) ? [] : selectedCell);
+      return {...state, activeCell: null, lastSelection, cellSelectionRanges: selectionActive ? addSelectedCellToSelectionArray : [], currentCellSelectionRange: selectedCell }
+    }
+    case ACTIVATE_CELL: {
       const {cellSelectionRanges = []} = state;
       const activeCell = {row, column};
       const selectedCell = {top: row, bottom: row, left: column, right: column};
       const addActiveCellToSelection = cellSelectionRanges.concat(cellSelectionRanges.some(cell => (cell.top === selectedCell.top) && (cell.right === selectedCell.right)) ? [] : selectedCell);
       return {...state, activeCell, cellSelectionRanges: selectionActive ? addActiveCellToSelection : [], currentCellSelectionRange: selectedCell }
     }
-    case 'ADD_CELL_TO_SELECTIONS': {
+    case ADD_CELL_TO_SELECTIONS: {
       const {cellSelectionRanges = []} = state;
       const newSelection = {top: row, bottom: row, left: column, right: column};
       return {...state, cellSelectionRanges: cellSelectionRanges.concat(cellSelectionRanges.some(cell => (cell.top === newSelection.top) && (cell.left === newSelection.left)) ? [] : newSelection)};
     }
-    // case 'add-cell-to-deselect-list': {
+    // case ADD_CELL_TO_DESELECT_LIST: {
     //   const { activeCell, deselectedCells: oldDeselectedCells = [] } = state;
     //   const deselectedCells = [...new Set(oldDeselectedCells.concat(activeCell))];
     //   return {...state, deselectedCells };
     // }
-    case 'add-current-selection-to-cell-selections': {
+    case ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS: {
       const {currentCellSelectionRange, cellSelectionRanges} = state;
       return {...state, cellSelectionRanges: cellSelectionRanges.concat(currentCellSelectionRange), currentCellSelectionRange: null};
     }
-    // case 'clear-deselect-list': {
+    // case CLEAR_DESELECT_LIST: {
     //   return {...state, deselectedCells: []}
     // }
-    case 'createColumns': {
+    case CREATE_COLUMNS: {
       const newColumns = Array(columnCount).fill(undefined).map(_ => {
         const id = createRandomID();
         return {id, type: 'String', label: `Column ${id}`};
@@ -71,7 +91,7 @@ function spreadsheetReducer(state, action) {
       }, state.columnPositions);
       return {...state, columns, columnPositions};
     }
-    case 'createRows': {
+    case CREATE_ROWS: {
       const newRows = Array(rowCount).fill(undefined).map(_ => {
         return {id: createRandomID()};
       });
@@ -80,7 +100,7 @@ function spreadsheetReducer(state, action) {
       }, state.rowPositions);
       return {...state, rows: state.rows.concat(newRows), rowPositions: newRowPositions};
     }
-    case 'DELETE_VALUES': {
+    case DELETE_VALUES: {
       const { cellSelectionRanges, columnPositions, rowPositions } = state;
       console.log(state)
 
@@ -108,23 +128,23 @@ function spreadsheetReducer(state, action) {
       }, state.rows);
       return {...state, rows: newRows };
     }
-    case 'modify-current-selection-cell-range': {
-      const {currentCellSelectionRange, activeCell} = state;
+    case MODIFY_CURRENT_SELECTION_CELL_RANGE: {
+      const {currentCellSelectionRange, lastSelection} = state;
       return currentCellSelectionRange ? {
         ...state,
         currentCellSelectionRange: getRangeBoundaries({
-          startRangeRow: activeCell.row,
-          startRangeColumn: activeCell.column,
+          startRangeRow: lastSelection.row,
+          startRangeColumn: lastSelection.column,
           endRangeRow,
           endRangeColumn,
           state
         })
       } : state;
     }
-    case 'setRowPosition': {
+    case SET_ROW_POSITION: {
       return {...state, rowPositions: {...state.rowPositions, [action.rowID]: action.row} };
     }
-    case 'updateCell': {
+    case UPDATE_CELL: {
       const { rows, columns } = state;
       const newRows = rows.slice();
       const {id: columnID} = column || columns[columns.length - 1];
@@ -163,6 +183,7 @@ export function SpreadsheetProvider({children}) {
     currentCellSelectionRange: null,
     columns: [{id: 'name321', type: 'String', label: 'Name'}, {id: 'age123', type: 'Number', label: 'Age'}, {id: 'gender456', type: 'String', label: 'Gender'}],
     columnPositions: {'name321': 0, 'age123': 1, 'gender456': 2},
+    lastSelection: {row: 1, column: 1},
     rowPositions: {"HITFiTNG8l": 1, "r0aWTL1Fae": 0},
     rows: [{id: "HITFiTNG8l", age123: 25, gender456: 'M', name321: 'John Smith'}, {id: "r0aWTL1Fae", age123: 24, gender456: 'F', name321: 'Jane Smith'}],
   });
