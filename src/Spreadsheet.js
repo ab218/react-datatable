@@ -12,6 +12,7 @@ import {
   CREATE_ROWS,
   MODIFY_CURRENT_SELECTION_CELL_RANGE,
   SELECT_CELL,
+  ACTIVATE_SELECTED_CELL,
 } from './constants'
 
 // function isFormula(value) {
@@ -77,6 +78,7 @@ function Spreadsheet({eventBus}) {
     columns,
     cellSelectionRanges,
     currentCellSelectionRange,
+    newValue,
     rowPositions,
     rows,
    } = useSpreadsheetState();
@@ -90,12 +92,6 @@ function Spreadsheet({eventBus}) {
     const withinASelectedRange = cellSelectionRanges.some(withinRange);
     return withinASelectedRange || (currentCellSelectionRange && withinRange(currentCellSelectionRange));
   }
-
-  // useEffect(() => {
-  //   console.log(rows)
-  //   console.log(columns)
-  //   console.log(rowPositions)
-  // })
 
   const rowMap = Object.entries(rowPositions).reduce((acc, [id, position]) => {
     return {...acc, [position]: id};
@@ -115,6 +111,7 @@ function Spreadsheet({eventBus}) {
         return (
           <Row
             key={'Row' + index}
+            activateSelectedCell={activateSelectedCell}
             activeCell={activeCell}
             cellCount={visibleColumnCount + 1}
             changeActiveCell={changeActiveCell}
@@ -125,6 +122,7 @@ function Spreadsheet({eventBus}) {
             isSelectedCell={isSelectedCell}
             modifyCellSelectionRange={modifyCellSelectionRange}
             finishCurrentSelectionRange={finishCurrentSelectionRange}
+            newValue={newValue}
             numberOfRows={rowCount}
             row={rows.find(({id}) => id === rowIDs[index])}
             rowIDs={rowIDs}
@@ -153,6 +151,10 @@ function Spreadsheet({eventBus}) {
         )
       } else { return <BlankRow key={'BlankRow' + index} cellCount={visibleColumnCount + 1} />}
   });
+
+  function activateSelectedCell(row, column, newValue) {
+    dispatchSpreadsheetAction({type: ACTIVATE_SELECTED_CELL, row, column, newValue})
+  }
 
   function createNewRows(rowCount) {
     dispatchSpreadsheetAction({type: CREATE_ROWS, rowCount});

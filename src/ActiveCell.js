@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { useSpreadsheetDispatch } from './SpreadsheetProvider';
 import {
   ADD_CELL_TO_SELECTIONS,
-  DELETE_VALUES,
+  // DELETE_VALUES,
   UPDATE_CELL
 } from './constants'
 
@@ -30,11 +30,12 @@ function ActiveCell({
   createNewColumns,
   createNewRows,
   numberOfRows,
-  value,
+  newValue,
   rowIndex,
   rows,
   column: someColumn,
   row: someRow,
+  value,
 }) {
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
@@ -44,19 +45,12 @@ function ActiveCell({
       // TODO: implement key shortcuts from: https://www.ddmcomputing.com/excel/keys/xlsk05.html
       case 'ArrowDown':
       case 'ArrowUp':
-      case 'ArrowLeft':
-      case 'ArrowRight':
         event.preventDefault();
         const { row, column } = cursorKeyToRowColMapper[event.key](rowIndex, columnIndex, numberOfRows);
         if (event.shiftKey) {
           dispatchSpreadsheetAction({type: ADD_CELL_TO_SELECTIONS, row, column});
-        } else {
-          updateCell(event);
         }
         changeActiveCell(row, column, event.ctrlKey || event.shiftKey || event.metaKey);
-        break;
-      case 'Backspace':
-        dispatchSpreadsheetAction({type: DELETE_VALUES})
         break;
       default:
         break;
@@ -66,10 +60,13 @@ function ActiveCell({
   const inputEl = useRef(null);
   useEffect(() => {
     inputEl.current.focus();
+    if (newValue !== null) {
+      dispatchSpreadsheetAction({type: UPDATE_CELL, row: someRow, column: someColumn, cellValue: newValue});
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   function updateCell(event) {
-    if (event.target.value) {
       if (rows === 1 ) {
         createNewRows(rows);
       }
@@ -77,9 +74,19 @@ function ActiveCell({
         createNewColumns(columnIndex - columns.length);
       }
       dispatchSpreadsheetAction({type: UPDATE_CELL, row: someRow, column: someColumn, cellValue: event.target.value});
-    }
   }
-  return (<td><input ref={inputEl} type="text" value={value} onKeyDown={onKeyDown} onChange={updateCell}/></td>);
+
+  return (
+  <td>
+    <input
+      ref={inputEl}
+      type="text"
+      value={newValue || value}
+      onKeyDown={onKeyDown}
+      onChange={updateCell}
+    />
+  </td>
+  );
 }
 
 export default ActiveCell;

@@ -2,6 +2,7 @@ import React, { useReducer } from 'react';
 import './App.css';
 import {
   ACTIVATE_CELL,
+  ACTIVATE_SELECTED_CELL,
   ADD_CELL_TO_SELECTIONS,
   ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS,
   CREATE_COLUMNS,
@@ -10,6 +11,7 @@ import {
   MODIFY_CURRENT_SELECTION_CELL_RANGE,
   SET_ROW_POSITION,
   SELECT_CELL,
+  TRANSLATE_SELECTED_CELL,
   UPDATE_CELL
 } from './constants'
 
@@ -38,15 +40,26 @@ function spreadsheetReducer(state, action) {
     cellValue,
     column,
     columnCount,
+    columnIndex,
     endRangeRow,
     endRangeColumn,
+    newValue,
     row,
+    rowIndex,
     rowCount,
     selectionActive,
     type,
    } = action;
   // console.log('dispatched:', type, 'with action:', action);
   switch (type) {
+    case TRANSLATE_SELECTED_CELL: {
+      return {...state}
+    }
+    // On text input of a selected cell, value is cleared, cell gets new value and cell is activated
+    case ACTIVATE_SELECTED_CELL: {
+      const activeCell = {row: rowIndex, column: columnIndex};
+      return {...state, activeCell, newValue}
+    }
     case SELECT_CELL: {
       const {cellSelectionRanges = []} = state;
       // track lastSelection to know where to begin range selection on drag
@@ -67,18 +80,10 @@ function spreadsheetReducer(state, action) {
       const newSelection = {top: row, bottom: row, left: column, right: column};
       return {...state, cellSelectionRanges: cellSelectionRanges.concat(cellSelectionRanges.some(cell => (cell.top === newSelection.top) && (cell.left === newSelection.left)) ? [] : newSelection)};
     }
-    // case ADD_CELL_TO_DESELECT_LIST: {
-    //   const { activeCell, deselectedCells: oldDeselectedCells = [] } = state;
-    //   const deselectedCells = [...new Set(oldDeselectedCells.concat(activeCell))];
-    //   return {...state, deselectedCells };
-    // }
     case ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS: {
       const {currentCellSelectionRange, cellSelectionRanges} = state;
       return {...state, cellSelectionRanges: cellSelectionRanges.concat(currentCellSelectionRange), currentCellSelectionRange: null};
     }
-    // case CLEAR_DESELECT_LIST: {
-    //   return {...state, deselectedCells: []}
-    // }
     case CREATE_COLUMNS: {
       const newColumns = Array(columnCount).fill(undefined).map(_ => {
         const id = createRandomID();
@@ -149,8 +154,9 @@ function spreadsheetReducer(state, action) {
       const newRows = rows.slice();
       const {id: columnID} = column || columns[columns.length - 1];
       const rowCopy = Object.assign({}, row || rows[rows.length - 1], {[columnID]: cellValue});
-      const changedRows = newRows.filter(newRow => newRow.id !== rowCopy.id).concat(rowCopy)
-      return  {...state, rows: changedRows };
+      const changedRows = newRows.filter(newRow => newRow.id !== rowCopy.id).concat(rowCopy);
+
+      return  {...state, rows: changedRows, newValue: null };
     }
     default: {
       throw new Error(`Unhandled action type: ${type}`);

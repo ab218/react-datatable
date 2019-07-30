@@ -1,48 +1,10 @@
 import React from 'react';
 import ActiveCell from './ActiveCell';
-
-function RowNumberCell({rowIndex}) { return <td>{rowIndex + 1}</td> }
-
-function SelectedCell({changeActiveCell, finishCurrentSelectionRange, modifyCellSelectionRange, row, rowIndex, column, columnIndex}) {
-
-  return (
-    <td
-      key={`row${rowIndex}col${columnIndex}`}
-      style={{backgroundColor: '#f0f0f0'}}
-      onMouseDown={(event) => {
-        changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
-      }}
-      onMouseEnter={(event) => {
-        if (typeof event.buttons === 'number' && event.buttons > 0) {
-          modifyCellSelectionRange(rowIndex, columnIndex, true);
-        }
-      }}
-      onMouseUp={() => {finishCurrentSelectionRange()}}
-    >{row[column.id]}</td>
-  )
-}
-
-function NormalCell({selectCell, finishCurrentSelectionRange, modifyCellSelectionRange, row, rowIndex, column, columnIndex}) {
-  return (
-  <td
-    key={`row${rowIndex}col${columnIndex}`}
-    onMouseDown={(event) => {
-      // prevent text from being highlighted
-      event.preventDefault();
-      selectCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
-    }}
-    onMouseEnter={(event) => {
-      if (typeof event.buttons === 'number' && event.buttons > 0) {
-        modifyCellSelectionRange(rowIndex, columnIndex, true);
-      }
-    }}
-    onMouseUp={() => {finishCurrentSelectionRange()}}
-    >
-  {row[column.id]}</td>
-  )}
+import { NormalCell, RowNumberCell, SelectedCell } from './Cell';
 
 export default function Row({
   activeCell,
+  activateSelectedCell,
   cellCount,
   columnPositions,
   columns,
@@ -52,6 +14,7 @@ export default function Row({
   finishCurrentSelectionRange,
   isSelectedCell,
   modifyCellSelectionRange,
+  newValue,
   numberOfRows,
   row,
   rows,
@@ -79,17 +42,19 @@ export default function Row({
               columns={columns}
               createNewColumns={createNewColumns}
               createNewRows={createNewRows}
+              newValue={newValue}
               numberOfRows={numberOfRows}
               row={row}
               rowIndex={rowIndex}
               rows={rows}
-              value={column ? row[column.id] : ''}
+              value={newValue || column ? row[column.id] : ''}
             />
           )
         } else if (column && isSelectedCell(rowIndex, columnIndex)) {
           return (
             <SelectedCell
               key={`Row${rowIndex}Col${columnIndex}`}
+              activateSelectedCell={activateSelectedCell}
               changeActiveCell={changeActiveCell}
               column={column}
               columnIndex={columnIndex}
