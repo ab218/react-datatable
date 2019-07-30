@@ -1,21 +1,50 @@
 import React, {useEffect} from 'react';
 import { useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { ACTIVATE_SELECTED_CELL, DELETE_VALUES } from './constants'
+import { ACTIVATE_SELECTED_CELL, DELETE_VALUES, TRANSLATE_SELECTED_CELL } from './constants'
 
 export function RowNumberCell({rowIndex}) { return <td>{rowIndex + 1}</td> }
 
-export function SelectedCell({changeActiveCell, finishCurrentSelectionRange, modifyCellSelectionRange, row, rowIndex, column, columnIndex}) {
+export function SelectedCell({changeActiveCell, finishCurrentSelectionRange, modifyCellSelectionRange, numberOfRows, row, rowIndex, column, columnIndex}) {
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+
+  const cursorKeyToRowColMapper = {
+    ArrowUp: function (row, column) {
+      // rows should never go less than index 0 (top row header)
+      return {row: Math.max(row - 1, 0), column};
+    },
+    ArrowDown: function (row, column, numberOfRows) {
+      return {row: Math.min(row + 1, numberOfRows), column};
+    },
+    ArrowLeft: function (row, column) {
+      // Column should be minimum of 1 due to side row header
+      return {row, column: Math.max(column - 1, 1)};
+    },
+    ArrowRight: function (row, column) {
+      return {row, column: column + 1};
+    }
+  };
 
   useEffect(() => {
     function onKeyDown(event) {
-      if (event.key === 'Backspace') {
-        dispatchSpreadsheetAction({type: DELETE_VALUES})
-        // else if the key pressed is not a non-character key (arrow key etc)
-      } else if (event.key.length === 1) {
-        dispatchSpreadsheetAction({type: ACTIVATE_SELECTED_CELL, rowIndex, columnIndex, newValue: event.key})
-      } else if (event.key === 'ArrowLeft') {
-        console.log('arrow left')
+      // if the key pressed is not a non-character key (arrow key etc)
+      if (event.key.length === 1) {
+        dispatchSpreadsheetAction({type: ACTIVATE_SELECTED_CELL, rowIndex, columnIndex, newValue: event.key});
+      } else {
+        switch (event.key) {
+          case 'ArrowDown':
+          case 'ArrowUp':
+          case 'ArrowLeft':
+          case 'ArrowRight':
+            event.preventDefault();
+            const { row, column } = cursorKeyToRowColMapper[event.key](rowIndex, columnIndex, numberOfRows);
+            dispatchSpreadsheetAction({type: TRANSLATE_SELECTED_CELL, rowIndex: row, columnIndex: column});
+            break;
+          case 'Backspace':
+            dispatchSpreadsheetAction({type: DELETE_VALUES});
+            break;
+          default:
+            break;
+        }
       }
     }
     document.addEventListener('keydown', onKeyDown);
@@ -37,7 +66,7 @@ export function SelectedCell({changeActiveCell, finishCurrentSelectionRange, mod
         }
       }}
       onMouseUp={() => {finishCurrentSelectionRange()}}
-    >{row[column.id]}</td>
+    >{row ? row[column.id] : ''}</td>
   )
 }
 

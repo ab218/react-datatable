@@ -5,6 +5,7 @@ import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvid
 import ColResizer from './ColResizer';
 import ActiveCell from './ActiveCell';
 import Row from './Row';
+import { SelectedCell } from './Cell';
 import {
   ACTIVATE_CELL,
   ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS,
@@ -30,7 +31,7 @@ function FormulaBar() {
 
 function BlankRow({cellCount}) { return <tr>{Array(cellCount).fill(undefined).map((_, columnIndex) => <td key={'blankcol' + columnIndex}></td>)}</tr> }
 
-function BlankClickableRow({activeCell, finishCurrentSelectionRange, modifyCellSelectionRange, row, selectCell, cellCount, changeActiveCell, createNewRows, createNewColumns, rowIndex, rows, numberOfRows, columns}) {
+function BlankClickableRow({activeCell, activateSelectedCell, finishCurrentSelectionRange, isSelectedCell, modifyCellSelectionRange, row, selectCell, cellCount, changeActiveCell, createNewRows, createNewColumns, rowIndex, rows, numberOfRows, columns}) {
   return (
     <tr>
       {Array(cellCount).fill(undefined).map((_, columnIndex) => {
@@ -49,6 +50,21 @@ function BlankClickableRow({activeCell, finishCurrentSelectionRange, modifyCellS
               row={row}
               rowIndex={rowIndex}
               rows={rows}
+            />
+          )
+        } else if (column && isSelectedCell(rowIndex, columnIndex)) {
+          return (
+            <SelectedCell
+              key={`Row${rowIndex}Col${columnIndex}`}
+              activateSelectedCell={activateSelectedCell}
+              changeActiveCell={changeActiveCell}
+              column={column}
+              columnIndex={columnIndex}
+              finishCurrentSelectionRange={finishCurrentSelectionRange}
+              modifyCellSelectionRange={modifyCellSelectionRange}
+              numberOfRows={numberOfRows}
+              row={row}
+              rowIndex={rowIndex}
             />
           )
         }
@@ -137,11 +153,13 @@ function Spreadsheet({eventBus}) {
             key={'Row' + index}
             cellCount={visibleColumnCount + 1}
             activeCell={activeCell}
+            activateSelectedCell={activateSelectedCell}
             changeActiveCell={changeActiveCell}
             columns={columns}
             createNewRows={createNewRows}
             createNewColumns={createNewColumns}
             finishCurrentSelectionRange={finishCurrentSelectionRange}
+            isSelectedCell={isSelectedCell}
             modifyCellSelectionRange={modifyCellSelectionRange}
             numberOfRows={rowCount}
             rowIndex={index}

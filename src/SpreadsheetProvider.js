@@ -53,7 +53,8 @@ function spreadsheetReducer(state, action) {
   // console.log('dispatched:', type, 'with action:', action);
   switch (type) {
     case TRANSLATE_SELECTED_CELL: {
-      return {...state}
+      const newCellSelectionRanges = [{top: rowIndex, bottom: rowIndex, left: columnIndex, right: columnIndex}];
+      return {...state, cellSelectionRanges: newCellSelectionRanges}
     }
     // On text input of a selected cell, value is cleared, cell gets new value and cell is activated
     case ACTIVATE_SELECTED_CELL: {

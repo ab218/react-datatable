@@ -60,6 +60,7 @@ export default function Row({
               columnIndex={columnIndex}
               finishCurrentSelectionRange={finishCurrentSelectionRange}
               modifyCellSelectionRange={modifyCellSelectionRange}
+              numberOfRows={numberOfRows}
               row={row}
               rowIndex={rowIndex}
             />
