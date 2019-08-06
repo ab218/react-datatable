@@ -2,8 +2,6 @@ import React, { useRef, useEffect } from 'react';
 import { useSpreadsheetDispatch } from './SpreadsheetProvider';
 import {
   ADD_CELL_TO_SELECTIONS,
-  // DELETE_VALUES,
-  UPDATE_CELL
 } from './constants'
 
 const cursorKeyToRowColMapper = {
@@ -14,27 +12,21 @@ const cursorKeyToRowColMapper = {
   ArrowDown: function (row, column, numberOfRows) {
     return {row: Math.min(row + 1, numberOfRows), column};
   },
-  ArrowLeft: function (row, column) {
-    // Column should be minimum of 1 due to side row header
-    return {row, column: Math.max(column - 1, 1)};
-  },
-  ArrowRight: function (row, column) {
-    return {row, column: column + 1};
-  }
+  // ArrowLeft: function (row, column) {
+  //   // Column should be minimum of 1 due to side row header
+  //   return {row, column: Math.max(column - 1, 1)};
+  // },
+  // ArrowRight: function (row, column) {
+  //   return {row, column: column + 1};
+  // }
 };
 
 function ActiveCell({
   changeActiveCell,
-  columns,
   columnIndex,
-  createNewColumns,
-  createNewRows,
   numberOfRows,
-  newValue,
   rowIndex,
-  rows,
-  column: someColumn,
-  row: someRow,
+  updateCell,
   value,
 }) {
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
@@ -60,30 +52,16 @@ function ActiveCell({
   const inputEl = useRef(null);
   useEffect(() => {
     inputEl.current.focus();
-    if (newValue !== null) {
-      dispatchSpreadsheetAction({type: UPDATE_CELL, row: someRow, column: someColumn, cellValue: newValue});
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  function updateCell(event) {
-      if (rows === 1 ) {
-        createNewRows(rows);
-      }
-      if (columnIndex > columns.length) {
-        createNewColumns(columnIndex - columns.length);
-      }
-      dispatchSpreadsheetAction({type: UPDATE_CELL, row: someRow, column: someColumn, cellValue: event.target.value});
-  }
+  })
 
   return (
   <td>
     <input
       ref={inputEl}
       type="text"
-      value={newValue || value}
+      value={value}
       onKeyDown={onKeyDown}
-      onChange={updateCell}
+      onInput={updateCell}
     />
   </td>
   );

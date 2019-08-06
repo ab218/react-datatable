@@ -1,5 +1,5 @@
 import React from 'react';
-// import { Parser } from 'hot-formula-parser';
+import { Parser } from 'hot-formula-parser';
 import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import ColResizer from './ColResizer';
@@ -13,7 +13,7 @@ import {
   CREATE_ROWS,
   MODIFY_CURRENT_SELECTION_CELL_RANGE,
   SELECT_CELL,
-  ACTIVATE_SELECTED_CELL,
+  UPDATE_CELL,
 } from './constants'
 
 // function isFormula(value) {
@@ -31,11 +31,36 @@ function FormulaBar() {
 
 function BlankRow({cellCount}) { return <tr>{Array(cellCount).fill(undefined).map((_, columnIndex) => <td key={'blankcol' + columnIndex}></td>)}</tr> }
 
-function BlankClickableRow({activeCell, activateSelectedCell, finishCurrentSelectionRange, isSelectedCell, modifyCellSelectionRange, row, selectCell, cellCount, changeActiveCell, createNewRows, createNewColumns, rowIndex, rows, numberOfRows, columns}) {
+function BlankClickableRow({
+  activeCell,
+  cellCount,
+  changeActiveCell,
+  columns,
+  createNewColumns,
+  createNewRows,
+  finishCurrentSelectionRange,
+  isSelectedCell,
+  modifyCellSelectionRange,
+  numberOfRows,
+  rowIndex,
+  rows,
+  selectCell,
+}) {
+  const dispatchSpreadsheetAction = useSpreadsheetDispatch();
   return (
     <tr>
       {Array(cellCount).fill(undefined).map((_, columnIndex) => {
         const column = columns[columnIndex - 1];
+        // REPEATED FUNCTION DECLARATION BELOW
+        function updateCell(event) {
+          if (rows === 1 ) {
+            createNewRows(rows);
+          }
+          if (columnIndex > columns.length) {
+            createNewColumns(columnIndex - columns.length);
+          }
+          dispatchSpreadsheetAction({type: UPDATE_CELL, row: null, column, cellValue: event.target.value});
+        }
         if (activeCell && activeCell.column > 0 && activeCell.row === rowIndex && activeCell.column === columnIndex) {
           return (
             <ActiveCell
@@ -47,24 +72,23 @@ function BlankClickableRow({activeCell, activateSelectedCell, finishCurrentSelec
               createNewColumns={createNewColumns}
               createNewRows={createNewRows}
               numberOfRows={numberOfRows}
-              row={row}
               rowIndex={rowIndex}
               rows={rows}
+              updateCell={updateCell}
             />
           )
         } else if (column && isSelectedCell(rowIndex, columnIndex)) {
           return (
             <SelectedCell
               key={`Row${rowIndex}Col${columnIndex}`}
-              activateSelectedCell={activateSelectedCell}
               changeActiveCell={changeActiveCell}
               column={column}
               columnIndex={columnIndex}
               finishCurrentSelectionRange={finishCurrentSelectionRange}
               modifyCellSelectionRange={modifyCellSelectionRange}
               numberOfRows={numberOfRows}
-              row={row}
               rowIndex={rowIndex}
+              updateCell={updateCell}
             />
           )
         }
@@ -94,11 +118,26 @@ function Spreadsheet({eventBus}) {
     columns,
     cellSelectionRanges,
     currentCellSelectionRange,
-    newValue,
     rowPositions,
     rows,
    } = useSpreadsheetState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+
+
+  const formulaParser = new Parser();
+  // formulaParser.on('callCellValue', function(cellValue, done) {
+  //   const {error, result} = formulaParser.parse(cellValue);
+  //   done(error || result);
+  // });
+
+  // formulaParser.on('callRangeValue', function(startCellCoord, endCellCoord, done) {
+  //   const data = cellPositions.slice(startCellCoord.row.index, endCellCoord.row.index + 1).map((row) => {
+  //     return row.slice(startCellCoord.column.index, endCellCoord.column.index + 1).map((cellID) => {
+  //       return cells[cellID].value;
+  //     });
+  //   });
+  //   done(data);
+  // });
 
   function isSelectedCell(row, column) {
     function withinRange(value) {
@@ -118,7 +157,6 @@ function Spreadsheet({eventBus}) {
     return rowMap[index];
   });
 
-
   // We add one more column header as the capstone for the column of row headers
   const visibleColumnCount = Math.max(26, columns.length);
   const headers = Array(visibleColumnCount).fill(undefined).map((_, index) => (<ColResizer key={index} minWidth={60} content={String.fromCharCode(index + 'A'.charCodeAt(0))}/>))
@@ -127,7 +165,6 @@ function Spreadsheet({eventBus}) {
         return (
           <Row
             key={'Row' + index}
-            activateSelectedCell={activateSelectedCell}
             activeCell={activeCell}
             cellCount={visibleColumnCount + 1}
             changeActiveCell={changeActiveCell}
@@ -135,10 +172,10 @@ function Spreadsheet({eventBus}) {
             columns={columns}
             createNewColumns={createNewColumns}
             createNewRows={createNewRows}
+            finishCurrentSelectionRange={finishCurrentSelectionRange}
+            formulaParser={formulaParser}
             isSelectedCell={isSelectedCell}
             modifyCellSelectionRange={modifyCellSelectionRange}
-            finishCurrentSelectionRange={finishCurrentSelectionRange}
-            newValue={newValue}
             numberOfRows={rowCount}
             row={rows.find(({id}) => id === rowIDs[index])}
             rowIDs={rowIDs}
@@ -153,7 +190,6 @@ function Spreadsheet({eventBus}) {
             key={'Row' + index}
             cellCount={visibleColumnCount + 1}
             activeCell={activeCell}
-            activateSelectedCell={activateSelectedCell}
             changeActiveCell={changeActiveCell}
             columns={columns}
             createNewRows={createNewRows}
@@ -169,10 +205,6 @@ function Spreadsheet({eventBus}) {
         )
       } else { return <BlankRow key={'BlankRow' + index} cellCount={visibleColumnCount + 1} />}
   });
-
-  function activateSelectedCell(row, column, newValue) {
-    dispatchSpreadsheetAction({type: ACTIVATE_SELECTED_CELL, row, column, newValue})
-  }
 
   function createNewRows(rowCount) {
     dispatchSpreadsheetAction({type: CREATE_ROWS, rowCount});
@@ -207,52 +239,27 @@ function Spreadsheet({eventBus}) {
       </table>
     </div>
   );
-
-  // useEffect(() => {
-  //   if (activeCell) {
-  //     eventBus.fire('select-cell', activeCell);
-  //   }
-  // }, [activeCell, eventBus]);
-  // // set active cell to A1 on first load
-  // useEffect(() => {
-  //   changeActiveCell(0, 0);
-  // // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [])
-
-  // const formulaParser = new Parser();
-  // formulaParser.on('callCellValue', function(cellCoordinates, done) {
-  //   const cellValue = cells[cellPositions[cellCoordinates.row.index][cellCoordinates.column.index]].value;
-  //   if (isFormula(cellValue)) {
-  //     const {error, result} = formulaParser.parse(cellValue.slice(1));
-  //     done(error || result);
-  //   } else {
-  //     done(cellValue);
-  //   }
-  // });
-
-  // formulaParser.on('callRangeValue', function(startCellCoord, endCellCoord, done) {
-  //   const data = cellPositions.slice(startCellCoord.row.index, endCellCoord.row.index + 1).map((row) => {
-  //     return row.slice(startCellCoord.column.index, endCellCoord.column.index + 1).map((cellID) => {
-  //       return cells[cellID].value;
-  //     });
-  //   });
-  //   done(data);
-  // });
-
-  // const columnCount = cellPositions.length ? Math.max(...(cellPositions.map((row) => row.length))) : 0;
-
-  // function modifyCellSelectionRange(row, col) {
-  //   dispatchSpreadsheetAction({type: 'modify-current-selection-cell-range', endRangeRow: row, endRangeColumn: col});
-  // }
-
-  // function finishCurrentSelectionRange() {
-  //   dispatchSpreadsheetAction({type: 'add-current-selection-to-cell-selections'});
-  // }
-
-  // const rows = cellPositions.map((row, index) => {
-  //   return (<Row key={index} row={row} rowIndex={index} cells={cells} finishCurrentSelectionRange={finishCurrentSelectionRange} modifyCellSelectionRange={modifyCellSelectionRange}
-  //      activeCell={activeCell} setActiveCell={changeActiveCell} isSelectedCell={isSelectedCell} formulaParser={formulaParser}/>)
-  // });
 }
 
 export default Spreadsheet;
+
+// formulaParser.on('callCellValue', function(cellCoordinates, done) {
+//   const cellValue = cells[cellPositions[cellCoordinates.row.index][cellCoordinates.column.index]].value;
+//   if (isFormula(cellValue)) {
+//     const {error, result} = formulaParser.parse(cellValue.slice(1));
+//     done(error || result);
+//   } else {
+//     done(cellValue);
+//   }
+// });
+
+// formulaParser.on('callRangeValue', function(startCellCoord, endCellCoord, done) {
+//   const data = cellPositions.slice(startCellCoord.row.index, endCellCoord.row.index + 1).map((row) => {
+//     return row.slice(startCellCoord.column.index, endCellCoord.column.index + 1).map((cellID) => {
+//       return cells[cellID].value;
+//     });
+//   });
+//   done(data);
+// });
+
+

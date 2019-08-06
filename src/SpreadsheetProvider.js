@@ -2,7 +2,6 @@ import React, { useReducer } from 'react';
 import './App.css';
 import {
   ACTIVATE_CELL,
-  ACTIVATE_SELECTED_CELL,
   ADD_CELL_TO_SELECTIONS,
   ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS,
   CREATE_COLUMNS,
@@ -43,38 +42,18 @@ function spreadsheetReducer(state, action) {
     columnIndex,
     endRangeRow,
     endRangeColumn,
-    newValue,
     row,
     rowIndex,
     rowCount,
     selectionActive,
     type,
    } = action;
-  // console.log('dispatched:', type, 'with action:', action);
+  console.log('dispatched:', type, 'with action:', action);
   switch (type) {
-    case TRANSLATE_SELECTED_CELL: {
-      const newCellSelectionRanges = [{top: rowIndex, bottom: rowIndex, left: columnIndex, right: columnIndex}];
-      return {...state, cellSelectionRanges: newCellSelectionRanges}
-    }
     // On text input of a selected cell, value is cleared, cell gets new value and cell is activated
-    case ACTIVATE_SELECTED_CELL: {
-      const activeCell = {row: rowIndex, column: columnIndex};
-      return {...state, activeCell, newValue}
-    }
-    case SELECT_CELL: {
-      const {cellSelectionRanges = []} = state;
-      // track lastSelection to know where to begin range selection on drag
-      const lastSelection = {row, column};
-      const selectedCell = {top: row, bottom: row, left: column, right: column};
-      const addSelectedCellToSelectionArray = cellSelectionRanges.concat(cellSelectionRanges.some(cell => (cell.top === selectedCell.top) && (cell.right === selectedCell.right)) ? [] : selectedCell);
-      return {...state, activeCell: null, lastSelection, cellSelectionRanges: selectionActive ? addSelectedCellToSelectionArray : [], currentCellSelectionRange: selectedCell }
-    }
     case ACTIVATE_CELL: {
-      const {cellSelectionRanges = []} = state;
       const activeCell = {row, column};
-      const selectedCell = {top: row, bottom: row, left: column, right: column};
-      const addActiveCellToSelection = cellSelectionRanges.concat(cellSelectionRanges.some(cell => (cell.top === selectedCell.top) && (cell.right === selectedCell.right)) ? [] : selectedCell);
-      return {...state, activeCell, cellSelectionRanges: selectionActive ? addActiveCellToSelection : [], currentCellSelectionRange: selectedCell }
+      return {...state, activeCell, cellSelectionRanges: [] }
     }
     case ADD_CELL_TO_SELECTIONS: {
       const {cellSelectionRanges = []} = state;
@@ -92,7 +71,6 @@ function spreadsheetReducer(state, action) {
       });
       const columns = state.columns.concat(newColumns);
       const columnPositions = newColumns.reduce((acc, {id}, offset) => {
-        console.log('offset:', offset);
         return {...acc, [id]: state.columns.length + offset};
       }, state.columnPositions);
       return {...state, columns, columnPositions};
@@ -147,8 +125,20 @@ function spreadsheetReducer(state, action) {
         })
       } : state;
     }
+    case SELECT_CELL: {
+      const {cellSelectionRanges = []} = state;
+      // track lastSelection to know where to begin range selection on drag
+      const lastSelection = {row, column};
+      const selectedCell = {top: row, bottom: row, left: column, right: column};
+      const addSelectedCellToSelectionArray = cellSelectionRanges.concat(cellSelectionRanges.some(cell => (cell.top === selectedCell.top) && (cell.right === selectedCell.right)) ? [] : selectedCell);
+      return {...state, activeCell: null, lastSelection, cellSelectionRanges: selectionActive ? addSelectedCellToSelectionArray : [], currentCellSelectionRange: selectedCell }
+    }
     case SET_ROW_POSITION: {
       return {...state, rowPositions: {...state.rowPositions, [action.rowID]: action.row} };
+    }
+    case TRANSLATE_SELECTED_CELL: {
+      const newCellSelectionRanges = [{top: rowIndex, bottom: rowIndex, left: columnIndex, right: columnIndex}];
+      return {...state, cellSelectionRanges: newCellSelectionRanges, currentCellSelectionRange: null}
     }
     case UPDATE_CELL: {
       const { rows, columns } = state;
@@ -157,7 +147,7 @@ function spreadsheetReducer(state, action) {
       const rowCopy = Object.assign({}, row || rows[rows.length - 1], {[columnID]: cellValue});
       const changedRows = newRows.filter(newRow => newRow.id !== rowCopy.id).concat(rowCopy);
 
-      return  {...state, rows: changedRows, newValue: null };
+      return  {...state, rows: changedRows };
     }
     default: {
       throw new Error(`Unhandled action type: ${type}`);

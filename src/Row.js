@@ -1,10 +1,11 @@
 import React from 'react';
 import ActiveCell from './ActiveCell';
 import { NormalCell, RowNumberCell, SelectedCell } from './Cell';
+import { UPDATE_CELL } from './constants';
+import { useSpreadsheetDispatch } from './SpreadsheetProvider';
 
 export default function Row({
   activeCell,
-  activateSelectedCell,
   cellCount,
   columnPositions,
   columns,
@@ -12,9 +13,9 @@ export default function Row({
   createNewColumns,
   createNewRows,
   finishCurrentSelectionRange,
+  formulaParser,
   isSelectedCell,
   modifyCellSelectionRange,
-  newValue,
   numberOfRows,
   row,
   rows,
@@ -24,6 +25,7 @@ export default function Row({
   columns.sort((colA, colB) => {
     return columnPositions[colA.id] - columnPositions[colB.id];
   });
+  const dispatchSpreadsheetAction = useSpreadsheetDispatch();
   return (
     <tr>
       {Array(cellCount).fill(undefined).map((_, columnIndex) => {
@@ -31,6 +33,16 @@ export default function Row({
         if (columnIndex === 0) {
           // The row # on the left side
           return <RowNumberCell key={`RowNumberCell${rowIndex}`} rowIndex={rowIndex}/>
+        }
+        function updateCell(event, clear) {
+          if (rows === 1 ) {
+            createNewRows(rows);
+          }
+          if (columnIndex > columns.length) {
+            createNewColumns(columnIndex - columns.length);
+          }
+          console.log('updating cell from active cell');
+          dispatchSpreadsheetAction({type: UPDATE_CELL, row, column, cellValue: clear ? '' : event.target.value});
         }
         if (activeCell && activeCell.row === rowIndex && activeCell.column === columnIndex) {
           return (
@@ -42,19 +54,18 @@ export default function Row({
               columns={columns}
               createNewColumns={createNewColumns}
               createNewRows={createNewRows}
-              newValue={newValue}
               numberOfRows={numberOfRows}
               row={row}
               rowIndex={rowIndex}
               rows={rows}
-              value={newValue || column ? row[column.id] : ''}
+              updateCell={updateCell}
+              value={column && row ? row[column.id] : ''}
             />
           )
-        } else if (column && isSelectedCell(rowIndex, columnIndex)) {
+        } else if (isSelectedCell(rowIndex, columnIndex)) {
           return (
             <SelectedCell
               key={`Row${rowIndex}Col${columnIndex}`}
-              activateSelectedCell={activateSelectedCell}
               changeActiveCell={changeActiveCell}
               column={column}
               columnIndex={columnIndex}
@@ -63,6 +74,7 @@ export default function Row({
               numberOfRows={numberOfRows}
               row={row}
               rowIndex={rowIndex}
+              updateCell={updateCell}
             />
           )
         } else if (column) {
@@ -73,6 +85,7 @@ export default function Row({
               column={column}
               columnIndex={columnIndex}
               finishCurrentSelectionRange={finishCurrentSelectionRange}
+              formulaParser={formulaParser}
               modifyCellSelectionRange={modifyCellSelectionRange}
               row={row}
               rowIndex={rowIndex}
@@ -81,7 +94,7 @@ export default function Row({
           )
         } else {
           // The rest of the cells in the row that aren't in a defined column
-          return (<td key={`row${rowIndex}col${columnIndex}`} onClick={() => changeActiveCell(rowIndex, columnIndex)}>.</td>)
+          return (<td key={`row${rowIndex}col${columnIndex}`} onClick={() => selectCell(rowIndex, columnIndex)}>.</td>)
         }
       })}
     </tr>

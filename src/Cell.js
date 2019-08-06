@@ -1,10 +1,20 @@
 import React, {useEffect} from 'react';
 import { useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { ACTIVATE_SELECTED_CELL, DELETE_VALUES, TRANSLATE_SELECTED_CELL } from './constants'
+import { DELETE_VALUES, TRANSLATE_SELECTED_CELL, ACTIVATE_CELL } from './constants'
 
 export function RowNumberCell({rowIndex}) { return <td>{rowIndex + 1}</td> }
 
-export function SelectedCell({changeActiveCell, finishCurrentSelectionRange, modifyCellSelectionRange, numberOfRows, row, rowIndex, column, columnIndex}) {
+export function SelectedCell({
+  changeActiveCell,
+  column,
+  columnIndex,
+  finishCurrentSelectionRange,
+  modifyCellSelectionRange,
+  numberOfRows,
+  row,
+  rowIndex,
+  updateCell,
+} ) {
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
   const cursorKeyToRowColMapper = {
@@ -28,18 +38,16 @@ export function SelectedCell({changeActiveCell, finishCurrentSelectionRange, mod
     function onKeyDown(event) {
       // if the key pressed is not a non-character key (arrow key etc)
       if (event.key.length === 1) {
-        dispatchSpreadsheetAction({type: ACTIVATE_SELECTED_CELL, rowIndex, columnIndex, newValue: event.key});
+        dispatchSpreadsheetAction({type: ACTIVATE_CELL, row: rowIndex, column: columnIndex});
+        updateCell(event, true);
       } else {
-        switch (event.key) {
-          case 'ArrowDown':
-          case 'ArrowUp':
-          case 'ArrowLeft':
-          case 'ArrowRight':
+        switch (true) {
+          case Object.keys(cursorKeyToRowColMapper).includes(event.key):
             event.preventDefault();
             const { row, column } = cursorKeyToRowColMapper[event.key](rowIndex, columnIndex, numberOfRows);
             dispatchSpreadsheetAction({type: TRANSLATE_SELECTED_CELL, rowIndex: row, columnIndex: column});
             break;
-          case 'Backspace':
+          case event.key === 'Backspace':
             dispatchSpreadsheetAction({type: DELETE_VALUES});
             break;
           default:
@@ -66,11 +74,26 @@ export function SelectedCell({changeActiveCell, finishCurrentSelectionRange, mod
         }
       }}
       onMouseUp={() => {finishCurrentSelectionRange()}}
-    >{row ? row[column.id] : ''}</td>
+    >{row && column ? row[column.id] : ''}</td>
   )
 }
 
-export function NormalCell({selectCell, finishCurrentSelectionRange, modifyCellSelectionRange, row, rowIndex, column, columnIndex}) {
+export function NormalCell({
+  column,
+  columnIndex,
+  finishCurrentSelectionRange,
+  formulaParser,
+  modifyCellSelectionRange,
+  row,
+  rowIndex,
+  selectCell,
+}) {
+  let cellValue = row[column.id];
+  formulaParser.on('callCellValue', function(cellValue, done) {
+    const {error, result} = formulaParser.parse(cellValue);
+    done(error || result);
+  });
+  console.log(formulaParser.parse(cellValue))
   return (
   <td
     key={`row${rowIndex}col${columnIndex}`}
@@ -86,7 +109,7 @@ export function NormalCell({selectCell, finishCurrentSelectionRange, modifyCellS
     }}
     onMouseUp={() => {finishCurrentSelectionRange()}}
     >
-  {row[column.id]}</td>
+  {cellValue}</td>
   )}
 
 // function isFormula(value) {
