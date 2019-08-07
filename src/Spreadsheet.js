@@ -1,5 +1,5 @@
 import React from 'react';
-import { Parser } from 'hot-formula-parser';
+// import { Parser } from 'hot-formula-parser';
 import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import ColResizer from './ColResizer';
@@ -29,7 +29,7 @@ function FormulaBar() {
   )
 }
 
-function BlankRow({cellCount}) { return <tr>{Array(cellCount).fill(undefined).map((_, columnIndex) => <td key={'blankcol' + columnIndex}></td>)}</tr> }
+function BlankRow({cellCount}) { return <tr>{Array(cellCount).fill(undefined).map((_, columnIndex) => <td style={{backgroundColor: '#f9f9f9'}} key={'blankcol' + columnIndex}></td>)}</tr> }
 
 function BlankClickableRow({
   activeCell,
@@ -51,6 +51,7 @@ function BlankClickableRow({
     <tr>
       {Array(cellCount).fill(undefined).map((_, columnIndex) => {
         const column = columns[columnIndex - 1];
+        const isFormulaColumn = column && column.formula;
         // REPEATED FUNCTION DECLARATION BELOW
         function updateCell(event) {
           if (rows === 1 ) {
@@ -81,6 +82,7 @@ function BlankClickableRow({
           return (
             <SelectedCell
               key={`Row${rowIndex}Col${columnIndex}`}
+              isFormulaColumn={isFormulaColumn}
               changeActiveCell={changeActiveCell}
               column={column}
               columnIndex={columnIndex}
@@ -95,6 +97,7 @@ function BlankClickableRow({
         return (
           <td
             onMouseDown={(event) => {
+              event.preventDefault();
               selectCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
             }}
             onMouseEnter={(event) => {
@@ -124,10 +127,21 @@ function Spreadsheet({eventBus}) {
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
 
-  const formulaParser = new Parser();
+  // const formulaParser = new Parser();
   // formulaParser.on('callCellValue', function(cellValue, done) {
+  //   console.log('inside callCellValue:', arguments);
+  //   const {column: {index: cellColumnIndex}, row: {index: cellRowIndex}} = cellValue;
+  //   // const whichColumn = columns.find(
+  //   // Resolve the cell reference
   //   const {error, result} = formulaParser.parse(cellValue);
   //   done(error || result);
+  // });
+  // formulaParser.on('callVariable', function(name, done) {
+  //   console.log('on call variable:', arguments);
+  //   const selectedColumn = columns.find((column) => column.id === name);
+  //   if (selectedColumn) {
+
+  //   }
   // });
 
   // formulaParser.on('callRangeValue', function(startCellCoord, endCellCoord, done) {
@@ -173,7 +187,7 @@ function Spreadsheet({eventBus}) {
             createNewColumns={createNewColumns}
             createNewRows={createNewRows}
             finishCurrentSelectionRange={finishCurrentSelectionRange}
-            formulaParser={formulaParser}
+            // formulaParser={formulaParser}
             isSelectedCell={isSelectedCell}
             modifyCellSelectionRange={modifyCellSelectionRange}
             numberOfRows={rowCount}

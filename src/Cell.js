@@ -8,7 +8,9 @@ export function SelectedCell({
   changeActiveCell,
   column,
   columnIndex,
+  formulaResult,
   finishCurrentSelectionRange,
+  isFormulaColumn,
   modifyCellSelectionRange,
   numberOfRows,
   row,
@@ -37,7 +39,7 @@ export function SelectedCell({
   useEffect(() => {
     function onKeyDown(event) {
       // if the key pressed is not a non-character key (arrow key etc)
-      if (event.key.length === 1) {
+      if (!formulaResult && event.key.length === 1) {
         dispatchSpreadsheetAction({type: ACTIVATE_CELL, row: rowIndex, column: columnIndex});
         updateCell(event, true);
       } else {
@@ -66,7 +68,9 @@ export function SelectedCell({
       key={`row${rowIndex}col${columnIndex}`}
       style={{backgroundColor: '#f0f0f0'}}
       onMouseDown={(event) => {
-        changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
+        if (!formulaResult && !isFormulaColumn) {
+          changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
+        }
       }}
       onMouseEnter={(event) => {
         if (typeof event.buttons === 'number' && event.buttons > 0) {
@@ -74,7 +78,7 @@ export function SelectedCell({
         }
       }}
       onMouseUp={() => {finishCurrentSelectionRange()}}
-    >{row && column ? row[column.id] : ''}</td>
+    >{formulaResult || (row && column ? row[column.id] : '')}</td>
   )
 }
 
@@ -82,18 +86,13 @@ export function NormalCell({
   column,
   columnIndex,
   finishCurrentSelectionRange,
-  formulaParser,
+  formulaResult,
   modifyCellSelectionRange,
   row,
   rowIndex,
   selectCell,
 }) {
-  let cellValue = row[column.id];
-  formulaParser.on('callCellValue', function(cellValue, done) {
-    const {error, result} = formulaParser.parse(cellValue);
-    done(error || result);
-  });
-  console.log(formulaParser.parse(cellValue))
+  const cellValue = row[column.id];
   return (
   <td
     key={`row${rowIndex}col${columnIndex}`}
@@ -109,12 +108,9 @@ export function NormalCell({
     }}
     onMouseUp={() => {finishCurrentSelectionRange()}}
     >
-  {cellValue}</td>
+  {formulaResult || cellValue}</td>
   )}
 
-// function isFormula(value) {
-//   return typeof value === 'string' && value.charAt(0) === '=';
-// }
 
 // function Cell({value, formulaParser, row, col, deselected, selected, setActiveCell, modifyCellSelectionRange, finishCurrentSelectionRange}) {
 //   const dispatchSpreadsheetAction = useSpreadsheetDispatch();

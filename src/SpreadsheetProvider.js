@@ -34,6 +34,12 @@ function createRandomID() {
   return result;
 }
 
+function createRandomLetterString() {
+  const upperAlphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const alphabet = upperAlphabet + upperAlphabet.toLowerCase();
+  return Array(10).fill(undefined).map((_) => alphabet.charAt(Math.floor(Math.random() * alphabet.length))).join('');
+}
+
 function spreadsheetReducer(state, action) {
   const {
     cellValue,
@@ -62,7 +68,7 @@ function spreadsheetReducer(state, action) {
     }
     case ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS: {
       const {currentCellSelectionRange, cellSelectionRanges} = state;
-      return {...state, cellSelectionRanges: cellSelectionRanges.concat(currentCellSelectionRange), currentCellSelectionRange: null};
+      return {...state, cellSelectionRanges: cellSelectionRanges.concat(currentCellSelectionRange || []), currentCellSelectionRange: null};
     }
     case CREATE_COLUMNS: {
       const newColumns = Array(columnCount).fill(undefined).map(_ => {
@@ -171,19 +177,46 @@ export function useSpreadsheetDispatch() {
 }
 
 export function SpreadsheetProvider({children}) {
+  const columns = [{
+    type: 'String', label: 'Name'
+  }, {
+    type: 'Number', label: 'Age'
+  }, {
+    type: 'String', label: 'Gender'
+  }, {
+    type: 'Formula', label: 'FormulaColumn', formula: 'Age + 20'
+  }].map((metadata) => ({id: createRandomLetterString(), ...metadata})).map((column, _, array) => {
+    const {formula, ...rest} = column;
+    if (formula) {
+      const newFormula = array.filter((someColumn) => formula.includes(someColumn.label)).reduce((changedFormula, someColumn) => {
+        return changedFormula.replace(new RegExp(someColumn.label), someColumn.id);
+      }, formula);
+      return {...rest, formula: newFormula};
+    } else {
+      return column;
+    }
+    // return formula ? {...rest, formula: } : column;
+  });
+  const columnPositions = columns.reduce((acc, column, index) => ({...acc, [column.id]: index}), {});
+  const rows = [['John Smith', 25, 'M', ''], ['Jane Smith', 24, 'F', '']].map((tuple) => ({
+    id: createRandomID(), ...tuple.reduce((acc, value, index) => ({...acc, [columns[index].id]: value}), {})
+  }));
+  const rowPositions = rows.reduce((acc, row, index) => ({...acc, [row.id]: index}), {});
 
-  const [state, changeSpreadsheet] = useReducer(spreadsheetReducer, {
+  const initialState = {
     activeCell: null,
     cellSelectionRanges: [{
       top: 1, bottom: 1, left: 1, right: 1
     }],
     currentCellSelectionRange: null,
-    columns: [{id: 'name321', type: 'String', label: 'Name'}, {id: 'age123', type: 'Number', label: 'Age'}, {id: 'gender456', type: 'String', label: 'Gender'}],
-    columnPositions: {'name321': 0, 'age123': 1, 'gender456': 2},
+    columns,
+    columnPositions,
     lastSelection: {row: 1, column: 1},
-    rowPositions: {"HITFiTNG8l": 1, "r0aWTL1Fae": 0},
-    rows: [{id: "HITFiTNG8l", age123: 25, gender456: 'M', name321: 'John Smith'}, {id: "r0aWTL1Fae", age123: 24, gender456: 'F', name321: 'Jane Smith'}],
-  });
+    rowPositions,
+    rows,
+  };
+  console.log('initialState:', initialState);
+  const [state, changeSpreadsheet] = useReducer(spreadsheetReducer, initialState);
   return (
     <SpreadsheetStateContext.Provider value={state}>
       <SpreadsheetDispatchContext.Provider value={changeSpreadsheet}>
