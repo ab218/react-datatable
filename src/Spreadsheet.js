@@ -15,6 +15,7 @@ import {
   SELECT_CELL,
   UPDATE_CELL,
 } from './constants'
+import HighchartsDemo from './HighchartsDemo';
 
 // function isFormula(value) {
 //   return typeof value === 'string' && value.charAt(0) === '=';
@@ -250,6 +251,7 @@ function Spreadsheet({eventBus}) {
         <thead><tr><td></td>{headers}</tr></thead>
         <tbody>{visibleRows}</tbody>
       </table>
+      <HighchartsDemo />
     </div>
   );
 }
