@@ -30,6 +30,7 @@ export default function Row({
     <tr>
       {Array(cellCount).fill(undefined).map((_, columnIndex) => {
         const column = columns[columnIndex - 1];
+        const isFormulaColumn = column && column.formula;
         if (columnIndex === 0) {
           // The row # on the left side
           return <RowNumberCell key={`RowNumberCell${rowIndex}`} rowIndex={rowIndex}/>
@@ -45,43 +46,15 @@ export default function Row({
           dispatchSpreadsheetAction({type: UPDATE_CELL, row, column, cellValue: clear ? '' : event.target.value});
         }
 
-        // const testParser = new Parser();
-        // testParser.on('callVariable', function(name, done) {
-        //   if (name === 'foo') {
-        //     done(Math.PI / 2);
-        //   }
-        // });
-
-        // console.log('result of test:', testParser.parse('SUM(SIN(foo), COS(foo))')); // returns `1`
-  const formulaParser = new Parser();
-  // formulaParser.setVariable('foo', 5);
-  console.log('parser vars:', formulaParser.variables, 'value for age123age:', formulaParser.getVariable('age123age'));
-
-  formulaParser.on('callVariable', function(name, done) {
-    console.log('callVariable callback:', arguments);
-    const selectedColumn = columns.find((column) => column.id === name);
-    console.log('selectedColumn:', selectedColumn);
-    if (selectedColumn) {
-      done(row ? row[selectedColumn.id] : 'column not found');
-    }
-  });
-  // formulaParser.on('callCellValue', function(cellValue, done) {
-  //   console.log('inside callCellValue:', arguments);
-  //   // const {column: {index: cellColumnIndex}, row: {index: cellRowIndex}} = cellValue;
-  //   // // const whichColumn = columns.find(
-  //   // // Resolve the cell reference
-  //   // const {error, result} = formulaParser.parse(cellValue);
-  //   done('blah');
-  // });
-
-  // formulaParser.on('callRangeValue', function(startCellCoord, endCellCoord, done) {
-  //   const data = cellPositions.slice(startCellCoord.row.index, endCellCoord.row.index + 1).map((row) => {
-  //     return row.slice(startCellCoord.column.index, endCellCoord.column.index + 1).map((cellID) => {
-  //       return cells[cellID].value;
-  //     });
-  //   });
-  //   done(data);
-  // });
+        const formulaParser = new Parser();
+        formulaParser.on('callVariable', function(name, done) {
+          // console.log('callVariable callback:', arguments);
+          const selectedColumn = columns.find((column) => column.id === name);
+          // console.log('selectedColumn:', selectedColumn);
+          if (selectedColumn) {
+            done(row ? row[selectedColumn.id] : 'column not found');
+          }
+        });
         const formulaResult = column && column.formula ? formulaParser.parse(column.formula).result : '';
         if (activeCell && activeCell.row === rowIndex && activeCell.column === columnIndex) {
           return (
@@ -110,6 +83,7 @@ export default function Row({
               columnIndex={columnIndex}
               formulaResult={formulaResult}
               finishCurrentSelectionRange={finishCurrentSelectionRange}
+              isFormulaColumn={isFormulaColumn}
               modifyCellSelectionRange={modifyCellSelectionRange}
               numberOfRows={numberOfRows}
               row={row}

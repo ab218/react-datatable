@@ -39,7 +39,7 @@ export function SelectedCell({
   useEffect(() => {
     function onKeyDown(event) {
       // if the key pressed is not a non-character key (arrow key etc)
-      if (!formulaResult && event.key.length === 1) {
+      if (!formulaResult && !isFormulaColumn && event.key.length === 1) {
         dispatchSpreadsheetAction({type: ACTIVATE_CELL, row: rowIndex, column: columnIndex});
         updateCell(event, true);
       } else {

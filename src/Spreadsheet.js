@@ -187,7 +187,6 @@ function Spreadsheet({eventBus}) {
             createNewColumns={createNewColumns}
             createNewRows={createNewRows}
             finishCurrentSelectionRange={finishCurrentSelectionRange}
-            // formulaParser={formulaParser}
             isSelectedCell={isSelectedCell}
             modifyCellSelectionRange={modifyCellSelectionRange}
             numberOfRows={rowCount}
