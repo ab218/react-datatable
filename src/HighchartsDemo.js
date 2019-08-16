@@ -1,19 +1,80 @@
+/* eslint-disable no-undef */
 import React, { useEffect } from 'react';
 import regression from 'regression';
 import PolyRegression from "js-polynomial-regression";
-// import { useSpreadsheetState } from './SpreadsheetProvider';
-// import PolynomialRegression from 'ml-regression-polynomial';
+import mwu from 'mann-whitney-utest';
+import './App.css';
+// import kruskal from 'compute-kruskal-test';
+import { useSpreadsheetState } from './SpreadsheetProvider';
+var jStat = require('jstat').jStat;
 
 export default function HighchartsDemo ({data}) {
   const { Highcharts } = window;
+  const {
+    columns,
+    rows,
+   } = useSpreadsheetState();
+
+  // const samples = [ [30, 14, 6], [12, 15, 16] ];
+  // console.log(mwu.test(samples));
+  // if (mwu.significant(mwu.test(samples), samples)) {
+  //   console.log('The data is significant!');
+  // } else {
+  //     console.log('The data is not significant.');
+  // }
+
+  const tempAVals = data.xVals.map((_, i) => {
+    return data.xVals[i]
+  })
+
+  const tempBVals = data.yVals.map((_, i) => {
+    return data.yVals[i]
+  })
+
+  console.log(tempAVals)
+  console.log(tempBVals)
+
+  console.log(
+    'mean is: ', jStat.mean(tempAVals),
+    '\nmedian is: ', jStat.median(tempAVals),
+    '\nstdev is: ', jStat.stdev(tempAVals),
+    '\nci is: ', jStat.normalci(50, 0.05, tempAVals),
+    // '\nanova: ', jStat.anovafscore(tempAVals, tempBVals),
+    )
+
+  // let x, y, z, out, table;
+
+  // // data from Hollander & Wolfe (1973), 116.
+  // x = [2.9, 3.0, 2.5, 2.6, 3.2];
+  // y = [3.8, 2.7, 4.0, 2.4];
+  // z = [2.8, 3.4, 3.7, 2.2, 2.0];
+
+  // out = kruskal( x, y, z );
+  // /*
+  // { H: 0.7714,
+  //   df: 2,
+  //   pValue: 0.6799 }
+  // */
+
+  // table = out.toString()
+  // console.log(table);
+
+  const colXID = columns[1].id;
+  const colYID = columns[2].id;
+  function mapColumnValues(colID) {
+    const colVals = rows.map(row => row[colID]);
+    // console.log(colVals)
+  }
+  mapColumnValues(colXID);
+  mapColumnValues(colYID);
   const tempABVals = data.xVals.map((_, i) => {
     return [data.xVals[i], data.yVals[i]]
   }).sort();
   const tempABValsPoly = data.xVals.map((_, i) => {
     return {x: data.xVals[i], y: data.yVals[i]}
   }).sort();
-  console.log('tempABVals', tempABVals)
   const linearRegressionLine = regression.linear(tempABVals);
+  console.log(linearRegressionLine)
   // const polyRegressionLine = regression.polynomial(tempABVals, {order: 3});
   // console.log('poly reg points:', polyRegressionLine.points);
 
@@ -21,7 +82,7 @@ export default function HighchartsDemo ({data}) {
   const model = PolyRegression.read(tempABValsPoly, 3);
   //terms is a list of coefficients for a polynomial equation. We'll feed these to predict y so that we don't have to re-compute them for every prediction.
   const terms = model.getTerms();
-  console.log('terms', terms)
+  console.log(terms) // Poly regression coefficients
   const polyregData = data.xVals.map(x => {
     return [x, model.predictY(terms, x)];
   });
@@ -39,90 +100,138 @@ export default function HighchartsDemo ({data}) {
   // console.log(regression2.toLaTeX());
   // console.log(regression2.score(data.xVals, data.yVals));
 
-  /*
-  0: -12.265654696511284
-  1: 2.2695927405735388
-  2: -0.03234904402012483
-  3: 0.0001506553294355703
-  */
-
   useEffect(() => {
-    // HighchartsPlugin(Highcharts);
-    Highcharts.chart('container', {
-      chart: {
-        zoomType: 'xy'
-    },
-      credits: false,
-      title: {
-        text: 'Bivariate Fit of Math by Verb'
+    function btnOnClick() {
+      const chartWindow = window.open("", "_blank", "left=9999,top=250,width=450,height=600"),
+            chartContainer = document.createElement("div"),
+            chartList = document.createElement("ul");
+
+      chartContainer.setAttribute("id", "container");
+      chartList.setAttribute("id", "list");
+
+      Highcharts.chart(chartContainer, {
+        chart: {
+          zoomType: 'xy',
+          height: 400,
+          width: 400
       },
-      xAxis: {
-        title: { text: 'Verb' },
-        alignTicks: false
-      },
-      yAxis: {
+        credits: false,
         title: {
-          text: 'Math'
+          text: 'Bivariate Fit of Math by Verb'
         },
-      },
-      legend: {
-        layout: 'vertical',
-        align: 'right',
-        verticalAlign: 'middle'
-      },
-
-      plotOptions: {
-        series: {
-          allowPointSelect: true,
-          label: {
-            connectorAllowed: false
+        xAxis: {
+          title: { text: 'Verb' },
+          alignTicks: false
+        },
+        yAxis: {
+          title: {
+            text: 'Math'
           },
-          // pointStart: 2010
-        }
-      },
+        },
+        legend: {
+          layout: 'vertical',
+          align: 'right',
+          verticalAlign: 'middle'
+        },
 
-      series: [
-        {
-          name: 'Points',
-          type: 'scatter',
-          id: 's1',
-          data: tempABVals,
-        },
-        {
-          name: 'Linear Regression Line',
-          type: 'line',
-          data: linearRegressionLine.points
-        },
-        {
-          name: 'Polynomial Cubic Regression Line',
-          type: 'line',
-          data: polyregData.sort()
-        },
-        {
-          name: 'Histogram',
-          type: 'histogram',
-          baseSeries: 's1',
-          zIndex: -1,
-          visible: false
-        },
-      ],
-
-      responsive: {
-        rules: [{
-          condition: {
-            maxWidth: 500
-          },
-          chartOptions: {
-            legend: {
-              layout: 'horizontal',
-              align: 'center',
-              verticalAlign: 'bottom'
-            }
+        plotOptions: {
+          series: {
+            allowPointSelect: true,
+            label: {
+              connectorAllowed: false
+            },
+            // pointStart: 2010
           }
-        }]
+        },
+
+        series: [
+          {
+            name: 'Points',
+            type: 'scatter',
+            id: 's1',
+            data: tempABVals,
+          },
+          {
+            name: 'Linear Regression Line',
+            type: 'line',
+            data: linearRegressionLine.points
+          },
+          {
+            name: 'Polynomial Cubic Regression Line',
+            type: 'line',
+            data: polyregData.sort()
+          },
+          {
+            name: 'Histogram',
+            type: 'histogram',
+            baseSeries: 's1',
+            zIndex: -1,
+            visible: false
+          },
+        ],
+
+        responsive: {
+          rules: [{
+            condition: {
+              maxWidth: 500
+            },
+            chartOptions: {
+              legend: {
+                layout: 'horizontal',
+                align: 'center',
+                verticalAlign: 'bottom'
+              }
+            }
+          }]
+        }})
+
+        // const fragment = document.createDocumentFragment();
+
+        // terms.forEach(function (term) {
+        //   const li = document.createElement('li');
+        //   li.innerHTML = term;
+        //   fragment.appendChild(li);
+        // })
+
+        // chartList.appendChild(fragment);
+
+        const tableOutput = `
+          <div style="text-align: center; margin: 0 3em;">
+            <h4>Linear Fit</h4>
+            <table style="width: 75%;">
+              <tr>
+                <td>r2:</td>
+                <td>${linearRegressionLine.r2}</td>
+              </tr>
+              <tr>
+                <td>gradient:</td>
+                <td>${linearRegressionLine.equation[0]}</td>
+              </tr>
+              <tr>
+                <td>y-intecept:</td>
+                <td>${linearRegressionLine.equation[1]}</td>
+              </tr>
+              <tr>
+                <td>equation:</td>
+                <td>${linearRegressionLine.string}</td>
+              </tr>
+            </table>
+          </div>
+        `
+
+        const doc = new DOMParser().parseFromString(tableOutput, 'text/html');
+        chartWindow.document.body.appendChild(chartContainer);
+        chartWindow.document.body.appendChild(doc.body.firstChild);
       }
-  })}, [Highcharts, linearRegressionLine.points, polyregData, tempABVals])
-return (
-  <div id="container" />
-)
+
+      document.getElementById('btn').addEventListener('click', btnOnClick);
+      return () => {
+        document.removeEventListener('click', btnOnClick);
+      };
+      // HighchartsPlugin(Highcharts);
+
+  }, [Highcharts, linearRegressionLine.equation, linearRegressionLine.points, linearRegressionLine.r2, linearRegressionLine.string, polyregData, tempABVals, terms])
+  return (
+      <button id='btn'>Perform Analysis</button>
+  )
 }

@@ -244,6 +244,11 @@ function Spreadsheet({eventBus}) {
     dispatchSpreadsheetAction({type: ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS});
   }
 
+  const chartData = {
+    xVals: [48, 56, 44, 82, 62, 79, 64, 51, 48, 51, 75, 53, 65, 83, 44, 42, 78, 64, 33, 87, 75, 84, 57, 79, 55],
+    yVals: [37, 46, 36, 41, 40, 39, 38, 44, 42, 38, 37, 26, 39, 34, 33, 42, 38, 45, 33, 43, 36, 36, 39, 49, 45]
+  };
+
   return (
     <div>
       <FormulaBar />
@@ -251,7 +256,7 @@ function Spreadsheet({eventBus}) {
         <thead><tr><td></td>{headers}</tr></thead>
         <tbody>{visibleRows}</tbody>
       </table>
-      <HighchartsDemo />
+      <HighchartsDemo data={chartData} />
     </div>
   );
 }
