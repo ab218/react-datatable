@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import regression from 'regression';
 import PolyRegression from "js-polynomial-regression";
 import mwu from 'mann-whitney-utest';
@@ -8,12 +8,14 @@ import './App.css';
 import { useSpreadsheetState } from './SpreadsheetProvider';
 var jStat = require('jstat').jStat;
 
-export default function HighchartsDemo ({data}) {
+export default function HighchartsDemo ({data, windowOpen, setAnalysisWindow}) {
   const { Highcharts } = window;
   const {
     columns,
     rows,
    } = useSpreadsheetState();
+
+   // Think of a way to only have one window open at a time.
 
   // const samples = [ [30, 14, 6], [12, 15, 16] ];
   // console.log(mwu.test(samples));
@@ -23,24 +25,22 @@ export default function HighchartsDemo ({data}) {
   //     console.log('The data is not significant.');
   // }
 
-  const tempAVals = data.xVals.map((_, i) => {
-    return data.xVals[i]
-  })
+  // const tempAVals = data.xVals.map((_, i) => {
+  //   return data.xVals[i]
+  // })
 
-  const tempBVals = data.yVals.map((_, i) => {
-    return data.yVals[i]
-  })
+  // const tempBVals = data.yVals.map((_, i) => {
+  //   return data.yVals[i]
+  // })
 
-  console.log(tempAVals)
-  console.log(tempBVals)
 
-  console.log(
-    'mean is: ', jStat.mean(tempAVals),
-    '\nmedian is: ', jStat.median(tempAVals),
-    '\nstdev is: ', jStat.stdev(tempAVals),
-    '\nci is: ', jStat.normalci(50, 0.05, tempAVals),
-    // '\nanova: ', jStat.anovafscore(tempAVals, tempBVals),
-    )
+  // console.log(
+  //   'mean is: ', jStat.mean(tempAVals),
+  //   '\nmedian is: ', jStat.median(tempAVals),
+  //   '\nstdev is: ', jStat.stdev(tempAVals),
+  //   '\nci is: ', jStat.normalci(50, 0.05, tempAVals),
+  //   // '\nanova: ', jStat.anovafscore(tempAVals, tempBVals),
+  //   )
 
   // let x, y, z, out, table;
 
@@ -59,22 +59,22 @@ export default function HighchartsDemo ({data}) {
   // table = out.toString()
   // console.log(table);
 
-  const colXID = columns[1].id;
-  const colYID = columns[2].id;
-  function mapColumnValues(colID) {
-    const colVals = rows.map(row => row[colID]);
-    // console.log(colVals)
-  }
-  mapColumnValues(colXID);
-  mapColumnValues(colYID);
+  const colXID = columns[0].id;
+  const colYID = columns[1].id;
+  function mapColumnValues(colID) { return rows.map(row => row[colID]); }
+  const colA = mapColumnValues(colXID);
+  const colB = mapColumnValues(colYID);
+
+  console.log(colA, colB)
+
   const tempABVals = data.xVals.map((_, i) => {
-    return [data.xVals[i], data.yVals[i]]
+    return [parseInt(colB[i]), parseInt(colA[i])]
   }).sort();
   const tempABValsPoly = data.xVals.map((_, i) => {
-    return {x: data.xVals[i], y: data.yVals[i]}
+    return {x: colB[i], y: colA[i]}
   }).sort();
   const linearRegressionLine = regression.linear(tempABVals);
-  console.log(linearRegressionLine)
+  // console.log(linearRegressionLine)
   // const polyRegressionLine = regression.polynomial(tempABVals, {order: 3});
   // console.log('poly reg points:', polyRegressionLine.points);
 
@@ -82,7 +82,7 @@ export default function HighchartsDemo ({data}) {
   const model = PolyRegression.read(tempABValsPoly, 3);
   //terms is a list of coefficients for a polynomial equation. We'll feed these to predict y so that we don't have to re-compute them for every prediction.
   const terms = model.getTerms();
-  console.log(terms) // Poly regression coefficients
+  // console.log(terms) // Poly regression coefficients
   const polyregData = data.xVals.map(x => {
     return [x, model.predictY(terms, x)];
   });
@@ -101,7 +101,7 @@ export default function HighchartsDemo ({data}) {
   // console.log(regression2.score(data.xVals, data.yVals));
 
   useEffect(() => {
-    function btnOnClick() {
+    if (windowOpen) {
       const chartWindow = window.open("", "_blank", "left=9999,top=250,width=450,height=600"),
             chartContainer = document.createElement("div"),
             chartList = document.createElement("ul");
@@ -222,16 +222,9 @@ export default function HighchartsDemo ({data}) {
         const doc = new DOMParser().parseFromString(tableOutput, 'text/html');
         chartWindow.document.body.appendChild(chartContainer);
         chartWindow.document.body.appendChild(doc.body.firstChild);
-      }
-
-      document.getElementById('btn').addEventListener('click', btnOnClick);
-      return () => {
-        document.removeEventListener('click', btnOnClick);
-      };
+        setAnalysisWindow(false);
       // HighchartsPlugin(Highcharts);
-
-  }, [Highcharts, linearRegressionLine.equation, linearRegressionLine.points, linearRegressionLine.r2, linearRegressionLine.string, polyregData, tempABVals, terms])
-  return (
-      <button id='btn'>Perform Analysis</button>
-  )
+    }
+  }, [Highcharts, linearRegressionLine.equation, linearRegressionLine.points, linearRegressionLine.r2, linearRegressionLine.string, polyregData, setAnalysisWindow, tempABVals, terms, windowOpen])
+  return null;
 }

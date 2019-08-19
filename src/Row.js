@@ -108,7 +108,10 @@ export default function Row({
           )
         } else {
           // The rest of the cells in the row that aren't in a defined column
-          return (<td key={`row${rowIndex}col${columnIndex}`} onClick={() => selectCell(rowIndex, columnIndex)}>.</td>)
+          return (<td key={`row${rowIndex}col${columnIndex}`} onClick={(e) => {
+            e.preventDefault();
+            selectCell(rowIndex, columnIndex)
+          }}></td>)
         }
       })}
     </tr>

@@ -15,7 +15,6 @@ function App() {
     <div className="App">
       <SpreadsheetProvider>
         <Spreadsheet eventBus={eventBus}/>
-        <div id="container"></div>
       </SpreadsheetProvider>
     </div>
   );

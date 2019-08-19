@@ -177,15 +177,22 @@ export function useSpreadsheetDispatch() {
 }
 
 export function SpreadsheetProvider({children}) {
-  const columns = [{
-    type: 'String', label: 'Name'
-  }, {
-    type: 'Number', label: 'Age'
-  }, {
-    type: 'String', label: 'Gender'
-  }, {
-    type: 'Formula', label: 'FormulaColumn', formula: 'Age + 20'
-  }].map((metadata) => ({id: createRandomLetterString(), ...metadata})).map((column, _, array) => {
+  // const columns = [{
+  //   type: 'String', label: 'Name'
+  // }, {
+  //   type: 'Number', label: 'Age'
+  // }, {
+  //   type: 'String', label: 'Gender'
+  // }, {
+  //   type: 'Formula', label: 'FormulaColumn', formula: 'Age + 20'
+  // }]
+
+  const dummyColumns = [
+    {type: 'Number', label: 'X'},
+    {type: 'Number', label: 'Y'},
+  ]
+
+  const columns = dummyColumns.map((metadata) => ({id: createRandomLetterString(), ...metadata})).map((column, _, array) => {
     const {formula, ...rest} = column;
     if (formula) {
       const newFormula = array.filter((someColumn) => formula.includes(someColumn.label)).reduce((changedFormula, someColumn) => {
@@ -197,8 +204,39 @@ export function SpreadsheetProvider({children}) {
     }
     // return formula ? {...rest, formula: } : column;
   });
+
+  const dummyRows = [
+    [37, 48],
+    [46, 56],
+    [36, 44],
+    [41, 82],
+    [40, 62],
+    [39, 79],
+    [38, 64],
+    [44, 51],
+    [42, 48],
+    [38, 51],
+    [37, 75],
+    [26, 53],
+    [39, 65],
+    [34, 83],
+    [33, 44],
+    [42, 42],
+    [38, 78],
+    [45, 64],
+    [33, 33],
+    [43, 87],
+    [36, 75],
+    [36, 84],
+    [39, 57],
+    [49, 79],
+    [45, 55],
+  ]
+
   const columnPositions = columns.reduce((acc, column, index) => ({...acc, [column.id]: index}), {});
-  const rows = [['John Smith', 25, 'M', ''], ['Jane Smith', 24, 'F', '']].map((tuple) => ({
+  // const rows = [['John Smith', 25, 'M', ''], ['Jane Smith', 24, 'F', '']]
+
+  const rows = dummyRows.map((tuple) => ({
     id: createRandomID(), ...tuple.reduce((acc, value, index) => ({...acc, [columns[index].id]: value}), {})
   }));
   const rowPositions = rows.reduce((acc, row, index) => ({...acc, [row.id]: index}), {});

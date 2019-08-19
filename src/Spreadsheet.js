@@ -1,9 +1,10 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 // import { Parser } from 'hot-formula-parser';
 import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import ColResizer from './ColResizer';
 import ActiveCell from './ActiveCell';
+import ColResizer from './ColResizer';
+import ContextMenu from './ContextMenu';
 import Row from './Row';
 import { SelectedCell } from './Cell';
 import {
@@ -16,6 +17,7 @@ import {
   UPDATE_CELL,
 } from './constants'
 import HighchartsDemo from './HighchartsDemo';
+
 
 // function isFormula(value) {
 //   return typeof value === 'string' && value.charAt(0) === '=';
@@ -126,6 +128,8 @@ function Spreadsheet({eventBus}) {
     rows,
    } = useSpreadsheetState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+
+  const [analysisWindow, setAnalysisWindow] = useState(false);
 
 
   // const formulaParser = new Parser();
@@ -251,12 +255,13 @@ function Spreadsheet({eventBus}) {
 
   return (
     <div>
+      <ContextMenu setAnalysisWindow={setAnalysisWindow} />
+      <HighchartsDemo setAnalysisWindow={setAnalysisWindow} windowOpen={analysisWindow} data={chartData}/>
       <FormulaBar />
       <table>
         <thead><tr><td></td>{headers}</tr></thead>
         <tbody>{visibleRows}</tbody>
       </table>
-      <HighchartsDemo data={chartData} />
     </div>
   );
 }

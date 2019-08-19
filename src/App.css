@@ -41,3 +41,28 @@ td input {
   background-color: '#f0f0f0';
 }
 
+.menu {
+  text-align: left;
+  width: 120px;
+  box-shadow: 0 4px 5px 3px rgba(0, 0, 0, 0.2);
+  position: absolute;
+  display: none;
+  background: rgb(255, 250, 250);
+}
+
+.menu-options {
+  list-style: none;
+  padding: 10px 0;
+}
+
+
+.menu-option {
+  font-weight: 500;
+  font-size: 14px;
+  padding: 10px 40px 10px 20px;
+  cursor: pointer;
+}
+
+.menu-option:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
