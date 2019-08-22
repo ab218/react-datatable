@@ -15,7 +15,6 @@ import {
   MODIFY_CURRENT_SELECTION_CELL_RANGE,
   SELECT_CELL,
   TOGGLE_CONTEXT_MENU,
-  TOGGLE_MODAL,
   UPDATE_CELL,
 } from './constants'
 import HighchartsDemo from './HighchartsDemo';
@@ -124,6 +123,7 @@ function Spreadsheet({eventBus}) {
     currentCellSelectionRange,
     rowPositions,
     rows,
+    selectedColumn
    } = useSpreadsheetState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
@@ -149,7 +149,15 @@ function Spreadsheet({eventBus}) {
 
   // We add one more column header as the capstone for the column of row headers
   const visibleColumnCount = Math.max(26, columns.length);
-  const headers = Array(visibleColumnCount).fill(undefined).map((_, index) => (<ColResizer openModal={openModal} key={index} minWidth={60} content={String.fromCharCode(index + 'A'.charCodeAt(0))}/>))
+  const headers = Array(visibleColumnCount).fill(undefined).map((_, index) => (
+    <ColResizer
+      columnIndex={index}
+      key={index}
+      minWidth={60}
+      column={columns[index]}
+      content={String.fromCharCode(index + 'A'.charCodeAt(0))}
+    />
+  ))
   const visibleRows = Array(visibleRowCount).fill(undefined).map((_, index) => {
       if (rowIDs[index]) {
         return (
@@ -207,10 +215,6 @@ function Spreadsheet({eventBus}) {
     dispatchSpreadsheetAction({type: ACTIVATE_CELL, row, column, selectionActive});
   }
 
-  function openModal() {
-    dispatchSpreadsheetAction({type: TOGGLE_MODAL, modalOpen: true})
-  }
-
   function selectCell(row, column, selectionActive) {
     dispatchSpreadsheetAction({type: SELECT_CELL, row, column, selectionActive});
   }
@@ -232,7 +236,7 @@ function Spreadsheet({eventBus}) {
     <div>
       <ContextMenu setAnalysisWindow={setAnalysisWindow} />
       <HighchartsDemo setAnalysisWindow={setAnalysisWindow} windowOpen={analysisWindow} data={chartData}/>
-      <Modal />
+      {selectedColumn && <Modal selectedColumn={selectedColumn}/>}
       <FormulaBar />
       <table>
         <thead><tr><td></td>{headers}</tr></thead>

@@ -12,10 +12,12 @@ import {
   // OPEN_ANALYSIS_WINDOW,
   TOGGLE_CONTEXT_MENU,
   TOGGLE_MODAL,
+  REMOVE_SELECTED_CELLS,
   SET_ROW_POSITION,
   SELECT_CELL,
   TRANSLATE_SELECTED_CELL,
-  UPDATE_CELL
+  UPDATE_CELL,
+  UPDATE_COLUMN
 } from './constants'
 
 const SpreadsheetStateContext = React.createContext();
@@ -59,6 +61,7 @@ function spreadsheetReducer(state, action) {
     rowCount,
     selectionActive,
     type,
+    updatedColumn,
    } = action;
   console.log('dispatched:', type, 'with action:', action);
   switch (type) {
@@ -140,12 +143,8 @@ function spreadsheetReducer(state, action) {
     // case OPEN_ANALYSIS_WINDOW: {
     //   return {...state, analysisWindowOpen: true};
     // }
-    case TOGGLE_CONTEXT_MENU: {
-      function showOrHideContextMenu(command) { return command === 'show' ? true : false }
-      return {...state, contextMenuOpen: showOrHideContextMenu(contextMenuOpen) };
-    }
-    case TOGGLE_MODAL: {
-      return {...state, modalOpen}
+    case REMOVE_SELECTED_CELLS: {
+      return {...state, cellSelectionRanges: [] }
     }
     case SELECT_CELL: {
       const {cellSelectionRanges = []} = state;
@@ -157,6 +156,13 @@ function spreadsheetReducer(state, action) {
     }
     case SET_ROW_POSITION: {
       return {...state, rowPositions: {...state.rowPositions, [action.rowID]: action.row} };
+    }
+    case TOGGLE_CONTEXT_MENU: {
+      function showOrHideContextMenu(command) { return command === 'show' ? true : false }
+      return {...state, contextMenuOpen: showOrHideContextMenu(contextMenuOpen) };
+    }
+    case TOGGLE_MODAL: {
+      return {...state, modalOpen, selectedColumn: column}
     }
     case TRANSLATE_SELECTED_CELL: {
       const newCellSelectionRanges = [{top: rowIndex, bottom: rowIndex, left: columnIndex, right: columnIndex}];
@@ -187,6 +193,11 @@ function spreadsheetReducer(state, action) {
       const changedRows = newRows.filter(newRow => newRow.id !== rowCopy.id).concat(rowCopy);
 
       return  {...state, rows: changedRows };
+    }
+    case UPDATE_COLUMN: {
+      const originalPosition = state.columns.findIndex(col => col.id === updatedColumn.id);
+      const updatedColumns = state.columns.slice(0, originalPosition).concat(updatedColumn).concat(state.columns.slice(originalPosition + 1));
+      return {...state, columns: updatedColumns}
     }
     default: {
       throw new Error(`Unhandled action type: ${type}`);

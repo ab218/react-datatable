@@ -1,26 +1,32 @@
 import React, { useEffect, useState } from 'react';
+import { useSpreadsheetDispatch } from './SpreadsheetProvider';
+import { TOGGLE_MODAL, REMOVE_SELECTED_CELLS } from './constants'
 
-export default function ColumnResizer({content, openModal}) {
+export default function ColumnResizer({column, content}) {
 
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [offset, setOffset] = useState(0);
   const [originalCellWidth, setOriginalCellWidth] = useState();
 
+  const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+
+  function openModal() {
+    if (!column) return;
+    dispatchSpreadsheetAction({type: REMOVE_SELECTED_CELLS })
+    dispatchSpreadsheetAction({type: TOGGLE_MODAL, modalOpen: true, column})
+  }
+
   useEffect(() => {
     const endDrag = () => {
-      if (!isDragging) {
-        return;
-      }
+      if (!isDragging) return;
       setIsDragging(false);
       setOriginalCellWidth(originalCellWidth + offset);
       setOffset(0);
     }
 
     const onMouseMove = (e) => {
-      if (!isDragging) {
-        return;
-      }
+      if (!isDragging) return;
       setOffset(e.clientX - startX);
     }
 
@@ -31,7 +37,7 @@ export default function ColumnResizer({content, openModal}) {
       document.removeEventListener('mouseup', endDrag);
 
     };
-  }, [isDragging, offset, openModal, originalCellWidth, startX]);
+  }, [content, isDragging, offset, originalCellWidth, startX]);
 
   const startDrag = (e) => {
     setStartX(e.clientX);
@@ -48,7 +54,7 @@ export default function ColumnResizer({content, openModal}) {
 
   return (
       <td style={style} onMouseDown={startDrag} onDoubleClick={openModal}>
-          {content}
+          {(column && column.label) || content}
       </td>
   );
 }

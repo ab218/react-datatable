@@ -79,12 +79,20 @@ td input {
 
 .modal-main {
   position: fixed;
+  display: flex;
+  flex-direction: column;
   background: white;
-  width: 200px;
-  height: 400px;
+  width: 400px;
+  height: 300px;
   top:50%;
   left:50%;
   transform: translate(-50%,-50%);
+}
+
+.modal-main > span {
+  display: flex;
+  justify-content: space-between;
+  margin: 1em;
 }
 
 .display-block {
@@ -93,4 +101,8 @@ td input {
 
 .display-none {
   display: none;
+}
+
+.display-flex {
+  display: flex;
 }
