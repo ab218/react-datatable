@@ -1,9 +1,8 @@
 import React from 'react';
 import ActiveCell from './ActiveCell';
 import { NormalCell, RowNumberCell, SelectedCell } from './Cell';
-import { UPDATE_CELL } from './constants';
+import { TOGGLE_CONTEXT_MENU, UPDATE_CELL } from './constants';
 import { useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { Parser } from 'hot-formula-parser';
 
 export default function Row({
   activeCell,
@@ -42,20 +41,9 @@ export default function Row({
           if (columnIndex > columns.length) {
             createNewColumns(columnIndex - columns.length);
           }
-          console.log('updating cell from active cell');
           dispatchSpreadsheetAction({type: UPDATE_CELL, row, column, cellValue: clear ? '' : event.target.value});
         }
 
-        const formulaParser = new Parser();
-        formulaParser.on('callVariable', function(name, done) {
-          // console.log('callVariable callback:', arguments);
-          const selectedColumn = columns.find((column) => column.id === name);
-          // console.log('selectedColumn:', selectedColumn);
-          if (selectedColumn) {
-            done(row ? row[selectedColumn.id] : 'column not found');
-          }
-        });
-        const formulaResult = column && column.formula ? formulaParser.parse(column.formula).result : '';
         if (activeCell && activeCell.row === rowIndex && activeCell.column === columnIndex) {
           return (
             <ActiveCell
@@ -81,7 +69,6 @@ export default function Row({
               changeActiveCell={changeActiveCell}
               column={column}
               columnIndex={columnIndex}
-              formulaResult={formulaResult}
               finishCurrentSelectionRange={finishCurrentSelectionRange}
               isFormulaColumn={isFormulaColumn}
               modifyCellSelectionRange={modifyCellSelectionRange}
@@ -99,7 +86,6 @@ export default function Row({
               column={column}
               columnIndex={columnIndex}
               finishCurrentSelectionRange={finishCurrentSelectionRange}
-              formulaResult={formulaResult}
               modifyCellSelectionRange={modifyCellSelectionRange}
               row={row}
               rowIndex={rowIndex}
@@ -108,8 +94,9 @@ export default function Row({
           )
         } else {
           // The rest of the cells in the row that aren't in a defined column
-          return (<td key={`row${rowIndex}col${columnIndex}`} onClick={(e) => {
+          return (<td key={`row${rowIndex}col${columnIndex}`} onMouseDown={(e) => {
             e.preventDefault();
+            dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen: 'hide' })
             selectCell(rowIndex, columnIndex)
           }}></td>)
         }

@@ -1,14 +1,19 @@
-import React, {useEffect} from 'react';
+import React, { useEffect } from 'react';
+import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
+import { TOGGLE_CONTEXT_MENU } from './constants'
 import './App.css';
 
 export default function ContextMenu({setAnalysisWindow}) {
+
+  const { contextMenuOpen } = useSpreadsheetState();
+  const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+
   useEffect(() => {
     const menu = document.querySelector(".menu");
-    let menuVisible = false;
+    menu.style.display = contextMenuOpen ? 'block' : 'none';
 
     const toggleMenu = command => {
-      menu.style.display = command === "show" ? "block" : "none";
-      menuVisible = !menuVisible;
+      dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen: command })
     };
 
     const setPosition = ({ top, left }) => {
@@ -17,21 +22,28 @@ export default function ContextMenu({setAnalysisWindow}) {
       toggleMenu("show");
     };
 
-    window.addEventListener("click", e => {
-      if (menuVisible) {
-        toggleMenu("hide");
-      }
-    });
-
-    window.addEventListener("contextmenu", e => {
+    const contextMenu = (e) => {
       e.preventDefault();
       const origin = {
         left: e.pageX,
         top: e.pageY
       };
       setPosition(origin);
-      return false;
-    });
+    }
+
+    const onClick = (e) => {
+      if (contextMenuOpen) {
+        toggleMenu("hide");
+      }
+    }
+
+    document.body.addEventListener("contextmenu", contextMenu)
+    document.body.addEventListener("click", onClick)
+
+    return () => {
+      document.body.removeEventListener("contextmenu", contextMenu);
+      document.body.removeEventListener("click", onClick);
+    };
   })
   return (
     <div className="menu">

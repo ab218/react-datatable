@@ -21,7 +21,7 @@ thead td {
   background-color: #eee;
   position: sticky;
   top: -1px;
-  z-index: 2;
+  z-index: 1;
 }
 
 tbody tr td:first-of-type {
@@ -65,4 +65,32 @@ td input {
 
 .menu-option:hover {
   background: rgba(0, 0, 0, 0.2);
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 2;
+}
+
+.modal-main {
+  position: fixed;
+  background: white;
+  width: 200px;
+  height: 400px;
+  top:50%;
+  left:50%;
+  transform: translate(-50%,-50%);
+}
+
+.display-block {
+  display: block;
+}
+
+.display-none {
+  display: none;
 }

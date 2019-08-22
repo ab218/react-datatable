@@ -1,6 +1,6 @@
 import React, {useEffect} from 'react';
 import { useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { DELETE_VALUES, TRANSLATE_SELECTED_CELL, ACTIVATE_CELL } from './constants'
+import { DELETE_VALUES, TRANSLATE_SELECTED_CELL, ACTIVATE_CELL, TOGGLE_CONTEXT_MENU } from './constants'
 
 export function RowNumberCell({rowIndex}) { return <td>{rowIndex + 1}</td> }
 
@@ -68,6 +68,7 @@ export function SelectedCell({
       key={`row${rowIndex}col${columnIndex}`}
       style={{backgroundColor: '#f0f0f0'}}
       onMouseDown={(event) => {
+        dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen: 'hide' })
         if (!formulaResult && !isFormulaColumn) {
           changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
         }
@@ -92,6 +93,8 @@ export function NormalCell({
   rowIndex,
   selectCell,
 }) {
+  const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+
   const cellValue = row[column.id];
   return (
   <td
@@ -99,6 +102,7 @@ export function NormalCell({
     onMouseDown={(event) => {
       // prevent text from being highlighted
       event.preventDefault();
+      dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen: 'hide' })
       selectCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
     }}
     onMouseEnter={(event) => {
@@ -106,39 +110,7 @@ export function NormalCell({
         modifyCellSelectionRange(rowIndex, columnIndex, true);
       }
     }}
-    onMouseUp={() => {finishCurrentSelectionRange()}}
+    onMouseUp={finishCurrentSelectionRange}
     >
   {formulaResult || cellValue}</td>
   )}
-
-
-// function Cell({value, formulaParser, row, col, deselected, selected, setActiveCell, modifyCellSelectionRange, finishCurrentSelectionRange}) {
-//   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-//   let cellValue = value;
-//   if (isFormula(cellValue)) {
-//     const {error, result} = formulaParser.parse(cellValue.slice(1));
-//     cellValue = error || result;
-//   }
-//   return (<td style={!deselected && selected ? {backgroundColor: '#f0f0f0'} : {}}
-//               onMouseDown={(event) => {
-//                 if (selected) {
-//                   setActiveCell(row, col, event.ctrlKey || event.shiftKey || event.metaKey);
-//                   dispatchSpreadsheetAction({type: 'add-cell-to-deselect-list'});
-//                 } else {
-//                   setActiveCell(row, col, event.ctrlKey || event.shiftKey || event.metaKey);
-//                 }
-//                 if (!event.metaKey && !event.shiftKey) {
-//                   dispatchSpreadsheetAction({type: 'clear-deselect-list'});
-//                 }
-//               }}
-//               onMouseMove={(event) => {
-//                 if (typeof event.buttons === 'number' && event.buttons > 0) {
-//                   modifyCellSelectionRange(row, col, true);
-//                 }
-//               }}
-//               onMouseUp={() => {
-//                 finishCurrentSelectionRange();
-//               }}>{cellValue}</td>);
-// }
-
-// export default Cell;

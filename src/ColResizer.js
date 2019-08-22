@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-export default function ColumnResizer({content}) {
+export default function ColumnResizer({content, openModal}) {
 
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
@@ -29,8 +29,9 @@ export default function ColumnResizer({content}) {
     return () => {
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', endDrag);
+
     };
-  }, [isDragging, offset, originalCellWidth, startX]);
+  }, [isDragging, offset, openModal, originalCellWidth, startX]);
 
   const startDrag = (e) => {
     setStartX(e.clientX);
@@ -46,7 +47,7 @@ export default function ColumnResizer({content}) {
   };
 
   return (
-      <td style={style} onMouseDown={startDrag}>
+      <td style={style} onMouseDown={startDrag} onDoubleClick={openModal}>
           {content}
       </td>
   );
