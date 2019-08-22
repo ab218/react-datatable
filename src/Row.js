@@ -2,7 +2,7 @@ import React from 'react';
 import ActiveCell from './ActiveCell';
 import { NormalCell, RowNumberCell, SelectedCell } from './Cell';
 import { TOGGLE_CONTEXT_MENU, UPDATE_CELL } from './constants';
-import { useSpreadsheetDispatch } from './SpreadsheetProvider';
+import { useSpreadsheetDispatch, useSpreadsheetState } from './SpreadsheetProvider';
 
 export default function Row({
   activeCell,
@@ -25,6 +25,7 @@ export default function Row({
     return columnPositions[colA.id] - columnPositions[colB.id];
   });
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+  const { contextMenuOpen } = useSpreadsheetState();
   return (
     <tr>
       {Array(cellCount).fill(undefined).map((_, columnIndex) => {
@@ -96,7 +97,9 @@ export default function Row({
           // The rest of the cells in the row that aren't in a defined column
           return (<td key={`row${rowIndex}col${columnIndex}`} onMouseDown={(e) => {
             e.preventDefault();
-            dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen: 'hide' })
+            if (contextMenuOpen) {
+              dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen: 'hide' })
+            }
             selectCell(rowIndex, columnIndex)
           }}></td>)
         }

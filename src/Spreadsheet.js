@@ -46,6 +46,7 @@ function BlankClickableRow({
   selectCell,
 }) {
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+  const { contextMenuOpen } = useSpreadsheetState();
   return (
     <tr>
       {Array(cellCount).fill(undefined).map((_, columnIndex) => {
@@ -97,7 +98,9 @@ function BlankClickableRow({
           <td
             onMouseDown={(event) => {
               event.preventDefault();
-              dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen: 'hide' })
+              if (contextMenuOpen) {
+                dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen: 'hide' })
+              }
               selectCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
             }}
             onMouseEnter={(event) => {
@@ -105,7 +108,7 @@ function BlankClickableRow({
               modifyCellSelectionRange(rowIndex, columnIndex, true);
             }
             }}
-            onMouseUp={() => {finishCurrentSelectionRange()}}
+            onMouseUp={finishCurrentSelectionRange}
             key={`blank_cell${rowIndex}_${columnIndex}`}
             ></td>
         )

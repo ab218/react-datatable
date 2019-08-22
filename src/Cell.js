@@ -1,5 +1,5 @@
 import React, {useEffect} from 'react';
-import { useSpreadsheetDispatch } from './SpreadsheetProvider';
+import { useSpreadsheetDispatch, useSpreadsheetState } from './SpreadsheetProvider';
 import { DELETE_VALUES, TRANSLATE_SELECTED_CELL, ACTIVATE_CELL, TOGGLE_CONTEXT_MENU } from './constants'
 
 export function RowNumberCell({rowIndex}) { return <td>{rowIndex + 1}</td> }
@@ -18,7 +18,7 @@ export function SelectedCell({
   updateCell,
 } ) {
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-
+  const { contextMenuOpen } = useSpreadsheetState();
   const cursorKeyToRowColMapper = {
     ArrowUp: function (row, column) {
       // rows should never go less than index 0 (top row header)
@@ -68,7 +68,9 @@ export function SelectedCell({
       key={`row${rowIndex}col${columnIndex}`}
       style={{backgroundColor: '#f0f0f0'}}
       onMouseDown={(event) => {
-        dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen: 'hide' })
+        if (contextMenuOpen) {
+          dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen: 'hide' })
+        }
         if (!formulaResult && !isFormulaColumn) {
           changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
         }
@@ -94,6 +96,7 @@ export function NormalCell({
   selectCell,
 }) {
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+  const { contextMenuOpen } = useSpreadsheetState();
 
   const cellValue = row[column.id];
   return (
@@ -102,7 +105,9 @@ export function NormalCell({
     onMouseDown={(event) => {
       // prevent text from being highlighted
       event.preventDefault();
-      dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen: 'hide' })
+      if (contextMenuOpen) {
+        dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen: 'hide' })
+      }
       selectCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
     }}
     onMouseEnter={(event) => {

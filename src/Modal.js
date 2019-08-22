@@ -44,7 +44,6 @@ export default function Modal({selectedColumn}) {
           <div>Formula</div>
           <input value={columnFormula} onChange={e => setColumnFormula(e.target.value)}/>
         </span>
-        <div></div>
         <button onClick={handleClose}>close</button>
       </section>
     </div>
