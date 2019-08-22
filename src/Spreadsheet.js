@@ -1,10 +1,10 @@
-import React, {useEffect, useState} from 'react';
-// import { Parser } from 'hot-formula-parser';
+import React, { useState } from 'react';
 import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import ActiveCell from './ActiveCell';
 import ColResizer from './ColResizer';
 import ContextMenu from './ContextMenu';
+import Modal from './Modal';
 import Row from './Row';
 import { SelectedCell } from './Cell';
 import {
@@ -14,14 +14,11 @@ import {
   CREATE_ROWS,
   MODIFY_CURRENT_SELECTION_CELL_RANGE,
   SELECT_CELL,
+  TOGGLE_CONTEXT_MENU,
+  TOGGLE_MODAL,
   UPDATE_CELL,
 } from './constants'
 import HighchartsDemo from './HighchartsDemo';
-
-
-// function isFormula(value) {
-//   return typeof value === 'string' && value.charAt(0) === '=';
-// }
 
 function FormulaBar() {
   return (
@@ -101,6 +98,7 @@ function BlankClickableRow({
           <td
             onMouseDown={(event) => {
               event.preventDefault();
+              dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen: 'hide' })
               selectCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
             }}
             onMouseEnter={(event) => {
@@ -131,33 +129,6 @@ function Spreadsheet({eventBus}) {
 
   const [analysisWindow, setAnalysisWindow] = useState(false);
 
-
-  // const formulaParser = new Parser();
-  // formulaParser.on('callCellValue', function(cellValue, done) {
-  //   console.log('inside callCellValue:', arguments);
-  //   const {column: {index: cellColumnIndex}, row: {index: cellRowIndex}} = cellValue;
-  //   // const whichColumn = columns.find(
-  //   // Resolve the cell reference
-  //   const {error, result} = formulaParser.parse(cellValue);
-  //   done(error || result);
-  // });
-  // formulaParser.on('callVariable', function(name, done) {
-  //   console.log('on call variable:', arguments);
-  //   const selectedColumn = columns.find((column) => column.id === name);
-  //   if (selectedColumn) {
-
-  //   }
-  // });
-
-  // formulaParser.on('callRangeValue', function(startCellCoord, endCellCoord, done) {
-  //   const data = cellPositions.slice(startCellCoord.row.index, endCellCoord.row.index + 1).map((row) => {
-  //     return row.slice(startCellCoord.column.index, endCellCoord.column.index + 1).map((cellID) => {
-  //       return cells[cellID].value;
-  //     });
-  //   });
-  //   done(data);
-  // });
-
   function isSelectedCell(row, column) {
     function withinRange(value) {
       const {top, right, bottom, left} = value;
@@ -178,7 +149,7 @@ function Spreadsheet({eventBus}) {
 
   // We add one more column header as the capstone for the column of row headers
   const visibleColumnCount = Math.max(26, columns.length);
-  const headers = Array(visibleColumnCount).fill(undefined).map((_, index) => (<ColResizer key={index} minWidth={60} content={String.fromCharCode(index + 'A'.charCodeAt(0))}/>))
+  const headers = Array(visibleColumnCount).fill(undefined).map((_, index) => (<ColResizer openModal={openModal} key={index} minWidth={60} content={String.fromCharCode(index + 'A'.charCodeAt(0))}/>))
   const visibleRows = Array(visibleRowCount).fill(undefined).map((_, index) => {
       if (rowIDs[index]) {
         return (
@@ -236,6 +207,10 @@ function Spreadsheet({eventBus}) {
     dispatchSpreadsheetAction({type: ACTIVATE_CELL, row, column, selectionActive});
   }
 
+  function openModal() {
+    dispatchSpreadsheetAction({type: TOGGLE_MODAL, modalOpen: true})
+  }
+
   function selectCell(row, column, selectionActive) {
     dispatchSpreadsheetAction({type: SELECT_CELL, row, column, selectionActive});
   }
@@ -257,6 +232,7 @@ function Spreadsheet({eventBus}) {
     <div>
       <ContextMenu setAnalysisWindow={setAnalysisWindow} />
       <HighchartsDemo setAnalysisWindow={setAnalysisWindow} windowOpen={analysisWindow} data={chartData}/>
+      <Modal />
       <FormulaBar />
       <table>
         <thead><tr><td></td>{headers}</tr></thead>
@@ -267,24 +243,3 @@ function Spreadsheet({eventBus}) {
 }
 
 export default Spreadsheet;
-
-// formulaParser.on('callCellValue', function(cellCoordinates, done) {
-//   const cellValue = cells[cellPositions[cellCoordinates.row.index][cellCoordinates.column.index]].value;
-//   if (isFormula(cellValue)) {
-//     const {error, result} = formulaParser.parse(cellValue.slice(1));
-//     done(error || result);
-//   } else {
-//     done(cellValue);
-//   }
-// });
-
-// formulaParser.on('callRangeValue', function(startCellCoord, endCellCoord, done) {
-//   const data = cellPositions.slice(startCellCoord.row.index, endCellCoord.row.index + 1).map((row) => {
-//     return row.slice(startCellCoord.column.index, endCellCoord.column.index + 1).map((cellID) => {
-//       return cells[cellID].value;
-//     });
-//   });
-//   done(data);
-// });
-
-

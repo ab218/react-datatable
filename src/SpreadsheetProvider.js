@@ -1,4 +1,5 @@
 import React, { useReducer } from 'react';
+import { Parser } from 'hot-formula-parser';
 import './App.css';
 import {
   ACTIVATE_CELL,
@@ -8,6 +9,9 @@ import {
   CREATE_ROWS,
   DELETE_VALUES,
   MODIFY_CURRENT_SELECTION_CELL_RANGE,
+  // OPEN_ANALYSIS_WINDOW,
+  TOGGLE_CONTEXT_MENU,
+  TOGGLE_MODAL,
   SET_ROW_POSITION,
   SELECT_CELL,
   TRANSLATE_SELECTED_CELL,
@@ -37,7 +41,7 @@ function createRandomID() {
 function createRandomLetterString() {
   const upperAlphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   const alphabet = upperAlphabet + upperAlphabet.toLowerCase();
-  return Array(10).fill(undefined).map((_) => alphabet.charAt(Math.floor(Math.random() * alphabet.length))).join('');
+  return '_' + Array(10).fill(undefined).map((_) => alphabet.charAt(Math.floor(Math.random() * alphabet.length))).join('') + '_';
 }
 
 function spreadsheetReducer(state, action) {
@@ -46,8 +50,10 @@ function spreadsheetReducer(state, action) {
     column,
     columnCount,
     columnIndex,
+    contextMenuOpen,
     endRangeRow,
     endRangeColumn,
+    modalOpen,
     row,
     rowIndex,
     rowCount,
@@ -131,6 +137,16 @@ function spreadsheetReducer(state, action) {
         })
       } : state;
     }
+    // case OPEN_ANALYSIS_WINDOW: {
+    //   return {...state, analysisWindowOpen: true};
+    // }
+    case TOGGLE_CONTEXT_MENU: {
+      function showOrHideContextMenu(command) { return command === 'show' ? true : false }
+      return {...state, contextMenuOpen: showOrHideContextMenu(contextMenuOpen) };
+    }
+    case TOGGLE_MODAL: {
+      return {...state, modalOpen}
+    }
     case SELECT_CELL: {
       const {cellSelectionRanges = []} = state;
       // track lastSelection to know where to begin range selection on drag
@@ -148,9 +164,26 @@ function spreadsheetReducer(state, action) {
     }
     case UPDATE_CELL: {
       const { rows, columns } = state;
+      // row from action or last row from state
+      const originalRow = row || rows[rows.length - 1];
       const newRows = rows.slice();
       const {id: columnID} = column || columns[columns.length - 1];
-      const rowCopy = Object.assign({}, row || rows[rows.length - 1], {[columnID]: cellValue});
+      const dependentColumns = columns.filter(({type, formula}) => {
+        return type === 'Formula' && formula.includes(columnID);
+      });
+      let rowCopy = Object.assign({}, originalRow, {[columnID]: cellValue});
+      if (dependentColumns.length) {
+        const formulaParser = new Parser();
+        formulaParser.on('callVariable', function(name, done) {
+          const selectedColumn = columns.find((column) => column.id === name);
+          if (selectedColumn) {
+            done(rowCopy[selectedColumn.id]);
+          }
+        });
+        rowCopy = dependentColumns.reduce((acc, column) => {
+          return {...acc, [column.id]: formulaParser.parse(column.formula).result};
+        }, rowCopy);
+      }
       const changedRows = newRows.filter(newRow => newRow.id !== rowCopy.id).concat(rowCopy);
 
       return  {...state, rows: changedRows };
@@ -177,68 +210,58 @@ export function useSpreadsheetDispatch() {
 }
 
 export function SpreadsheetProvider({children}) {
-  // const columns = [{
-  //   type: 'String', label: 'Name'
-  // }, {
-  //   type: 'Number', label: 'Age'
-  // }, {
-  //   type: 'String', label: 'Gender'
-  // }, {
-  //   type: 'Formula', label: 'FormulaColumn', formula: 'Age + 20'
-  // }]
-
-  const dummyColumns = [
-    {type: 'Number', label: 'X'},
-    {type: 'Number', label: 'Y'},
+  const jovitaColumns = [
+    {type: 'Number', label: 'A'},
+    {type: 'Number', label: 'B'},
+    {type: 'Number', label: 'C'},
+    {type: 'Number', label: 'D'},
+    {type: 'Number', label: 'E'},
+    {type: 'Number', label: 'F'},
+    {type: 'Formula', label: 'G', formula: '(B + C + D + E + F) / 5'}
   ]
 
-  const columns = dummyColumns.map((metadata) => ({id: createRandomLetterString(), ...metadata})).map((column, _, array) => {
+  const columns = jovitaColumns.map((metadata) => ({id: createRandomLetterString(), ...metadata})).map((column, _, array) => {
     const {formula, ...rest} = column;
     if (formula) {
       const newFormula = array.filter((someColumn) => formula.includes(someColumn.label)).reduce((changedFormula, someColumn) => {
-        return changedFormula.replace(new RegExp(someColumn.label), someColumn.id);
+        return changedFormula.replace(new RegExp(`\\b${someColumn.label}\\b`), `${someColumn.id}`);
       }, formula);
       return {...rest, formula: newFormula};
     } else {
       return column;
     }
-    // return formula ? {...rest, formula: } : column;
   });
 
-  const dummyRows = [
-    [37, 48],
-    [46, 56],
-    [36, 44],
-    [41, 82],
-    [40, 62],
-    [39, 79],
-    [38, 64],
-    [44, 51],
-    [42, 48],
-    [38, 51],
-    [37, 75],
-    [26, 53],
-    [39, 65],
-    [34, 83],
-    [33, 44],
-    [42, 42],
-    [38, 78],
-    [45, 64],
-    [33, 33],
-    [43, 87],
-    [36, 75],
-    [36, 84],
-    [39, 57],
-    [49, 79],
-    [45, 55],
+  const jovitaRows = [
+    [10, 12, 10, 12, 11, 11],
+    [20, 10, 9, 9, 8, 10],
+    [30, 7, 6, 8, 7, 7],
+    [40, 6, 4, 5, 6, 5],
+    [50, 2, 4, 3, 2, 3]
   ]
 
   const columnPositions = columns.reduce((acc, column, index) => ({...acc, [column.id]: index}), {});
-  // const rows = [['John Smith', 25, 'M', ''], ['Jane Smith', 24, 'F', '']]
 
-  const rows = dummyRows.map((tuple) => ({
+  const rows = jovitaRows.map((tuple) => ({
     id: createRandomID(), ...tuple.reduce((acc, value, index) => ({...acc, [columns[index].id]: value}), {})
-  }));
+  })).map((originalRow) => {
+    const formulaColumns = columns.filter(({type}) => type === 'Formula');
+    let rowCopy = Object.assign({}, originalRow);
+    if (formulaColumns.length) {
+      const formulaParser = new Parser();
+      formulaParser.on('callVariable', function(name, done) {
+        const selectedColumn = columns.find((column) => column.id === name);
+        if (selectedColumn) {
+          done(originalRow[selectedColumn.id]);
+        }
+      });
+      rowCopy = formulaColumns.reduce((acc, column) => {
+        return {...acc, [column.id]: formulaParser.parse(column.formula).result};
+      }, rowCopy);
+    }
+
+    return rowCopy;
+  });
   const rowPositions = rows.reduce((acc, row, index) => ({...acc, [row.id]: index}), {});
 
   const initialState = {
@@ -253,7 +276,6 @@ export function SpreadsheetProvider({children}) {
     rowPositions,
     rows,
   };
-  console.log('initialState:', initialState);
   const [state, changeSpreadsheet] = useReducer(spreadsheetReducer, initialState);
   return (
     <SpreadsheetStateContext.Provider value={state}>
