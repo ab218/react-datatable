@@ -30,11 +30,12 @@ export default function Row({
     <tr>
       {Array(cellCount).fill(undefined).map((_, columnIndex) => {
         const column = columns[columnIndex - 1];
-        const isFormulaColumn = column && column.formula;
+        const isFormulaColumn = column && column.type === 'Formula' && column.formula;
         if (columnIndex === 0) {
           // The row # on the left side
           return <RowNumberCell key={`RowNumberCell${rowIndex}`} rowIndex={rowIndex}/>
         }
+
         function updateCell(event, clear) {
           if (rows === 1 ) {
             createNewRows(rows);

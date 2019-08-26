@@ -8,7 +8,6 @@ export function SelectedCell({
   changeActiveCell,
   column,
   columnIndex,
-  formulaResult,
   finishCurrentSelectionRange,
   isFormulaColumn,
   modifyCellSelectionRange,
@@ -39,7 +38,7 @@ export function SelectedCell({
   useEffect(() => {
     function onKeyDown(event) {
       // if the key pressed is not a non-character key (arrow key etc)
-      if (!formulaResult && !isFormulaColumn && event.key.length === 1) {
+      if (!isFormulaColumn && event.key.length === 1) {
         dispatchSpreadsheetAction({type: ACTIVATE_CELL, row: rowIndex, column: columnIndex});
         updateCell(event, true);
       } else {
@@ -71,7 +70,7 @@ export function SelectedCell({
         if (contextMenuOpen) {
           dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen: 'hide' })
         }
-        if (!formulaResult && !isFormulaColumn) {
+        if (!isFormulaColumn) {
           changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
         }
       }}
@@ -81,7 +80,7 @@ export function SelectedCell({
         }
       }}
       onMouseUp={() => {finishCurrentSelectionRange()}}
-    >{formulaResult || (row && column ? row[column.id] : '')}</td>
+    >{(row && column ? row[column.id] : '')}</td>
   )
 }
 
@@ -89,7 +88,6 @@ export function NormalCell({
   column,
   columnIndex,
   finishCurrentSelectionRange,
-  formulaResult,
   modifyCellSelectionRange,
   row,
   rowIndex,
@@ -117,5 +115,5 @@ export function NormalCell({
     }}
     onMouseUp={finishCurrentSelectionRange}
     >
-  {formulaResult || cellValue}</td>
+  {cellValue}</td>
   )}

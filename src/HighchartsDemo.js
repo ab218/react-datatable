@@ -23,14 +23,9 @@ export default function HighchartsDemo ({data, windowOpen, setAnalysisWindow}) {
   function mapColumnValues(colID) { return rows.map(row => row[colID]); }
   const colA = mapColumnValues(colXID);
   const colB = mapColumnValues(colYID);
-
-  console.log(colA, colB)
-
   const tempABVals = colA.map((_, i) => {
     return [parseInt(colA[i]), parseInt(colB[i])]
   }).sort();
-
-  console.log(jStat.anovaftest(colB, colA))
 
   const tempABValsPoly = colA.map((_, i) => {
     return {x: colB[i], y: colA[i]}

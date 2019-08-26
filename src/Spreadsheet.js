@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
+import AnalysisModal from './ModalAnalysis';
 import ActiveCell from './ActiveCell';
 import ColResizer from './ColResizer';
 import ContextMenu from './ContextMenu';
-import Modal from './Modal';
+import ColumnTypeModal from './ModalColumnType';
 import Row from './Row';
 import { SelectedCell } from './Cell';
 import {
@@ -239,7 +240,8 @@ function Spreadsheet({eventBus}) {
     <div>
       <ContextMenu setAnalysisWindow={setAnalysisWindow} />
       <HighchartsDemo setAnalysisWindow={setAnalysisWindow} windowOpen={analysisWindow} data={chartData}/>
-      {selectedColumn && <Modal selectedColumn={selectedColumn}/>}
+      {selectedColumn && <ColumnTypeModal selectedColumn={selectedColumn}/>}
+      <AnalysisModal />
       <FormulaBar />
       <table>
         <thead><tr><td></td>{headers}</tr></thead>

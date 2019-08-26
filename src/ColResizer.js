@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { TOGGLE_MODAL, REMOVE_SELECTED_CELLS } from './constants'
+import { TOGGLE_COLUMN_TYPE_MODAL, REMOVE_SELECTED_CELLS } from './constants'
 
 export default function ColumnResizer({column, content}) {
 
@@ -14,7 +14,7 @@ export default function ColumnResizer({column, content}) {
   function openModal() {
     if (!column) return;
     dispatchSpreadsheetAction({type: REMOVE_SELECTED_CELLS })
-    dispatchSpreadsheetAction({type: TOGGLE_MODAL, modalOpen: true, column})
+    dispatchSpreadsheetAction({type: TOGGLE_COLUMN_TYPE_MODAL, columnTypeModalOpen: true, column})
   }
 
   useEffect(() => {

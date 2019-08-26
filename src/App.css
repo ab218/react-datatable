@@ -67,32 +67,11 @@ td input {
   background: rgba(0, 0, 0, 0.2);
 }
 
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.6);
-  z-index: 2;
-}
 
-.modal-main {
-  position: fixed;
-  display: flex;
-  flex-direction: column;
-  background: white;
-  width: 400px;
-  height: 300px;
-  top:50%;
-  left:50%;
-  transform: translate(-50%,-50%);
-}
-
-.modal-main > span {
+.modal-span {
   display: flex;
   justify-content: space-between;
-  margin: 1em;
+  /* margin: 1em; */
 }
 
 .display-block {

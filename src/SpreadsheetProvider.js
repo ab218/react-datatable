@@ -11,7 +11,8 @@ import {
   MODIFY_CURRENT_SELECTION_CELL_RANGE,
   // OPEN_ANALYSIS_WINDOW,
   TOGGLE_CONTEXT_MENU,
-  TOGGLE_MODAL,
+  TOGGLE_COLUMN_TYPE_MODAL,
+  TOGGLE_ANALYSIS_MODAL,
   REMOVE_SELECTED_CELLS,
   SET_ROW_POSITION,
   SELECT_CELL,
@@ -19,6 +20,12 @@ import {
   UPDATE_CELL,
   UPDATE_COLUMN
 } from './constants'
+
+function translateLabelToID(columns, formula) {
+  return columns.filter((someColumn) => formula.includes(someColumn.label)).reduce((changedFormula, someColumn) => {
+    return changedFormula.replace(new RegExp(`\\b${someColumn.label}\\b`, 'g'), `${someColumn.id}`);
+  }, formula);
+}
 
 const SpreadsheetStateContext = React.createContext();
 const SpreadsheetDispatchContext = React.createContext();
@@ -48,6 +55,7 @@ function createRandomLetterString() {
 
 function spreadsheetReducer(state, action) {
   const {
+    analysisModalOpen,
     cellValue,
     column,
     columnCount,
@@ -55,7 +63,7 @@ function spreadsheetReducer(state, action) {
     contextMenuOpen,
     endRangeRow,
     endRangeColumn,
-    modalOpen,
+    columnTypeModalOpen,
     row,
     rowIndex,
     rowCount,
@@ -82,7 +90,7 @@ function spreadsheetReducer(state, action) {
     case CREATE_COLUMNS: {
       const newColumns = Array(columnCount).fill(undefined).map(_ => {
         const id = createRandomID();
-        return {id, type: 'String', label: `Column ${id}`};
+        return {id, type: 'String'};
       });
       const columns = state.columns.concat(newColumns);
       const columnPositions = newColumns.reduce((acc, {id}, offset) => {
@@ -161,8 +169,11 @@ function spreadsheetReducer(state, action) {
       function showOrHideContextMenu(command) { return command === 'show' ? true : false }
       return {...state, contextMenuOpen: showOrHideContextMenu(contextMenuOpen) };
     }
-    case TOGGLE_MODAL: {
-      return {...state, modalOpen, selectedColumn: column}
+    case TOGGLE_ANALYSIS_MODAL: {
+      return {...state, analysisModalOpen}
+    }
+    case TOGGLE_COLUMN_TYPE_MODAL: {
+      return {...state, columnTypeModalOpen, selectedColumn: column}
     }
     case TRANSLATE_SELECTED_CELL: {
       const newCellSelectionRanges = [{top: rowIndex, bottom: rowIndex, left: columnIndex, right: columnIndex}];
@@ -195,9 +206,36 @@ function spreadsheetReducer(state, action) {
       return  {...state, rows: changedRows };
     }
     case UPDATE_COLUMN: {
-      const originalPosition = state.columns.findIndex(col => col.id === updatedColumn.id);
-      const updatedColumns = state.columns.slice(0, originalPosition).concat(updatedColumn).concat(state.columns.slice(originalPosition + 1));
-      return {...state, columns: updatedColumns}
+      // if (updatedColumn.formula && updatedColumn.type === 'Formula') {
+      //   updatedColumn.formula = translateLabelToID(state.columns, updatedColumn.formula);
+      // }
+      // TODO: Make it so a formula cannot refer to itself. Detect formula cycles. Use a stack?
+      const columnHasFormula = updatedColumn.formula && updatedColumn.type === 'Formula';
+      const columnCopy = Object.assign({}, updatedColumn, columnHasFormula ? {formula: translateLabelToID(state.columns, updatedColumn.formula)} : {});
+      const originalPosition = state.columns.findIndex(col => col.id === columnCopy.id);
+      const updatedColumns = state.columns.slice(0, originalPosition).concat(columnCopy).concat(state.columns.slice(originalPosition + 1));
+      let rows = state.rows;
+      if (columnHasFormula) {
+        rows = rows.map((row) => {
+          const formulaColumnsToUpdate = [columnCopy].concat(state.columns.filter(({type, formula}) => {
+            return type === 'Formula' && formula.includes(columnCopy.id);
+          }));
+          const formulaParser = new Parser();
+          formulaParser.on('callVariable', function(name, done) {
+            const selectedColumn = state.columns.find((column) => column.id === name);
+            if (selectedColumn) {
+              done(row[selectedColumn.id]);
+            }
+          });
+          return formulaColumnsToUpdate.reduce((acc, column) => {
+            row = acc;
+            const {result, error} = formulaParser.parse(column.formula);
+            console.log('formula parsed result:', result, 'error:', error, 'formula:', column.formula);
+            return {...acc, [column.id]: result};
+          }, row);
+        });
+      }
+      return {...state, columns: updatedColumns, rows};
     }
     default: {
       throw new Error(`Unhandled action type: ${type}`);
@@ -228,20 +266,20 @@ export function SpreadsheetProvider({children}) {
     {type: 'Number', label: 'D'},
     {type: 'Number', label: 'E'},
     {type: 'Number', label: 'F'},
-    {type: 'Formula', label: 'G', formula: '(B + C + D + E + F) / 5'}
+    {type: 'Formula', label: 'G', formula: '(B + B + C + D + E + F) / 5'}
   ]
 
-  const columns = jovitaColumns.map((metadata) => ({id: createRandomLetterString(), ...metadata})).map((column, _, array) => {
+  const columns = jovitaColumns.map((metadata) => ({id: createRandomLetterString(), ...metadata}))
+  .map((column, _, array) => {
     const {formula, ...rest} = column;
     if (formula) {
       const newFormula = array.filter((someColumn) => formula.includes(someColumn.label)).reduce((changedFormula, someColumn) => {
-        return changedFormula.replace(new RegExp(`\\b${someColumn.label}\\b`), `${someColumn.id}`);
+        return changedFormula.replace(new RegExp(`\\b${someColumn.label}\\b`, 'g'), `${someColumn.id}`);
       }, formula);
       return {...rest, formula: newFormula};
-    } else {
-      return column;
     }
-  });
+    return column;
+  })
 
   const jovitaRows = [
     [10, 12, 10, 12, 11, 11],
@@ -276,6 +314,8 @@ export function SpreadsheetProvider({children}) {
   const rowPositions = rows.reduce((acc, row, index) => ({...acc, [row.id]: index}), {});
 
   const initialState = {
+    analysisModalOpen: false,
+    columnTypeModalOpen: false,
     activeCell: null,
     cellSelectionRanges: [{
       top: 1, bottom: 1, left: 1, right: 1
