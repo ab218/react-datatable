@@ -11,19 +11,20 @@ export default function AnalysisModal() {
   const { analysisModalOpen, columns } = useSpreadsheetState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
-  function handleClose() {
+  function handleModalClose() {
     dispatchSpreadsheetAction({type: TOGGLE_ANALYSIS_MODAL, analysisModalOpen: false });
   }
 
   function addColumnToList(col, setCol) {
     if (!selectedColumn || col.length > 0) return;
+    setSelectedRightColumn(selectedColumn);
     setCol(prevState => prevState.concat(selectedColumn));
   }
 
   function removeColumnFromList(setCol) {
     if (!selectedRightColumn) return;
-    setCol(prevState => prevState.filter(col => col !== selectedRightColumn));
     setSelectedRightColumn(null);
+    setCol(prevState => prevState.filter(col => col !== selectedRightColumn));
   }
 
   function openAnalysisWindow() {
@@ -35,7 +36,7 @@ export default function AnalysisModal() {
       <Modal
         className="ant-modal"
         // destroyOnClose
-        onCancel={handleClose}
+        onCancel={handleModalClose}
         onOk={openAnalysisWindow}
         title="Fit Y by X"
         visible={analysisModalOpen}

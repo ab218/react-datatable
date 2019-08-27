@@ -1,12 +1,19 @@
 /* eslint-disable no-undef */
 import { useEffect } from 'react';
 import regression from 'regression';
-import PolyRegression from "js-polynomial-regression";
+// import PolyRegression from "js-polynomial-regression";
 // import mwu from 'mann-whitney-utest';
 import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { OPEN_ANALYSIS_WINDOW } from './constants';
-// var jStat = require('jstat').jStat;
+var jStat = require('jstat').jStat;
+
+/*
+Linear regression and correlation (Yes to all of these)
+Calculate slope and intercept with 95% confidence intervals.
+Calculate correlation coefficient (Spearman or Pearson) and its confidence interval.
+Test for departure from linearity with a runs test or the F test for linearity.
+*/
 
 export default function HighchartsDemo () {
   const { Highcharts } = window;
@@ -34,6 +41,18 @@ export default function HighchartsDemo () {
   }).sort();
 
   const linearRegressionLine = regression.linear(tempABVals);
+  const corrcoeff = jStat.corrcoeff(colA, colB).toFixed(5);
+  // const spearman = jStat.spearmancoeff(colA, colB);
+  const covariance = jStat.covariance(colA, colB);
+  const colAMean = jStat.mean(colA).toFixed(2);
+  const colBMean = jStat.mean(colB).toFixed(2);
+  const colAStdev = jStat.stdev(colA).toFixed(4);
+  const colBStdev = jStat.stdev(colB).toFixed(4);
+
+  // const t = jStat.tscore( colA[0], colA );
+  // console.log(t)
+
+
 
   // const tempABValsPoly = colA.map((_, i) => {
   //   return {x: colB[i], y: colA[i]}
@@ -51,7 +70,7 @@ export default function HighchartsDemo () {
 
   useEffect(() => {
     if (analysisWindowOpen) {
-      const chartWindow = window.open("", "_blank", "left=9999,top=250,width=450,height=600"),
+      const chartWindow = window.open("", "_blank", "left=9999,top=100,width=450,height=850"),
             chartContainer = document.createElement("div"),
             chartList = document.createElement("ul");
 
@@ -60,7 +79,7 @@ export default function HighchartsDemo () {
 
       Highcharts.chart(chartContainer, {
         chart: {
-          zoomType: 'xy',
+          // zoomType: 'xy',
           height: 400,
           width: 400
       },
@@ -93,6 +112,66 @@ export default function HighchartsDemo () {
             pointStart: 0
           }
         },
+        annotations: [{
+          title: {
+              text: '<span style="">drag me anywhere <br> dblclick to remove</span>',
+              style: {
+                  color: 'red'
+              }
+          },
+          anchorX: "left",
+          anchorY: "top",
+          allowDragX: true,
+          allowDragY: true,
+          x: 515,
+          y: 155
+        }, {
+            title: 'drag me <br> horizontaly',
+            anchorX: "left",
+            anchorY: "top",
+            allowDragY: false,
+            allowDragX: true,
+            xValue: 4,
+            yValue: 10,
+            shape: {
+                type: 'path',
+                params: {
+                    d: ['M', 0, 0, 'L', 110, 0],
+                    stroke: '#c55'
+                }
+            }
+        }, {
+            title: 'on point <br> drag&drop <br> disabled',
+            linkedTo: 'high',
+            allowDragY: false,
+            allowDragX: false,
+            anchorX: "center",
+            anchorY: "center",
+            shape: {
+                type: 'circle',
+                params: {
+                    r: 40,
+                    stroke: '#c55'
+                }
+            }
+        }, {
+            x: 100,
+            y: 200,
+            title: 'drag me <br> verticaly',
+            anchorX: "left",
+            anchorY: "top",
+            allowDragY: true,
+            allowDragX: false,
+            shape: {
+                type: 'rect',
+                params: {
+                    x: 0,
+                    y: 0,
+                    width: 55,
+                    height: 40
+                }
+            }
+        }],
 
         series: [
           {
@@ -136,10 +215,43 @@ export default function HighchartsDemo () {
           }]
         }})
 
-        const tableOutput = `
+        const tableOutputTemplate = `
           <div style="text-align: center; margin: 0 3em;">
+            <h4>Summary Statistics</h4>
+              <table style="width: 100%;">
+                <tr>
+                  <td>Correlation:</td>
+                  <td>${corrcoeff}</td>
+                </tr>
+                <tr>
+                  <td>Covariance:</td>
+                  <td>${covariance}</td>
+                </tr>
+                <tr>
+                  <td>Count:</td>
+                  <td>${linearRegressionLine.points.length}</td>
+                </tr>
+              </table>
+              <br>
+              <table style="width: 100%;">
+                <tr>
+                  <td style="font-weight: bold;">Variable</td>
+                  <td style="font-weight: bold;">Mean</td>
+                  <td style="font-weight: bold;">Std Dev</td>
+                </tr>
+                <tr>
+                  <td>${colXLabel}</td>
+                  <td>${colAMean}</td>
+                  <td>${colAStdev}</td>
+                </tr>
+                <tr>
+                  <td>${colYLabel}</td>
+                  <td>${colBMean}</td>
+                  <td>${colBStdev}</td>
+                </tr>
+              </table>
             <h4>Linear Fit</h4>
-            <table style="width: 75%;">
+            <table style="width: 100%;">
               <tr>
                 <td>r2:</td>
                 <td>${linearRegressionLine.r2}</td>
@@ -160,13 +272,13 @@ export default function HighchartsDemo () {
           </div>
         `
 
-        const doc = new DOMParser().parseFromString(tableOutput, 'text/html');
+        const doc = new DOMParser().parseFromString(tableOutputTemplate, 'text/html');
         chartWindow.document.body.appendChild(chartContainer);
         chartWindow.document.body.appendChild(doc.body.firstChild);
         dispatchSpreadsheetAction({type: OPEN_ANALYSIS_WINDOW, analysisWindowOpen: false })
       // HighchartsPlugin(Highcharts);
     }
-  }, [Highcharts, analysisWindowOpen, colXLabel, colYLabel, dispatchSpreadsheetAction, linearRegressionLine.equation, linearRegressionLine.points, linearRegressionLine.r2, linearRegressionLine.string, tempABVals])
+  }, [Highcharts, analysisWindowOpen, colAMean, colAStdev, colBMean, colBStdev, colXLabel, colYLabel, corrcoeff, covariance, dispatchSpreadsheetAction, linearRegressionLine.equation, linearRegressionLine.points, linearRegressionLine.r2, linearRegressionLine.string, tempABVals])
   return null;
 }
 
