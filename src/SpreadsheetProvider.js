@@ -9,7 +9,7 @@ import {
   CREATE_ROWS,
   DELETE_VALUES,
   MODIFY_CURRENT_SELECTION_CELL_RANGE,
-  // OPEN_ANALYSIS_WINDOW,
+  OPEN_ANALYSIS_WINDOW,
   TOGGLE_CONTEXT_MENU,
   TOGGLE_COLUMN_TYPE_MODAL,
   TOGGLE_ANALYSIS_MODAL,
@@ -56,6 +56,7 @@ function createRandomLetterString() {
 function spreadsheetReducer(state, action) {
   const {
     analysisModalOpen,
+    analysisWindowOpen,
     cellValue,
     column,
     columnCount,
@@ -70,6 +71,8 @@ function spreadsheetReducer(state, action) {
     selectionActive,
     type,
     updatedColumn,
+    xColData,
+    yColData
    } = action;
   console.log('dispatched:', type, 'with action:', action);
   switch (type) {
@@ -148,9 +151,9 @@ function spreadsheetReducer(state, action) {
         })
       } : state;
     }
-    // case OPEN_ANALYSIS_WINDOW: {
-    //   return {...state, analysisWindowOpen: true};
-    // }
+    case OPEN_ANALYSIS_WINDOW: {
+      return {...state, xColData, yColData, analysisWindowOpen};
+    }
     case REMOVE_SELECTED_CELLS: {
       return {...state, cellSelectionRanges: [] }
     }
@@ -206,9 +209,6 @@ function spreadsheetReducer(state, action) {
       return  {...state, rows: changedRows };
     }
     case UPDATE_COLUMN: {
-      // if (updatedColumn.formula && updatedColumn.type === 'Formula') {
-      //   updatedColumn.formula = translateLabelToID(state.columns, updatedColumn.formula);
-      // }
       // TODO: Make it so a formula cannot refer to itself. Detect formula cycles. Use a stack?
       const columnHasFormula = updatedColumn.formula && updatedColumn.type === 'Formula';
       const columnCopy = Object.assign({}, updatedColumn, columnHasFormula ? {formula: translateLabelToID(state.columns, updatedColumn.formula)} : {});
@@ -266,7 +266,7 @@ export function SpreadsheetProvider({children}) {
     {type: 'Number', label: 'D'},
     {type: 'Number', label: 'E'},
     {type: 'Number', label: 'F'},
-    {type: 'Formula', label: 'G', formula: '(B + B + C + D + E + F) / 5'}
+    {type: 'Formula', label: 'G', formula: '(B + C + D + E + F) / 5'}
   ]
 
   const columns = jovitaColumns.map((metadata) => ({id: createRandomLetterString(), ...metadata}))
@@ -323,6 +323,8 @@ export function SpreadsheetProvider({children}) {
     currentCellSelectionRange: null,
     columns,
     columnPositions,
+    xColData: null,
+    yColData: null,
     lastSelection: {row: 1, column: 1},
     rowPositions,
     rows,

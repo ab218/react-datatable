@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { TOGGLE_CONTEXT_MENU } from './constants'
+import { TOGGLE_CONTEXT_MENU, TOGGLE_ANALYSIS_MODAL, OPEN_ANALYSIS_WINDOW } from './constants'
 import './App.css';
 
 export default function ContextMenu({setAnalysisWindow}) {
@@ -50,8 +50,8 @@ export default function ContextMenu({setAnalysisWindow}) {
       <ul className="menu-options">
         <li className="menu-option">Cut</li>
         <li className="menu-option">Copy</li>
-        <li className="menu-option">Paste</li>
-        <li onClick={() => setAnalysisWindow(true)} className="menu-option">Analysis</li>
+        <li onClick={() => dispatchSpreadsheetAction({type: OPEN_ANALYSIS_WINDOW, analysisWindowOpen: true })} className="menu-option">Paste</li>
+        <li onClick={() => dispatchSpreadsheetAction({type: TOGGLE_ANALYSIS_MODAL, analysisModalOpen: true })} className="menu-option">Analysis</li>
       </ul>
     </div>
   )

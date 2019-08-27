@@ -4,45 +4,53 @@ import regression from 'regression';
 import PolyRegression from "js-polynomial-regression";
 // import mwu from 'mann-whitney-utest';
 import './App.css';
-import { useSpreadsheetState } from './SpreadsheetProvider';
-var jStat = require('jstat').jStat;
+import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
+import { OPEN_ANALYSIS_WINDOW } from './constants';
+// var jStat = require('jstat').jStat;
 
-export default function HighchartsDemo ({data, windowOpen, setAnalysisWindow}) {
+export default function HighchartsDemo () {
   const { Highcharts } = window;
   const {
     columns,
     rows,
+    analysisWindowOpen,
+    xColData,
+    yColData
    } = useSpreadsheetState();
+   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
    // TODO: Think of a way to only have one window open at a time.
 
-  const colXID = columns[0].id;
-  const colYID = columns[6].id;
-  const colXLabel = columns[0].label;
-  const colYLabel = columns[6].label;
+   const colX = xColData || columns[0];
+   const colY = yColData || columns[6];
+
+  const colXLabel = colX.label;
+  const colYLabel = colY.label;
   function mapColumnValues(colID) { return rows.map(row => row[colID]); }
-  const colA = mapColumnValues(colXID);
-  const colB = mapColumnValues(colYID);
+  const colA = mapColumnValues(colX.id);
+  const colB = mapColumnValues(colY.id);
   const tempABVals = colA.map((_, i) => {
     return [parseInt(colA[i]), parseInt(colB[i])]
   }).sort();
 
-  const tempABValsPoly = colA.map((_, i) => {
-    return {x: colB[i], y: colA[i]}
-  }).sort();
   const linearRegressionLine = regression.linear(tempABVals);
 
+  // const tempABValsPoly = colA.map((_, i) => {
+  //   return {x: colB[i], y: colA[i]}
+  // }).sort();
   //Factory function - returns a PolynomialRegression instance. 2nd argument is the degree of the desired polynomial equation.
-  const model = PolyRegression.read(tempABValsPoly, 3);
+  // const model = PolyRegression.read(tempABValsPoly, 3);
   //terms is a list of coefficients for a polynomial equation. We'll feed these to predict y so that we don't have to re-compute them for every prediction.
-  const terms = model.getTerms();
+  // const terms = model.getTerms();
   // console.log(terms) // Poly regression coefficients
-  const polyregData = colA.map(x => {
-    return [x, model.predictY(terms, x)];
-  });
+  // const polyregData = colA.map(x => {
+  //   return [x, model.predictY(terms, x)];
+  // });
+
+  // console.log(polyregData);
 
   useEffect(() => {
-    if (windowOpen) {
+    if (analysisWindowOpen) {
       const chartWindow = window.open("", "_blank", "left=9999,top=250,width=450,height=600"),
             chartContainer = document.createElement("div"),
             chartList = document.createElement("ul");
@@ -155,10 +163,10 @@ export default function HighchartsDemo ({data, windowOpen, setAnalysisWindow}) {
         const doc = new DOMParser().parseFromString(tableOutput, 'text/html');
         chartWindow.document.body.appendChild(chartContainer);
         chartWindow.document.body.appendChild(doc.body.firstChild);
-        setAnalysisWindow(false);
+        dispatchSpreadsheetAction({type: OPEN_ANALYSIS_WINDOW, analysisWindowOpen: false })
       // HighchartsPlugin(Highcharts);
     }
-  }, [Highcharts, colXLabel, colYLabel, linearRegressionLine.equation, linearRegressionLine.points, linearRegressionLine.r2, linearRegressionLine.string, polyregData, setAnalysisWindow, tempABVals, terms, windowOpen])
+  }, [Highcharts, analysisWindowOpen, colXLabel, colYLabel, dispatchSpreadsheetAction, linearRegressionLine.equation, linearRegressionLine.points, linearRegressionLine.r2, linearRegressionLine.string, tempABVals])
   return null;
 }
 

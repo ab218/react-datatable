@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import AnalysisModal from './ModalAnalysis';
@@ -131,7 +131,7 @@ function Spreadsheet({eventBus}) {
    } = useSpreadsheetState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
-  const [analysisWindow, setAnalysisWindow] = useState(false);
+  // const [analysisWindow, setAnalysisWindow] = useState(false);
 
   function isSelectedCell(row, column) {
     function withinRange(value) {
@@ -231,15 +231,10 @@ function Spreadsheet({eventBus}) {
     dispatchSpreadsheetAction({type: ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS});
   }
 
-  const chartData = {
-    xVals: [48, 56, 44, 82, 62, 79, 64, 51, 48, 51, 75, 53, 65, 83, 44, 42, 78, 64, 33, 87, 75, 84, 57, 79, 55],
-    yVals: [37, 46, 36, 41, 40, 39, 38, 44, 42, 38, 37, 26, 39, 34, 33, 42, 38, 45, 33, 43, 36, 36, 39, 49, 45]
-  };
-
   return (
     <div>
-      <ContextMenu setAnalysisWindow={setAnalysisWindow} />
-      <HighchartsDemo setAnalysisWindow={setAnalysisWindow} windowOpen={analysisWindow} data={chartData}/>
+      <ContextMenu />
+      <HighchartsDemo />
       {selectedColumn && <ColumnTypeModal selectedColumn={selectedColumn}/>}
       <AnalysisModal />
       <FormulaBar />
