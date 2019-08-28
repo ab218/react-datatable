@@ -6,7 +6,8 @@ import regression from 'regression';
 import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { OPEN_ANALYSIS_WINDOW } from './constants';
-var jStat = require('jstat').jStat;
+import { jStat } from 'jstat';
+// import ttest from 'ttest';
 
 /*
 Linear regression and correlation (Yes to all of these)
@@ -33,11 +34,12 @@ export default function HighchartsDemo () {
 
   const colXLabel = colX.label;
   const colYLabel = colY.label;
-  function mapColumnValues(colID) { return rows.map(row => row[colID]); }
+  function mapColumnValues(colID) { return rows.map(row => Number(row[colID])).filter(x=>x) }
   const colA = mapColumnValues(colX.id);
   const colB = mapColumnValues(colY.id);
+  console.log(colA, colB)
   const tempABVals = colA.map((_, i) => {
-    return [parseInt(colA[i]), parseInt(colB[i])]
+    return [(colA[i]), (colB[i])]
   }).sort();
 
   const linearRegressionLine = regression.linear(tempABVals);
@@ -49,8 +51,11 @@ export default function HighchartsDemo () {
   const colAStdev = jStat.stdev(colA).toFixed(4);
   const colBStdev = jStat.stdev(colB).toFixed(4);
 
-  // const t = jStat.tscore( colA[0], colA );
-  // console.log(t)
+  // console.log(ttest(colA), {mu: 1}.valid());
+
+  // for (let i = 0; i < colA.length; i++) {
+    // console.log(jStat.ttest([1, 2, 3, 4, 5, 6,]))
+  // }
 
 
 
