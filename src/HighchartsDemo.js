@@ -7,6 +7,7 @@ import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { OPEN_ANALYSIS_WINDOW } from './constants';
 import { jStat } from 'jstat';
+
 // import ttest from 'ttest';
 
 /*
@@ -42,14 +43,21 @@ export default function HighchartsDemo () {
     return [(colA[i]), (colB[i])]
   }).sort();
 
-  const linearRegressionLine = regression.linear(tempABVals);
+  const linearRegressionLine = regression.linear(tempABVals, { precision: 5 });
+
   const corrcoeff = jStat.corrcoeff(colA, colB).toFixed(5);
   // const spearman = jStat.spearmancoeff(colA, colB);
   const covariance = jStat.covariance(colA, colB);
-  const colAMean = jStat.mean(colA).toFixed(2);
-  const colBMean = jStat.mean(colB).toFixed(2);
+  const colAMean = jStat.mean(colA).toFixed(3);
+  const colBMean = jStat.mean(colB).toFixed(3);
   const colAStdev = jStat.stdev(colA).toFixed(4);
   const colBStdev = jStat.stdev(colB).toFixed(4);
+// console.log([colA[0], colA[colA.length-1]])
+// const lr = linearRegression([[colA[0], colB[0]], [colA[colA.length-1], colB[colB.length-1]]])
+// console.log(linearRegressionLine)
+// console.log(lr)
+// console.log(lrl(lr)(50))
+
 
   // console.log(ttest(colA), {mu: 1}.valid());
 
