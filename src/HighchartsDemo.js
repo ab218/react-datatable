@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-import { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import regression from 'regression';
 // import PolyRegression from "js-polynomial-regression";
 // import mwu from 'mann-whitney-utest';
@@ -7,6 +7,9 @@ import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { OPEN_ANALYSIS_WINDOW } from './constants';
 import { jStat } from 'jstat';
+import HighchartsPortal from './Portal';
+// import * as AnnotationsModule from 'highcharts/modules/annotations';
+// AnnotationsModule(Highcharts);
 
 // import ttest from 'ttest';
 
@@ -28,71 +31,71 @@ export default function HighchartsDemo () {
    } = useSpreadsheetState();
    const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
+  function get_t_test(t_array1, t_array2){
+    const meanA = jStat.mean(t_array1);
+    const meanB = jStat.mean(t_array2);
+    const S2=(jStat.sum(jStat.pow(jStat.subtract(t_array1,meanA),2)) + jStat.sum(jStat.pow(jStat.subtract(t_array2,meanB),2)))/(t_array1.length+t_array2.length-2);
+    const t_score = (meanA - meanB)/Math.sqrt(S2/t_array1.length+S2/t_array2.length);
+    const t_pval = jStat.studentt.cdf(-Math.abs(t_score), t_array1.length+t_array2.length-2) * 2;
+    return [t_score, t_pval];
+}
    // TODO: Think of a way to only have one window open at a time.
 
-   const colX = xColData || columns[0];
-   const colY = yColData || columns[6];
-
-  const colXLabel = colX.label;
-  const colYLabel = colY.label;
-  function mapColumnValues(colID) { return rows.map(row => Number(row[colID])).filter(x=>x) }
-  const colA = mapColumnValues(colX.id);
-  const colB = mapColumnValues(colY.id);
-  console.log(colA, colB)
-  const tempABVals = colA.map((_, i) => {
-    return [(colA[i]), (colB[i])]
-  }).sort();
-
-  const linearRegressionLine = regression.linear(tempABVals, { precision: 5 });
-
-  const corrcoeff = jStat.corrcoeff(colA, colB).toFixed(5);
-  // const spearman = jStat.spearmancoeff(colA, colB);
-  const covariance = jStat.covariance(colA, colB);
-  const colAMean = jStat.mean(colA).toFixed(3);
-  const colBMean = jStat.mean(colB).toFixed(3);
-  const colAStdev = jStat.stdev(colA).toFixed(4);
-  const colBStdev = jStat.stdev(colB).toFixed(4);
-// console.log([colA[0], colA[colA.length-1]])
-// const lr = linearRegression([[colA[0], colB[0]], [colA[colA.length-1], colB[colB.length-1]]])
-// console.log(linearRegressionLine)
-// console.log(lr)
-// console.log(lrl(lr)(50))
-
-
-  // console.log(ttest(colA), {mu: 1}.valid());
-
-  // for (let i = 0; i < colA.length; i++) {
-    // console.log(jStat.ttest([1, 2, 3, 4, 5, 6,]))
-  // }
-
-
-
-  // const tempABValsPoly = colA.map((_, i) => {
-  //   return {x: colB[i], y: colA[i]}
-  // }).sort();
-  //Factory function - returns a PolynomialRegression instance. 2nd argument is the degree of the desired polynomial equation.
-  // const model = PolyRegression.read(tempABValsPoly, 3);
-  //terms is a list of coefficients for a polynomial equation. We'll feed these to predict y so that we don't have to re-compute them for every prediction.
-  // const terms = model.getTerms();
-  // console.log(terms) // Poly regression coefficients
-  // const polyregData = colA.map(x => {
-  //   return [x, model.predictY(terms, x)];
-  // });
-
-  // console.log(polyregData);
-
   useEffect(() => {
+    const colX = xColData || columns[0];
+    const colY = yColData || columns[6];
+
+    const colXLabel = colX.label;
+    const colYLabel = colY.label;
+    function mapColumnValues(colID) { return rows.map(row => Number(row[colID])).filter(x=>x) }
+    const colA = mapColumnValues(colX.id);
+    const colB = mapColumnValues(colY.id);
+    console.log(colA, colB)
+    const tempABVals = colA.map((_, i) => {
+      return [(colA[i]), (colB[i])]
+    }).sort();
+    console.log(get_t_test(colA, colB))
+    const jTest = jStat(colB);
+    // colA.forEach(t => {
+    //   console.log(jStat.tscore(colA));
+    // })
+    console.log('jTest t-score for 3.25 given:', colB, 'is:', jTest.tscore(3.25));
+    console.log('t test', jStat.ttest(colB, 4));
+    const linearRegressionLine = regression.linear(tempABVals, { precision: 5 });
+    const corrcoeff = jStat.corrcoeff(colA, colB).toFixed(5);
+    // const spearman = jStat.spearmancoeff(colA, colB);
+    const covariance = jStat.covariance(colB, colA);
+    const colAMean = jStat.mean(colA).toFixed(3);
+    const colBMean = jStat.mean(colB).toFixed(3);
+    const colAStdev = jStat.stdev(colA).toFixed(4);
+    const colBStdev = jStat.stdev(colB).toFixed(4);
+
     if (analysisWindowOpen) {
-      const chartWindow = window.open("", "_blank", "left=9999,top=100,width=450,height=850"),
-            chartContainer = document.createElement("div"),
+            // annotationScript = chartWindow.document.createElement("script"),
+            // jQuery = chartWindow.document.createElement("script"),
+            // highchartsElem = chartWindow.document.createElement("script"),
+            const chartContainer = document.createElement("div"),
             chartList = document.createElement("ul");
+
+      // Object.assign(jQuery, {
+      //   src: "https://code.jquery.com/jquery-3.4.1.min.js",
+      //   // integrity: "sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=",
+      //   // crossorigin: "anonymous"
+      // });
+      // highchartsElem.src = 'https://code.highcharts.com/highcharts.js';
+      // annotationScript.src = window.location.href + '/annotations.js';
+
+      // chartWindow.document.head.appendChild(jQuery);
+      // chartWindow.document.head.appendChild(highchartsElem);
+      // chartWindow.document.head.appendChild(annotationScript);
 
       chartContainer.setAttribute("id", "container");
       chartList.setAttribute("id", "list");
 
-      Highcharts.chart(chartContainer, {
+      const options = {
         chart: {
           // zoomType: 'xy',
+          marginTop: 50,
           height: 400,
           width: 400
       },
@@ -102,8 +105,7 @@ export default function HighchartsDemo () {
         },
         xAxis: {
           title: { text: colXLabel },
-          alignTicks: false,
-          tickInterval: 5,
+          // tickInterval: 10,
           min: 0
         },
         yAxis: {
@@ -118,98 +120,56 @@ export default function HighchartsDemo () {
 
         plotOptions: {
           series: {
-            allowPointSelect: true,
+            // allowPointSelect: true,
             label: {
               connectorAllowed: false
             },
-            pointStart: 0
-          }
-        },
-        annotations: [{
-          title: {
-              text: '<span style="">drag me anywhere <br> dblclick to remove</span>',
-              style: {
-                  color: 'red'
+            events: {
+              legendItemClick: function () {
+                  if (this.visible) {
+                      return false;
+                  } else {
+                      let series = this.chart.series,
+                          i = series.length,
+                          otherSeries;
+                      while (i--) {
+                          otherSeries = series[i]
+                          if (otherSeries !== this && otherSeries.visible) {
+                              otherSeries.hide();
+                          }
+                      }
+                  }
               }
           },
-          anchorX: "left",
-          anchorY: "top",
-          allowDragX: true,
-          allowDragY: true,
-          x: 515,
-          y: 155
-        }, {
-            title: 'drag me <br> horizontaly',
-            anchorX: "left",
-            anchorY: "top",
-            allowDragY: false,
-            allowDragX: true,
-            xValue: 4,
-            yValue: 10,
-            shape: {
-                type: 'path',
-                params: {
-                    d: ['M', 0, 0, 'L', 110, 0],
-                    stroke: '#c55'
-                }
-            }
-        }, {
-            title: 'on point <br> drag&drop <br> disabled',
-            linkedTo: 'high',
-            allowDragY: false,
-            allowDragX: false,
-            anchorX: "center",
-            anchorY: "center",
-            shape: {
-                type: 'circle',
-                params: {
-                    r: 40,
-                    stroke: '#c55'
-                }
-            }
-        }, {
-            x: 100,
-            y: 200,
-            title: 'drag me <br> verticaly',
-            anchorX: "left",
-            anchorY: "top",
-            allowDragY: true,
-            allowDragX: false,
-            shape: {
-                type: 'rect',
-                params: {
-                    x: 0,
-                    y: 0,
-                    width: 55,
-                    height: 40
-                }
-            }
-        }],
-
+            // pointStart: 0
+          }
+        },
         series: [
-          {
-            name: 'Points',
+                    {
+            name: 'Points with Linear Regression Line',
             type: 'scatter',
-            id: 's1',
+            id: 's2',
             data: tempABVals,
           },
           {
             name: 'Linear Regression Line',
             type: 'line',
-            data: linearRegressionLine.points
+            linkedTo: 's2',
+            data: linearRegressionLine.points,
           },
-          // {
-          //   name: 'Polynomial Cubic Regression Line',
-          //   type: 'line',
-          //   data: polyregData.sort(),
-          //   visible: false
-          // },
+          {
+            name: 'Points',
+            type: 'scatter',
+            id: 's1',
+            data: tempABVals,
+            visible: false,
+          },
           {
             name: 'Histogram',
-            type: 'histogram',
-            baseSeries: 's1',
+            type: 'column',
             zIndex: -1,
-            visible: false
+            visible: false,
+            data: tempABVals,
           },
         ],
 
@@ -226,14 +186,19 @@ export default function HighchartsDemo () {
               }
             }
           }]
-        }})
+        }
+      }
+
+      // chartWindow.postMessage('hello HELLO', '*');
+
+      Highcharts.chart(chartContainer, options)
 
         const tableOutputTemplate = `
           <div style="text-align: center; margin: 0 3em;">
             <h4>Summary Statistics</h4>
               <table style="width: 100%;">
                 <tr>
-                  <td>Correlation:</td>
+                  <td>Pearson's Correlation:</td>
                   <td>${corrcoeff}</td>
                 </tr>
                 <tr>
@@ -286,56 +251,10 @@ export default function HighchartsDemo () {
         `
 
         const doc = new DOMParser().parseFromString(tableOutputTemplate, 'text/html');
-        chartWindow.document.body.appendChild(chartContainer);
-        chartWindow.document.body.appendChild(doc.body.firstChild);
+        // chartWindow.document.body.appendChild(chartContainer);
+        chartContainer.appendChild(doc.body.firstChild);
         dispatchSpreadsheetAction({type: OPEN_ANALYSIS_WINDOW, analysisWindowOpen: false })
-      // HighchartsPlugin(Highcharts);
     }
-  }, [Highcharts, analysisWindowOpen, colAMean, colAStdev, colBMean, colBStdev, colXLabel, colYLabel, corrcoeff, covariance, dispatchSpreadsheetAction, linearRegressionLine.equation, linearRegressionLine.points, linearRegressionLine.r2, linearRegressionLine.string, tempABVals])
-  return null;
+  }, [Highcharts, analysisWindowOpen, columns, dispatchSpreadsheetAction, rows, xColData, yColData])
+  return <HighchartsPortal data={99} />;
 }
-
-
-
-
-  // const samples = [ [30, 14, 6], [12, 15, 16] ];
-  // console.log(mwu.test(samples));
-  // if (mwu.significant(mwu.test(samples), samples)) {
-  //   console.log('The data is significant!');
-  // } else {
-  //     console.log('The data is not significant.');
-  // }
-
-  // const tempAVals = data.xVals.map((_, i) => {
-  //   return data.xVals[i]
-  // })
-
-  // const tempBVals = data.yVals.map((_, i) => {
-  //   return data.yVals[i]
-  // })
-
-
-  // console.log(
-  //   'mean is: ', jStat.mean(tempAVals),
-  //   '\nmedian is: ', jStat.median(tempAVals),
-  //   '\nstdev is: ', jStat.stdev(tempAVals),
-  //   '\nci is: ', jStat.normalci(50, 0.05, tempAVals),
-  //   // '\nanova: ', jStat.anovafscore(tempAVals, tempBVals),
-  //   )
-
-  // let x, y, z, out, table;
-
-  // // data from Hollander & Wolfe (1973), 116.
-  // x = [2.9, 3.0, 2.5, 2.6, 3.2];
-  // y = [3.8, 2.7, 4.0, 2.4];
-  // z = [2.8, 3.4, 3.7, 2.2, 2.0];
-
-  // out = kruskal( x, y, z );
-  // /*
-  // { H: 0.7714,
-  //   df: 2,
-  //   pValue: 0.6799 }
-  // */
-
-  // table = out.toString()
-  // console.log(table);

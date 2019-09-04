@@ -152,6 +152,10 @@ function spreadsheetReducer(state, action) {
       } : state;
     }
     case OPEN_ANALYSIS_WINDOW: {
+      const popup = window.open(window.location.href + "postmessage_test.html");
+      setTimeout(() => popup.postMessage({hello: 'world'}, '*'), 25);
+
+
       return {...state, xColData, yColData, analysisWindowOpen};
     }
     case REMOVE_SELECTED_CELLS: {
@@ -260,13 +264,13 @@ export function useSpreadsheetDispatch() {
 
 export function SpreadsheetProvider({children}) {
   const jovitaColumns = [
-    {type: 'Number', label: 'A'},
-    {type: 'Number', label: 'B'},
-    {type: 'Number', label: 'C'},
-    {type: 'Number', label: 'D'},
-    {type: 'Number', label: 'E'},
-    {type: 'Number', label: 'F'},
-    {type: 'Formula', label: 'G', formula: '(B + C + D + E + F) / 5'}
+    {type: 'Number', label: 'Distance'},
+    {type: 'Number', label: 'Trial 1'},
+    {type: 'Number', label: 'Trial 2'},
+    {type: 'Number', label: 'Trial 3'},
+    {type: 'Number', label: 'Trial 4'},
+    {type: 'Number', label: 'Trial 5'},
+    {type: 'Formula', label: 'Average # of Bubbles', formula: '(Trial 1 + Trial 2 + Trial 3 + Trial 4 + Trial 5) / 5'}
   ]
 
   const columns = jovitaColumns.map((metadata) => ({id: createRandomLetterString(), ...metadata}))
@@ -315,6 +319,7 @@ export function SpreadsheetProvider({children}) {
 
   const initialState = {
     analysisModalOpen: false,
+    analysisWindowOpen: false,
     columnTypeModalOpen: false,
     activeCell: null,
     cellSelectionRanges: [{
