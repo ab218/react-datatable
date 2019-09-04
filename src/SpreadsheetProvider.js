@@ -10,6 +10,7 @@ import {
   DELETE_VALUES,
   MODIFY_CURRENT_SELECTION_CELL_RANGE,
   OPEN_ANALYSIS_WINDOW,
+  PERFORM_ANALYSIS,
   TOGGLE_CONTEXT_MENU,
   TOGGLE_COLUMN_TYPE_MODAL,
   TOGGLE_ANALYSIS_MODAL,
@@ -65,14 +66,14 @@ function spreadsheetReducer(state, action) {
     endRangeRow,
     endRangeColumn,
     columnTypeModalOpen,
+    outputData,
+    performAnalysis,
     row,
     rowIndex,
     rowCount,
     selectionActive,
     type,
     updatedColumn,
-    xColData,
-    yColData
    } = action;
   console.log('dispatched:', type, 'with action:', action);
   switch (type) {
@@ -153,10 +154,11 @@ function spreadsheetReducer(state, action) {
     }
     case OPEN_ANALYSIS_WINDOW: {
       const popup = window.open(window.location.href + "postmessage_test.html");
-      setTimeout(() => popup.postMessage({hello: 'world'}, '*'), 25);
-
-
-      return {...state, xColData, yColData, analysisWindowOpen};
+      setTimeout(() => popup.postMessage(outputData, '*'), 25);
+      return {...state, performAnalysis: false, outputData};
+    }
+    case PERFORM_ANALYSIS: {
+      return {...state, performAnalysis: true};
     }
     case REMOVE_SELECTED_CELLS: {
       return {...state, cellSelectionRanges: [] }
@@ -328,6 +330,7 @@ export function SpreadsheetProvider({children}) {
     currentCellSelectionRange: null,
     columns,
     columnPositions,
+    performAnalysis: false,
     xColData: null,
     yColData: null,
     lastSelection: {row: 1, column: 1},

@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import regression from 'regression';
 // import PolyRegression from "js-polynomial-regression";
 // import mwu from 'mann-whitney-utest';
 import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { jStat } from 'jstat';
-import HighchartsReact from 'highcharts-react-official';
 
 // import ttest from 'ttest';
 
@@ -17,7 +16,6 @@ Test for departure from linearity with a runs test or the F test for linearity.
 */
 
 export default function HighchartsDemo () {
-  const { Highcharts } = window;
   const {
     columns,
     rows,
@@ -26,10 +24,6 @@ export default function HighchartsDemo () {
     yColData
    } = useSpreadsheetState();
    const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-
-   const [hOptions, setHOptions ] = useState(null);
-   const [template, setTemplate] = useState(null);
-
   function get_t_test(t_array1, t_array2){
     const meanA = jStat.mean(t_array1);
     const meanB = jStat.mean(t_array2);
@@ -39,11 +33,10 @@ export default function HighchartsDemo () {
     return [t_score, t_pval];
 }
    // TODO: Think of a way to only have one window open at a time.
-
-  useEffect(() => {
+   console.log('a')
+   useEffect(() => {
     const colX = xColData || columns[0];
     const colY = yColData || columns[6];
-
     const colXLabel = colX.label;
     const colYLabel = colY.label;
     function mapColumnValues(colID) { return rows.map(row => Number(row[colID])).filter(x=>x) }
@@ -69,170 +62,21 @@ export default function HighchartsDemo () {
     const colAStdev = jStat.stdev(colA).toFixed(4);
     const colBStdev = jStat.stdev(colB).toFixed(4);
 
-    const options = {
-      chart: {
-        marginTop: 50,
-        height: 400,
-        width: 400
-      },
-      credits: false,
-      title: {
-        text: `${colYLabel} by ${colXLabel}`
-      },
-      xAxis: {
-        title: { text: colXLabel },
-        min: 0
-      },
-      yAxis: {
-        title: { text: colYLabel },
-        min: 0
-      },
-      legend: {
-        layout: 'vertical',
-        align: 'right',
-        verticalAlign: 'middle'
-      },
-
-      plotOptions: {
-        series: {
-          label: {
-            connectorAllowed: false
-          },
-          events: {
-            legendItemClick: function () {
-              if (this.visible) {
-                return false;
-              } else {
-                let series = this.chart.series,
-                i = series.length,
-                otherSeries;
-                while (i--) {
-                  otherSeries = series[i]
-                  if (otherSeries !== this && otherSeries.visible) {
-                    otherSeries.hide();
-                  }
-                }
-              }
-            }
-          },
-        }
-      },
-      series: [
-        {
-          name: 'Points with Linear Regression Line',
-          type: 'scatter',
-          id: 's2',
-          data: tempABVals,
-        },
-        {
-          name: 'Linear Regression Line',
-          type: 'line',
-          linkedTo: 's2',
-          data: linearRegressionLine.points,
-        },
-        {
-          name: 'Points',
-          type: 'scatter',
-          id: 's1',
-          data: tempABVals,
-          visible: false,
-        },
-        {
-          name: 'Histogram',
-          type: 'column',
-          zIndex: -1,
-          visible: false,
-          data: tempABVals,
-        },
-      ],
-
-      responsive: {
-        rules: [{
-          condition: {
-            maxWidth: 500
-          },
-          chartOptions: {
-            legend: {
-              layout: 'horizontal',
-              align: 'center',
-              verticalAlign: 'bottom'
-            }
-          }
-        }]
+    dispatchSpreadsheetAction({
+      type: 'OPEN_ANALYSIS_WINDOW',
+      outputData: {
+        corrcoeff,
+        covariance,
+        // linearRegressionLine,
+        colXLabel,
+        colAMean,
+        colAStdev,
+        colYLabel,
+        colBMean,
+        colBStdev,
+        tempABVals
       }
-    }
-    setHOptions(options);
-    setTemplate({
-      corrcoeff,
-      covariance,
-      linearRegressionLine,
-      colXLabel,
-      colAMean,
-      colAStdev,
-      colYLabel,
-      colBMean,
-      colBStdev,
     })
-  }, [Highcharts, analysisWindowOpen, columns, dispatchSpreadsheetAction, rows, xColData, yColData])
-  return (
-    <>
-      <HighchartsReact highcharts={Highcharts} options={hOptions}/>
-        {template
-          && <div style={{textAlign: 'center', margin: '0 3em'}}>
-          <h4>Summary Statistics</h4>
-            <table style={{width: '100%'}}>
-              <tr>
-                <td>Pearson's Correlation:</td>
-                <td>{template.corrcoeff}</td>
-              </tr>
-              <tr>
-                <td>Covariance:</td>
-                <td>{template.covariance}</td>
-              </tr>
-              <tr>
-                <td>Count:</td>
-                <td>{template.linearRegressionLine.points.length}</td>
-              </tr>
-            </table>
-            <br/>
-            <table style={{width: '100%'}}>
-              <tr>
-                <td style={{fontWeight: 'bold'}}>Variable</td>
-                <td style={{fontWeight: 'bold'}}>Mean</td>
-                <td style={{fontWeight: 'bold'}}>Std Dev</td>
-              </tr>
-              <tr>
-                <td>{template.colXLabel}</td>
-                <td>{template.colAMean}</td>
-                <td>{template.colAStdev}</td>
-              </tr>
-              <tr>
-                <td>{template.colYLabel}</td>
-                <td>{template.colBMean}</td>
-                <td>{template.colBStdev}</td>
-              </tr>
-            </table>
-          <h4>Linear Fit</h4>
-          <table style={{width: '100%'}}>
-            <tr>
-              <td>r2:</td>
-              <td>{template.linearRegressionLine.r2}</td>
-            </tr>
-            <tr>
-              <td>slope:</td>
-              <td>{template.linearRegressionLine.equation[0]}</td>
-            </tr>
-            <tr>
-              <td>y-intercept:</td>
-              <td>{template.linearRegressionLine.equation[1]}</td>
-            </tr>
-            <tr>
-              <td>equation:</td>
-              <td>{template.linearRegressionLine.string}</td>
-            </tr>
-          </table>
-        </div>
-      }
-    </>
-  )
+  }, [analysisWindowOpen, columns, dispatchSpreadsheetAction, rows, xColData, yColData])
+  return null;
 }

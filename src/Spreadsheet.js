@@ -8,19 +8,17 @@ import ContextMenu from './ContextMenu';
 import ColumnTypeModal from './ModalColumnType';
 import Row from './Row';
 import { SelectedCell } from './Cell';
-import Portal from './Portal';
 import {
   ACTIVATE_CELL,
   ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS,
   CREATE_COLUMNS,
   CREATE_ROWS,
   MODIFY_CURRENT_SELECTION_CELL_RANGE,
-  OPEN_ANALYSIS_WINDOW,
   SELECT_CELL,
   TOGGLE_CONTEXT_MENU,
   UPDATE_CELL,
 } from './constants'
-import HighchartsDemo from './HighchartsReact';
+import HighchartsReact from './HighchartsReact';
 
 function FormulaBar() {
   return (
@@ -123,11 +121,11 @@ function BlankClickableRow({
 function Spreadsheet({eventBus}) {
   const {
     activeCell,
-    analysisWindowOpen,
     columnPositions,
     columns,
     cellSelectionRanges,
     currentCellSelectionRange,
+    performAnalysis,
     rowPositions,
     rows,
     selectedColumn
@@ -234,19 +232,12 @@ function Spreadsheet({eventBus}) {
     dispatchSpreadsheetAction({type: ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS});
   }
 
-  // function closeWindow() {
-  //   dispatchSpreadsheetAction({type: OPEN_ANALYSIS_WINDOW, analysisWindowOpen: false })
-  // }
-
-
   return (
     <div>
       <ContextMenu />
-      {/* {analysisWindowOpen &&
-        <Portal closeWindow={closeWindow}>
-          <HighchartsDemo />
-        </Portal>
-      } */}
+      {performAnalysis &&
+        <HighchartsReact />
+      }
       {selectedColumn && <ColumnTypeModal selectedColumn={selectedColumn}/>}
       <AnalysisModal />
       <FormulaBar />
