@@ -157,6 +157,7 @@ function spreadsheetReducer(state, action) {
         console.log('ORIGIN', event);
         if (event.data === 'ready') {
           popup.postMessage(outputData, '*');
+          window.removeEventListener("message", receiveMessage);
         }
       }
       const popup = window.open(window.location.href + "postmessage_test.html", "", "left=9999,top=100,width=450,height=850");

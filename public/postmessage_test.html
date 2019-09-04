@@ -177,6 +177,7 @@
           </div>`
         const doc = new DOMParser().parseFromString(template, 'text/html');
         container.appendChild(doc.body.firstChild);
+        window.removeEventListener("message", receiveMessage);
       }
 
       window.addEventListener("message", receiveMessage, false);
