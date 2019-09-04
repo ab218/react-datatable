@@ -251,8 +251,8 @@ export default function HighchartsDemo () {
         `
 
         const doc = new DOMParser().parseFromString(tableOutputTemplate, 'text/html');
-        // chartWindow.document.body.appendChild(chartContainer);
         chartContainer.appendChild(doc.body.firstChild);
+        // chartWindow.document.body.appendChild(chartContainer);
         dispatchSpreadsheetAction({type: OPEN_ANALYSIS_WINDOW, analysisWindowOpen: false })
     }
   }, [Highcharts, analysisWindowOpen, columns, dispatchSpreadsheetAction, rows, xColData, yColData])

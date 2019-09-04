@@ -6,9 +6,6 @@
 		factory(Highcharts);
 	}
 }(function (H) {
-
-  console.log('H is:', H);
-
 	// Highcharts helper methods
 	var UNDEFINED,
 		ALIGN_FACTOR,
@@ -1041,9 +1038,6 @@
 
 	// Initialize on chart load
 	Chart.prototype.callbacks.push(function (chart) {
-
-console.log('annotations.js loaded');
-console.log('chart container:', chart);
 
 		var options = chart.options.annotations,
 			yAxes = chart.yAxis,

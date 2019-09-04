@@ -153,9 +153,15 @@ function spreadsheetReducer(state, action) {
       } : state;
     }
     case OPEN_ANALYSIS_WINDOW: {
-      const popup = window.open(window.location.href + "postmessage_test.html");
-      setTimeout(() => popup.postMessage(outputData, '*'), 25);
-      return {...state, performAnalysis: false, outputData};
+      function receiveMessage(event) {
+        console.log('ORIGIN', event);
+        if (event.data === 'ready') {
+          popup.postMessage(outputData, '*');
+        }
+      }
+      const popup = window.open(window.location.href + "postmessage_test.html", "", "left=9999,top=100,width=450,height=850");
+      window.addEventListener("message", receiveMessage, false);
+      return {...state, performAnalysis: false};
     }
     case PERFORM_ANALYSIS: {
       return {...state, performAnalysis: true};

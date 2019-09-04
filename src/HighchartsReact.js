@@ -67,14 +67,18 @@ export default function HighchartsDemo () {
       outputData: {
         corrcoeff,
         covariance,
-        // linearRegressionLine,
         colXLabel,
         colAMean,
         colAStdev,
         colYLabel,
         colBMean,
         colBStdev,
-        tempABVals
+        tempABVals,
+        linearRegressionLinePoints: linearRegressionLine.points,
+        linearRegressionLineR2: linearRegressionLine.r2,
+        linearRegressionLineSlope: linearRegressionLine.equation[0],
+        linearRegressionLineYIntercept: linearRegressionLine.equation[1],
+        linearRegressionLineEquation: linearRegressionLine.string,
       }
     })
   }, [analysisWindowOpen, columns, dispatchSpreadsheetAction, rows, xColData, yColData])
