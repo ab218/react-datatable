@@ -41,7 +41,7 @@ export default function ColumnResizer({column, content}) {
 
   const startDrag = (e) => {
     setStartX(e.clientX);
-    const  {width: originalWidth} = e.target.getBoundingClientRect();
+    const { width: originalWidth } = e.target.getBoundingClientRect();
     setOriginalCellWidth(originalWidth);
     setIsDragging(true);
   }

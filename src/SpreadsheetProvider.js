@@ -57,7 +57,6 @@ function createRandomLetterString() {
 function spreadsheetReducer(state, action) {
   const {
     analysisModalOpen,
-    analysisWindowOpen,
     cellValue,
     column,
     columnCount,
@@ -67,7 +66,6 @@ function spreadsheetReducer(state, action) {
     endRangeColumn,
     columnTypeModalOpen,
     outputData,
-    performAnalysis,
     row,
     rowIndex,
     rowCount,

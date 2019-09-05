@@ -27,7 +27,7 @@
 		middle: 0.5,
 		bottom: 1,
 		right: 1
-	};
+  };
 
 
 	H.SVGRenderer.prototype.symbols.line = function (x, y, w, h) {
@@ -503,7 +503,7 @@
 				shapeOptions = options.shape,
 				allowDragX = options.allowDragX,
 				allowDragY = options.allowDragY,
-				hasEvents = annotation.hasEvents;
+        hasEvents = annotation.hasEvents;
 
 			function attachCustomEvents(element, events) {
 				if (defined(events)) {
@@ -515,12 +515,12 @@
 						})(name);
 					}
 				}
-			}
+      }
 
 			if (!group) {
 				group = annotation.group = renderer.g();
 				group.attr({ 'class': 'highcharts-annotation' });
-			}
+      }
 
       if (!shape && shapeOptions && inArray(shapeOptions.type
         , H.ALLOWED_SHAPES) !== -1) {
@@ -533,24 +533,18 @@
 				title.add(group);
 			}
 			if ((allowDragX || allowDragY) && !hasEvents) {
-      console.log('mousedown 1')
 
 				$(group.element).on('mousedown', function (e) {
-        console.log('mousedown 2')
-
 					annotation.events.storeAnnotation(e, annotation, chart);
 					annotation.events.select(e, annotation);
 				});
 				addEvent(document, 'mouseup', function (e) {
-        console.log('mouseup 3')
-
 					annotation.events.releaseAnnotation(e, chart);
 				});
 
 				attachCustomEvents(group, options.events);
 			} else if (!hasEvents) {
 				$(group.element).on('mousedown', function (e) {
-        console.log('mousedown 4')
 					annotation.events.select(e, annotation);
 				});
 				attachCustomEvents(group, options.events);
@@ -661,7 +655,7 @@
 						shapeParams.height *= chart.inverted ? -1 : 1;
 					} else if (defined(shapeParams.y)) {
 						shapeParams.y = yAxis.toPixels(shapeParams.y);
-					}
+          }
 
 					if (options.shape.type === 'path') {
 						shapeParams.d = translatePath(shapeParams.d, xAxis, yAxis, x, y);
@@ -671,7 +665,7 @@
 					shapeParams.d = shapeParams.d || options.shape.d || ['M', 0, 0, 'L', 0, 0];
 					shapeParams.d[4] = xAxis.toPixels(options.xValueEnd) - xAxis.toPixels(options.xValue);
 					shapeParams.d[5] = yAxis.toPixels(options.yValueEnd) - yAxis.toPixels(options.yValue);
-				}
+        }
 
 				// move the center of the circle to shape x/y
 				if (options.shape.type === 'circle') {
@@ -832,7 +826,7 @@
 				var chart = ann.chart,
 					prevAnn = chart.selectedAnnotation,
 					box,
-					padding = 10;
+          padding = 10;
 
 				if (prevAnn && prevAnn !== ann) {
 					prevAnn.deselect();

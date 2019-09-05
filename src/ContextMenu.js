@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { TOGGLE_CONTEXT_MENU, TOGGLE_ANALYSIS_MODAL, OPEN_ANALYSIS_WINDOW, PERFORM_ANALYSIS } from './constants'
+import { TOGGLE_CONTEXT_MENU, TOGGLE_ANALYSIS_MODAL, PERFORM_ANALYSIS } from './constants'
 import './App.css';
 
-export default function ContextMenu({setAnalysisWindow}) {
+export default function ContextMenu() {
 
   const { contextMenuOpen } = useSpreadsheetState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
