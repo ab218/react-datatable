@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Card, Icon, Modal, Radio } from 'antd';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { TOGGLE_ANALYSIS_MODAL, OPEN_ANALYSIS_WINDOW } from './constants';
+import { TOGGLE_ANALYSIS_MODAL, PERFORM_ANALYSIS } from './constants';
 
 const styles = {
   cardWithBorder: {
@@ -60,7 +60,7 @@ export default function AnalysisModal() {
   }
 
   function openAnalysisWindow() {
-    dispatchSpreadsheetAction({type: OPEN_ANALYSIS_WINDOW, xColData: xCol[0], yColData: yCol[0], analysisWindowOpen: true})
+    dispatchSpreadsheetAction({type: PERFORM_ANALYSIS })
   }
 
   function RadioGroup({data, setData, styleProps}) {

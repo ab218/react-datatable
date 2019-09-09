@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import AnalysisModal from './ModalAnalysis';
@@ -128,11 +128,10 @@ function Spreadsheet({eventBus}) {
     performAnalysis,
     rowPositions,
     rows,
-    selectedColumn
+    selectedColumn,
+    tableView
    } = useSpreadsheetState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-
-  // const [analysisWindow, setAnalysisWindow] = useState(false);
 
   function isSelectedCell(row, column) {
     function withinRange(value) {
@@ -156,9 +155,9 @@ function Spreadsheet({eventBus}) {
   const visibleColumnCount = Math.max(26, columns.length);
   const headers = Array(visibleColumnCount).fill(undefined).map((_, index) => (
     <ColResizer
+      borderRight={tableView && (index === 0 || index === 5) && true}
       columnIndex={index}
       key={index}
-      minWidth={60}
       column={columns[index]}
       content={String.fromCharCode(index + 'A'.charCodeAt(0))}
     />
@@ -242,7 +241,14 @@ function Spreadsheet({eventBus}) {
       <AnalysisModal />
       <FormulaBar />
       <table>
-        <thead><tr><td></td>{headers}</tr></thead>
+        <thead>
+          <tr className={tableView && 'move-row-down'}><th></th>{headers}</tr>
+          <tr className={tableView ? 'move-row-up' : 'display-none'}>
+            <td></td>
+            <td className={'border-right'}></td>
+            <td className={'border-right'} colSpan={5}>Group 1</td>
+          </tr>
+        </thead>
         <tbody>{visibleRows}</tbody>
       </table>
     </div>

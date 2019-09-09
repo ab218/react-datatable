@@ -85,6 +85,7 @@ export function SelectedCell({
 }
 
 export function NormalCell({
+  borderRight,
   column,
   columnIndex,
   finishCurrentSelectionRange,
@@ -94,11 +95,12 @@ export function NormalCell({
   selectCell,
 }) {
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-  const { contextMenuOpen } = useSpreadsheetState();
+  const { contextMenuOpen, tableView } = useSpreadsheetState();
 
   const cellValue = row[column.id];
   return (
   <td
+    className={borderRight && tableView && 'border-right'}
     key={`row${rowIndex}col${columnIndex}`}
     onMouseDown={(event) => {
       // prevent text from being highlighted

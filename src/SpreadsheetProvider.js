@@ -5,6 +5,7 @@ import {
   ACTIVATE_CELL,
   ADD_CELL_TO_SELECTIONS,
   ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS,
+  CHANGE_TABLE_VIEW,
   CREATE_COLUMNS,
   CREATE_ROWS,
   DELETE_VALUES,
@@ -70,6 +71,7 @@ function spreadsheetReducer(state, action) {
     rowIndex,
     rowCount,
     selectionActive,
+    tableView,
     type,
     updatedColumn,
    } = action;
@@ -88,6 +90,9 @@ function spreadsheetReducer(state, action) {
     case ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS: {
       const {currentCellSelectionRange, cellSelectionRanges} = state;
       return {...state, cellSelectionRanges: cellSelectionRanges.concat(currentCellSelectionRange || []), currentCellSelectionRange: null};
+    }
+    case CHANGE_TABLE_VIEW: {
+      return {...state, tableView };
     }
     case CREATE_COLUMNS: {
       const newColumns = Array(columnCount).fill(undefined).map(_ => {
@@ -272,12 +277,13 @@ export function useSpreadsheetDispatch() {
 export function SpreadsheetProvider({children}) {
   const jovitaColumns = [
     {type: 'Number', label: 'Distance'},
-    {type: 'Number', label: 'Trial 1'},
-    {type: 'Number', label: 'Trial 2'},
-    {type: 'Number', label: 'Trial 3'},
-    {type: 'Number', label: 'Trial 4'},
-    {type: 'Number', label: 'Trial 5'},
-    {type: 'Formula', label: 'Average # of Bubbles', formula: '(Trial 1 + Trial 2 + Trial 3 + Trial 4 + Trial 5) / 5'}
+    {type: 'Number', label: 'Trial 1', group: '1'},
+    {type: 'Number', label: 'Trial 2', group: '1'},
+    {type: 'Number', label: 'Trial 3', group: '1'},
+    {type: 'Number', label: 'Trial 4', group: '1'},
+    {type: 'Number', label: 'Trial 5', group: '1'},
+    {type: 'Formula', label: 'Average # of Bubbles', formula: '(Trial 1 + Trial 2 + Trial 3 + Trial 4 + Trial 5) / 5'},
+    {type: 'Group', id: 'abc123'}
   ]
 
   const columns = jovitaColumns.map((metadata) => ({id: createRandomLetterString(), ...metadata}))
@@ -297,7 +303,7 @@ export function SpreadsheetProvider({children}) {
     [20, 10, 9, 9, 8, 10],
     [30, 7, 6, 8, 7, 7],
     [40, 6, 4, 5, 6, 5],
-    [50, 2, 4, 3, 2, 3]
+    [50, 2, 4, 3, 2, 3],
   ]
 
   const columnPositions = columns.reduce((acc, column, index) => ({...acc, [column.id]: index}), {});
@@ -323,6 +329,11 @@ export function SpreadsheetProvider({children}) {
     return rowCopy;
   });
   const rowPositions = rows.reduce((acc, row, index) => ({...acc, [row.id]: index}), {});
+  const colgroupId = 'abc123';
+  const reducedThing = rows.reduce((acc, row) => {
+    return {...acc, [row[colgroupId]]: (acc[row[colgroupId]] || []).concat(row.id)}
+  }, {})
+  console.log(reducedThing);
 
   const initialState = {
     analysisModalOpen: false,
@@ -336,6 +347,7 @@ export function SpreadsheetProvider({children}) {
     columns,
     columnPositions,
     performAnalysis: false,
+    tableView: false,
     xColData: null,
     yColData: null,
     lastSelection: {row: 1, column: 1},

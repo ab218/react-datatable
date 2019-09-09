@@ -84,6 +84,7 @@ export default function Row({
           return (
             <NormalCell
               key={`Row${rowIndex}Col${columnIndex}`}
+              borderRight={(columnIndex === 1 || columnIndex === 6) && true}
               changeActiveCell={changeActiveCell}
               column={column}
               columnIndex={columnIndex}

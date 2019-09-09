@@ -17,7 +17,7 @@ td, th {
   overflow: hidden;
 }
 
-thead td {
+thead th {
   background-color: #eee;
   position: sticky;
   top: -1px;
@@ -83,4 +83,16 @@ td input {
 
 .display-flex {
   display: flex;
+}
+
+.move-row-up {
+  transform: translateY(-30px);
+}
+
+.move-row-down {
+  transform: translateY(30px);
+}
+
+.border-right {
+  border-right: 1px solid black;
 }

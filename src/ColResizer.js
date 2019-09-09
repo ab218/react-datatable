@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { TOGGLE_COLUMN_TYPE_MODAL, REMOVE_SELECTED_CELLS } from './constants'
 
-export default function ColumnResizer({column, content}) {
+export default function ColumnResizer({borderRight, column, content}) {
 
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
@@ -47,14 +47,15 @@ export default function ColumnResizer({column, content}) {
   }
 
   const style = {
+    borderRight: borderRight && '1px solid black',
     userSelect: 'none',
     cursor: 'e-resize',
     width: (originalCellWidth || 80) + offset,
   };
 
   return (
-      <td style={style} onMouseDown={startDrag} onDoubleClick={openModal}>
+      <th style={style} onMouseDown={startDrag} onDoubleClick={openModal}>
           {(column && column.label) || content}
-      </td>
+      </th>
   );
 }

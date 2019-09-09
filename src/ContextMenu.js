@@ -1,11 +1,11 @@
 import React, { useEffect } from 'react';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { TOGGLE_CONTEXT_MENU, TOGGLE_ANALYSIS_MODAL, PERFORM_ANALYSIS } from './constants'
+import { CHANGE_TABLE_VIEW, TOGGLE_CONTEXT_MENU, TOGGLE_ANALYSIS_MODAL, PERFORM_ANALYSIS } from './constants'
 import './App.css';
 
 export default function ContextMenu() {
 
-  const { contextMenuOpen } = useSpreadsheetState();
+  const { contextMenuOpen, tableView } = useSpreadsheetState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
   useEffect(() => {
@@ -48,7 +48,7 @@ export default function ContextMenu() {
   return (
     <div className="menu">
       <ul className="menu-options">
-        <li className="menu-option">Cut</li>
+        <li className="menu-option" onClick={() => dispatchSpreadsheetAction({type: CHANGE_TABLE_VIEW, tableView: !tableView })}>Cut</li>
         <li className="menu-option">Copy</li>
         <li onClick={() => dispatchSpreadsheetAction({type: PERFORM_ANALYSIS })} className="menu-option">Paste</li>
         <li onClick={() => dispatchSpreadsheetAction({type: TOGGLE_ANALYSIS_MODAL, analysisModalOpen: true })} className="menu-option">Analysis</li>
