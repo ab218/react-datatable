@@ -38,8 +38,8 @@ const styles = {
 export default function AnalysisModal() {
   const [selectedColumn, setSelectedColumn] = useState(null);
   const [selectedRightColumn, setSelectedRightColumn] = useState(null);
-  const [xCol, setXCol] = useState([]);
-  const [yCol, setYCol] = useState([]);
+  const [xColData, setXColData] = useState([]);
+  const [yColData, setYColData] = useState([]);
   const { analysisModalOpen, columns } = useSpreadsheetState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
@@ -60,11 +60,10 @@ export default function AnalysisModal() {
   }
 
   function openAnalysisWindow() {
-    dispatchSpreadsheetAction({type: PERFORM_ANALYSIS })
+    dispatchSpreadsheetAction({type: PERFORM_ANALYSIS, xColData: xColData[0], yColData: yColData[0] })
   }
 
   function RadioGroup({data, setData, styleProps}) {
-    console.log(arguments)
     return (
       <Card bordered style={{...styles.cardWithBorder, ...styleProps}}>
         <Radio.Group style={styles.radioGroup} buttonStyle='solid'>
@@ -76,7 +75,7 @@ export default function AnalysisModal() {
 
   function CaratButtons({data, setData, axis}) {
     return (
-      <div style={styles.flexColumn}>
+      <div style={styles.flexColDataumn}>
         <Button onClick={() => addColumnToList(data, setData)}>{axis}
           <Icon type="right" />
         </Button>
@@ -105,19 +104,20 @@ export default function AnalysisModal() {
           <div>Select Column <em>({columns.length} columns)</em>
             <Card bordered style={{ marginTop: 20, ...styles.cardWithBorder}}>
               <Radio.Group style={styles.radioGroup} buttonStyle='solid'>
-                {columns.map(column => <Radio.Button style={styles.radioButton} key={column.id} onClick={() => setSelectedColumn(column)} value={column}>{column.label}</Radio.Button>)}
+                {/* only map columns with labels */}
+                {columns.filter(a=>a.label).map(column => <Radio.Button style={styles.radioButton} key={column.id} onClick={() => setSelectedColumn(column)} value={column}>{column.label}</Radio.Button>)}
               </Radio.Group>
             </Card>
             {/* <RadioGroup data={columns} setData={setSelectedColumn} /> */}
           </div>
           <div style={{width: 300}}>Cast Selected Columns into Roles
             <div style={{marginBottom: 20, marginTop: 20, ...styles.flexSpaced }}>
-              <CaratButtons data={yCol} setData={setYCol} axis='Y' />
-              <RadioGroup data={yCol} setData={setSelectedRightColumn} />
+              <CaratButtons data={yColData} setData={setYColData} axis='Y' />
+              <RadioGroup data={yColData} setData={setSelectedRightColumn} />
             </div>
             <div style={styles.flexSpaced}>
-              <CaratButtons data={xCol} setData={setXCol} axis='X' />
-              <RadioGroup data={xCol} setData={setSelectedRightColumn} />
+              <CaratButtons data={xColData} setData={setXColData} axis='X' />
+              <RadioGroup data={xColData} setData={setSelectedRightColumn} />
             </div>
           </div>
         </div>

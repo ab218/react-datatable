@@ -74,6 +74,8 @@ function spreadsheetReducer(state, action) {
     tableView,
     type,
     updatedColumn,
+    xColData,
+    yColData,
    } = action;
   console.log('dispatched:', type, 'with action:', action);
   switch (type) {
@@ -168,7 +170,7 @@ function spreadsheetReducer(state, action) {
       return {...state, performAnalysis: false};
     }
     case PERFORM_ANALYSIS: {
-      return {...state, performAnalysis: true};
+      return {...state, performAnalysis: true, xColData, yColData};
     }
     case REMOVE_SELECTED_CELLS: {
       return {...state, cellSelectionRanges: [] }
@@ -275,18 +277,24 @@ export function useSpreadsheetDispatch() {
 }
 
 export function SpreadsheetProvider({children}) {
-  const jovitaColumns = [
-    {type: 'Number', label: 'Distance'},
-    {type: 'Number', label: 'Trial 1', group: '1'},
-    {type: 'Number', label: 'Trial 2', group: '1'},
-    {type: 'Number', label: 'Trial 3', group: '1'},
-    {type: 'Number', label: 'Trial 4', group: '1'},
-    {type: 'Number', label: 'Trial 5', group: '1'},
-    {type: 'Formula', label: 'Average # of Bubbles', formula: '(Trial 1 + Trial 2 + Trial 3 + Trial 4 + Trial 5) / 5'},
-    {type: 'Group', id: 'abc123'}
+  // const jovitaColumns = [
+  //   {type: 'Number', label: 'Distance'},
+  //   {type: 'Number', label: 'Trial 1', group: '1'},
+  //   {type: 'Number', label: 'Trial 2', group: '1'},
+  //   {type: 'Number', label: 'Trial 3', group: '1'},
+  //   {type: 'Number', label: 'Trial 4', group: '1'},
+  //   {type: 'Number', label: 'Trial 5', group: '1'},
+  //   {type: 'Formula', label: 'Average # of Bubbles', formula: '(Trial 1 + Trial 2 + Trial 3 + Trial 4 + Trial 5) / 5'},
+  //   {type: 'Group', id: 'abc123'}
+  // ]
+
+  const statsColumns = [
+    {type: 'Number', label: 'Distance',  id: 'abc123'},
+    {type: 'Number', label: 'Trial'},
+    {type: 'Number', label: 'Bubbles'},
   ]
 
-  const columns = jovitaColumns.map((metadata) => ({id: createRandomLetterString(), ...metadata}))
+  const columns = statsColumns.map((metadata) => ({id: metadata.id || createRandomLetterString(), ...metadata}))
   .map((column, _, array) => {
     const {formula, ...rest} = column;
     if (formula) {
@@ -298,17 +306,45 @@ export function SpreadsheetProvider({children}) {
     return column;
   })
 
-  const jovitaRows = [
-    [10, 12, 10, 12, 11, 11],
-    [20, 10, 9, 9, 8, 10],
-    [30, 7, 6, 8, 7, 7],
-    [40, 6, 4, 5, 6, 5],
-    [50, 2, 4, 3, 2, 3],
+  const statsRows = [
+    [10, 1, 12],
+    [20, 1, 10],
+    [30, 1, 7],
+    [40, 1, 6],
+    [50, 1, 2],
+    [10, 2, 10],
+    [20, 2, 9],
+    [30, 2, 6],
+    [40, 2, 4],
+    [50, 2, 4],
+    [10, 3, 12],
+    [20, 3, 9],
+    [30, 3, 8],
+    [40, 3, 5],
+    [50, 3, 3],
+    [10, 4, 11],
+    [20, 4, 8],
+    [30, 4, 7],
+    [40, 4, 6],
+    [50, 4, 2],
+    [10, 5, 11],
+    [20, 5, 10],
+    [30, 5, 7],
+    [40, 5, 5],
+    [50, 5, 3],
   ]
+
+  // const jovitaRows = [
+  //   [10, 12, 10, 12, 11, 11],
+  //   [20, 10, 9, 9, 8, 10],
+  //   [30, 7, 6, 8, 7, 7],
+  //   [40, 6, 4, 5, 6, 5],
+  //   [50, 2, 4, 3, 2, 3],
+  // ]
 
   const columnPositions = columns.reduce((acc, column, index) => ({...acc, [column.id]: index}), {});
 
-  const rows = jovitaRows.map((tuple) => ({
+  const rows = statsRows.map((tuple) => ({
     id: createRandomID(), ...tuple.reduce((acc, value, index) => ({...acc, [columns[index].id]: value}), {})
   })).map((originalRow) => {
     const formulaColumns = columns.filter(({type}) => type === 'Formula');
@@ -329,13 +365,47 @@ export function SpreadsheetProvider({children}) {
     return rowCopy;
   });
   const rowPositions = rows.reduce((acc, row, index) => ({...acc, [row.id]: index}), {});
-  const colgroupId = 'abc123';
-  const reducedThing = rows.reduce((acc, row) => {
-    return {...acc, [row[colgroupId]]: (acc[row[colgroupId]] || []).concat(row.id)}
-  }, {})
-  console.log(reducedThing);
+  const groupByColumnID = 'abc123';
+  const groupedColumns = rows.reduce((acc, row) => {
+    const {[groupByColumnID]: _, ...restRow} = row;
+    return {...acc, [row[groupByColumnID]]: (acc[row[groupByColumnID]] || []).concat(restRow)}
+  }, {});
+
+  const groupCount = Object.keys(groupedColumns).length;
+  const sortedNonGroupedColumns = columns.filter(({id}) => id !== groupByColumnID).sort((colA, colB) => {
+    return columnPositions[colA.id] - columnPositions[colB.id];
+  });
+
+  // Given m logical columns and n different values in our group by column,
+  // we should have (m - 1) * n number of physical columns
+  const allPhysicalColumns = Array.from({length: groupCount}).flatMap(_ => {
+        return sortedNonGroupedColumns.map((logicalColumn) => {
+          return {...logicalColumn, id: createRandomID(), logicalColumn: logicalColumn.id};
+        });
+      });
+  const logicalRowGroups = Object.values(groupedColumns);
+  // the size of the largest group is the maximum number of physical rows
+  const physicalRowTotal = Math.max(...logicalRowGroups.map(group => group.length));
+  // We have to translate the logical rows into physical rows
+  const physicalRows = rows.slice(0, physicalRowTotal).reduce((acc, _, index) => {
+    return acc.concat(logicalRowGroups.reduce((physicalRow, group, groupIndex) => {
+      const logicalRow = group[index];
+      // If we have a valid logical row from our group, we then map the row values
+      // for all its logical column ids to refer to physical column ids
+      return logicalRow ? sortedNonGroupedColumns.reduce((acc, column, columnIndex, array) => {
+        // We compute the offset bvecause allPhysicalColumns is a flat list
+        const physicalColumn = allPhysicalColumns[columnIndex + (groupIndex * array.length)];
+        const result = {...acc, [physicalColumn.id]: logicalRow[column.id]};
+        return result;
+      }, physicalRow) : physicalRow;
+    }, {id: createRandomID()}));
+  }, []);
+
+  console.log('physicalRows:', physicalRows, 'allPhysicalColumns:', allPhysicalColumns);
+  // console.log(sortedNonGroupedColumns, groupedColumns)
 
   const initialState = {
+    allPhysicalColumns,
     analysisModalOpen: false,
     analysisWindowOpen: false,
     columnTypeModalOpen: false,
@@ -346,7 +416,10 @@ export function SpreadsheetProvider({children}) {
     currentCellSelectionRange: null,
     columns,
     columnPositions,
+    groupByColumnID,
+    groupedColumns,
     performAnalysis: false,
+    physicalRows,
     tableView: false,
     xColData: null,
     yColData: null,

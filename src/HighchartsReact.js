@@ -33,10 +33,9 @@ export default function HighchartsDemo () {
     return [t_score, t_pval];
 }
    // TODO: Think of a way to only have one window open at a time.
-   console.log('a')
    useEffect(() => {
     const colX = xColData || columns[0];
-    const colY = yColData || columns[6];
+    const colY = yColData || columns[2];
     const colXLabel = colX.label;
     const colYLabel = colY.label;
     function mapColumnValues(colID) { return rows.map(row => Number(row[colID])).filter(x=>x) }

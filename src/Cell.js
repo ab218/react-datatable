@@ -100,7 +100,7 @@ export function NormalCell({
   const cellValue = row[column.id];
   return (
   <td
-    className={borderRight && tableView && 'border-right'}
+    className={(borderRight && tableView && 'border-right').toString()}
     key={`row${rowIndex}col${columnIndex}`}
     onMouseDown={(event) => {
       // prevent text from being highlighted

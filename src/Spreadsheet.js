@@ -121,10 +121,14 @@ function BlankClickableRow({
 function Spreadsheet({eventBus}) {
   const {
     activeCell,
+    allPhysicalColumns,
+    analysisModalOpen,
     columnPositions,
     columns,
     cellSelectionRanges,
     currentCellSelectionRange,
+    groupedColumns,
+    physicalRows,
     performAnalysis,
     rowPositions,
     rows,
@@ -234,22 +238,41 @@ function Spreadsheet({eventBus}) {
   return (
     <div>
       <ContextMenu />
-      {performAnalysis &&
-        <HighchartsReact />
-      }
+      {performAnalysis && <HighchartsReact />}
       {selectedColumn && <ColumnTypeModal selectedColumn={selectedColumn}/>}
-      <AnalysisModal />
+      {analysisModalOpen && <AnalysisModal />}
       <FormulaBar />
       <table>
         <thead>
-          <tr className={tableView && 'move-row-down'}><th></th>{headers}</tr>
-          <tr className={tableView ? 'move-row-up' : 'display-none'}>
+          <tr className={(tableView && 'move-row-down').toString()}><th></th>{headers}</tr>
+          <tr className={(tableView ? 'move-row-up' : 'display-none').toString()}>
             <td></td>
             <td className={'border-right'}></td>
             <td className={'border-right'} colSpan={5}>Group 1</td>
           </tr>
         </thead>
         <tbody>{visibleRows}</tbody>
+      </table>
+      <table>
+        <thead>
+          <tr>
+        {Object.keys(groupedColumns).map(col => {
+          return <th key={col} colSpan={2}>{col}</th>
+        })}
+        </tr>
+        <tr>
+          {allPhysicalColumns.map(p => {
+          return <th key={p.id}>{p.label}</th>
+          })}
+        </tr>
+        </thead>
+        <tbody>
+          {physicalRows.map(phys =>{
+            return <tr key={phys.id}>{allPhysicalColumns.map(p => {
+              return <td key={p.id}>{phys[p.id]}</td>
+            })}</tr>
+          })}
+        </tbody>
       </table>
     </div>
   );
