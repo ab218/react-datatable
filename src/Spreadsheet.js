@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React from 'react';
 import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import AnalysisModal from './ModalAnalysis';
@@ -210,6 +210,15 @@ function Spreadsheet({eventBus}) {
         )
       } else { return <BlankRow key={'BlankRow' + index} cellCount={visibleColumnCount + 1} />}
   });
+
+  // const spreadsheetHeaders = Array(visibleColumnCount).fill(undefined).map((_, index) => (
+  //   <ColResizer
+  //     columnIndex={index}
+  //     key={index}
+  //     column={columns[index]}
+  //     content={String.fromCharCode(index + 'A'.charCodeAt(0))}
+  //   />
+  // ))
 
   function createNewRows(rowCount) {
     dispatchSpreadsheetAction({type: CREATE_ROWS, rowCount});

@@ -289,8 +289,8 @@ export function SpreadsheetProvider({children}) {
   // ]
 
   const statsColumns = [
-    {type: 'Number', label: 'Distance',  id: 'abc123'},
-    {type: 'Number', label: 'Trial'},
+    {type: 'Number', label: 'Distance'},
+    {type: 'Number', label: 'Trial', id: 'abc123'},
     {type: 'Number', label: 'Bubbles'},
   ]
 
@@ -305,6 +305,34 @@ export function SpreadsheetProvider({children}) {
     }
     return column;
   })
+
+  // const statsRows = [
+  //   [10, 1, 12],
+  //   [10, 6, 10],
+  //   [10, 7, 7],
+  //   [10, 8, 6],
+  //   [10, 9, 2],
+  //   [10, 2, 10],
+  //   [20, 2, 9],
+  //   [30, 2, 6],
+  //   [40, 2, 4],
+  //   [50, 2, 4],
+  //   [10, 3, 12],
+  //   [20, 3, 9],
+  //   [30, 3, 8],
+  //   [40, 3, 5],
+  //   [50, 3, 3],
+  //   [10, 4, 11],
+  //   [20, 4, 8],
+  //   [30, 4, 7],
+  //   [40, 4, 6],
+  //   [50, 4, 2],
+  //   [10, 5, 11],
+  //   [20, 5, 10],
+  //   [30, 5, 7],
+  //   [40, 5, 5],
+  //   [50, 5, 3],
+  // ]
 
   const statsRows = [
     [10, 1, 12],
