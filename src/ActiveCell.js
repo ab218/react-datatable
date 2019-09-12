@@ -27,6 +27,7 @@ const cursorKeyToRowColMapper = {
 function ActiveCell({
   changeActiveCell,
   columnIndex,
+  handleContextMenu,
   numberOfRows,
   rowIndex,
   updateCell,
@@ -60,7 +61,7 @@ function ActiveCell({
   })
 
   return (
-  <td>
+  <td onContextMenu={e => handleContextMenu(e)}>
     <input
       ref={inputEl}
       type="text"

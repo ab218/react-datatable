@@ -9,6 +9,7 @@ export function SelectedCell({
   column,
   columnIndex,
   finishCurrentSelectionRange,
+  handleContextMenu,
   isFormulaColumn,
   modifyCellSelectionRange,
   numberOfRows,
@@ -66,9 +67,10 @@ export function SelectedCell({
     <td
       key={`row${rowIndex}col${columnIndex}`}
       style={{backgroundColor: '#f0f0f0'}}
+      onContextMenu={e => handleContextMenu(e)}
       onMouseDown={(event) => {
         if (contextMenuOpen) {
-          dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen: 'hide' })
+          dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen: false, colHeaderContext: false })
         }
         if (!isFormulaColumn) {
           changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
@@ -85,7 +87,6 @@ export function SelectedCell({
 }
 
 export function NormalCell({
-  borderRight,
   column,
   columnIndex,
   finishCurrentSelectionRange,
@@ -95,18 +96,17 @@ export function NormalCell({
   selectCell,
 }) {
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-  const { contextMenuOpen, tableView } = useSpreadsheetState();
+  const { contextMenuOpen } = useSpreadsheetState();
 
   const cellValue = row[column.id];
   return (
-  <td
-    className={(borderRight && tableView && 'border-right').toString()}
+    <td
     key={`row${rowIndex}col${columnIndex}`}
     onMouseDown={(event) => {
       // prevent text from being highlighted
       event.preventDefault();
       if (contextMenuOpen) {
-        dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen: 'hide' })
+        dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen: false, colHeaderContext: false })
       }
       selectCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
     }}

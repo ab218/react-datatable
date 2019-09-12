@@ -5,19 +5,19 @@ import {
   ACTIVATE_CELL,
   ADD_CELL_TO_SELECTIONS,
   ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS,
-  CHANGE_TABLE_VIEW,
   CREATE_COLUMNS,
   CREATE_ROWS,
   DELETE_VALUES,
   MODIFY_CURRENT_SELECTION_CELL_RANGE,
   OPEN_ANALYSIS_WINDOW,
   PERFORM_ANALYSIS,
-  TOGGLE_CONTEXT_MENU,
-  TOGGLE_COLUMN_TYPE_MODAL,
-  TOGGLE_ANALYSIS_MODAL,
   REMOVE_SELECTED_CELLS,
   SET_ROW_POSITION,
   SELECT_CELL,
+  TOGGLE_CONTEXT_MENU,
+  TOGGLE_COLUMN_TYPE_MODAL,
+  TOGGLE_ANALYSIS_MODAL,
+  TOGGLE_LAYOUT,
   TRANSLATE_SELECTED_CELL,
   UPDATE_CELL,
   UPDATE_COLUMN
@@ -59,19 +59,21 @@ function spreadsheetReducer(state, action) {
   const {
     analysisModalOpen,
     cellValue,
+    contextMenuPosition,
+    colHeaderContext,
     column,
     columnCount,
     columnIndex,
+    columnTypeModalOpen,
     contextMenuOpen,
     endRangeRow,
     endRangeColumn,
-    columnTypeModalOpen,
+    layout,
     outputData,
     row,
     rowIndex,
     rowCount,
     selectionActive,
-    tableView,
     type,
     updatedColumn,
     xColData,
@@ -93,8 +95,8 @@ function spreadsheetReducer(state, action) {
       const {currentCellSelectionRange, cellSelectionRanges} = state;
       return {...state, cellSelectionRanges: cellSelectionRanges.concat(currentCellSelectionRange || []), currentCellSelectionRange: null};
     }
-    case CHANGE_TABLE_VIEW: {
-      return {...state, tableView };
+    case 'COL_HEADER_CONTEXT': {
+      return {...state, colHeaderContext};
     }
     case CREATE_COLUMNS: {
       const newColumns = Array(columnCount).fill(undefined).map(_ => {
@@ -115,6 +117,9 @@ function spreadsheetReducer(state, action) {
         return {...acc, [id]: state.rows.length + offset};
       }, state.rowPositions);
       return {...state, rows: state.rows.concat(newRows), rowPositions: newRowPositions};
+    }
+    case 'CLEAR_CLICKED_LOCATION': {
+      return {...state, contextMenuPosition: null};
     }
     case DELETE_VALUES: {
       const { cellSelectionRanges, columnPositions, rowPositions } = state;
@@ -186,9 +191,11 @@ function spreadsheetReducer(state, action) {
     case SET_ROW_POSITION: {
       return {...state, rowPositions: {...state.rowPositions, [action.rowID]: action.row} };
     }
+    case TOGGLE_LAYOUT: {
+      return {...state, layout};
+    }
     case TOGGLE_CONTEXT_MENU: {
-      function showOrHideContextMenu(command) { return command === 'show' ? true : false }
-      return {...state, contextMenuOpen: showOrHideContextMenu(contextMenuOpen) };
+      return {...state, contextMenuOpen, contextMenuPosition, colHeaderContext };
     }
     case TOGGLE_ANALYSIS_MODAL: {
       return {...state, analysisModalOpen}
@@ -277,21 +284,11 @@ export function useSpreadsheetDispatch() {
 }
 
 export function SpreadsheetProvider({children}) {
-  // const jovitaColumns = [
-  //   {type: 'Number', label: 'Distance'},
-  //   {type: 'Number', label: 'Trial 1', group: '1'},
-  //   {type: 'Number', label: 'Trial 2', group: '1'},
-  //   {type: 'Number', label: 'Trial 3', group: '1'},
-  //   {type: 'Number', label: 'Trial 4', group: '1'},
-  //   {type: 'Number', label: 'Trial 5', group: '1'},
-  //   {type: 'Formula', label: 'Average # of Bubbles', formula: '(Trial 1 + Trial 2 + Trial 3 + Trial 4 + Trial 5) / 5'},
-  //   {type: 'Group', id: 'abc123'}
-  // ]
-
   const statsColumns = [
-    {type: 'Number', label: 'Distance'},
-    {type: 'Number', label: 'Trial', id: 'abc123'},
+    {type: 'Number', label: 'Distance', id: 'abc123'},
+    {type: 'Number', label: 'Trial'},
     {type: 'Number', label: 'Bubbles'},
+    {type: 'Formula', label: 'Trial * Bubbles', formula: 'Trial * Bubbles'},
   ]
 
   const columns = statsColumns.map((metadata) => ({id: metadata.id || createRandomLetterString(), ...metadata}))
@@ -305,34 +302,6 @@ export function SpreadsheetProvider({children}) {
     }
     return column;
   })
-
-  // const statsRows = [
-  //   [10, 1, 12],
-  //   [10, 6, 10],
-  //   [10, 7, 7],
-  //   [10, 8, 6],
-  //   [10, 9, 2],
-  //   [10, 2, 10],
-  //   [20, 2, 9],
-  //   [30, 2, 6],
-  //   [40, 2, 4],
-  //   [50, 2, 4],
-  //   [10, 3, 12],
-  //   [20, 3, 9],
-  //   [30, 3, 8],
-  //   [40, 3, 5],
-  //   [50, 3, 3],
-  //   [10, 4, 11],
-  //   [20, 4, 8],
-  //   [30, 4, 7],
-  //   [40, 4, 6],
-  //   [50, 4, 2],
-  //   [10, 5, 11],
-  //   [20, 5, 10],
-  //   [30, 5, 7],
-  //   [40, 5, 5],
-  //   [50, 5, 3],
-  // ]
 
   const statsRows = [
     [10, 1, 12],
@@ -361,14 +330,6 @@ export function SpreadsheetProvider({children}) {
     [40, 5, 5],
     [50, 5, 3],
   ]
-
-  // const jovitaRows = [
-  //   [10, 12, 10, 12, 11, 11],
-  //   [20, 10, 9, 9, 8, 10],
-  //   [30, 7, 6, 8, 7, 7],
-  //   [40, 6, 4, 5, 6, 5],
-  //   [50, 2, 4, 3, 2, 3],
-  // ]
 
   const columnPositions = columns.reduce((acc, column, index) => ({...acc, [column.id]: index}), {});
 
@@ -429,8 +390,10 @@ export function SpreadsheetProvider({children}) {
     }, {id: createRandomID()}));
   }, []);
 
-  console.log('physicalRows:', physicalRows, 'allPhysicalColumns:', allPhysicalColumns);
-  // console.log(sortedNonGroupedColumns, groupedColumns)
+  const physicalRowPositions = physicalRows.reduce((acc, row, index) => ({...acc, [row.id]: index}), {});
+  // console.log(physicalRowPositions);
+
+  // console.log('physicalRows:', physicalRows, 'allPhysicalColumns:', allPhysicalColumns);
 
   const initialState = {
     allPhysicalColumns,
@@ -441,14 +404,18 @@ export function SpreadsheetProvider({children}) {
     cellSelectionRanges: [{
       top: 1, bottom: 1, left: 1, right: 1
     }],
+    contextMenuPosition: null,
     currentCellSelectionRange: null,
+    colHeaderContext: false,
     columns,
     columnPositions,
+    contextMenuOpen: false,
     groupByColumnID,
     groupedColumns,
+    layout: true,
     performAnalysis: false,
     physicalRows,
-    tableView: false,
+    physicalRowPositions,
     xColData: null,
     yColData: null,
     lastSelection: {row: 1, column: 1},

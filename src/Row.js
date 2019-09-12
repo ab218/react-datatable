@@ -16,14 +16,16 @@ export default function Row({
   isSelectedCell,
   modifyCellSelectionRange,
   numberOfRows,
+  handleContextMenu,
   row,
   rows,
   rowIndex,
   selectCell,
 }) {
-  columns.sort((colA, colB) => {
+  columnPositions && columns.sort((colA, colB) => {
     return columnPositions[colA.id] - columnPositions[colB.id];
   });
+
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
   const { contextMenuOpen } = useSpreadsheetState();
   return (
@@ -49,6 +51,7 @@ export default function Row({
         if (activeCell && activeCell.row === rowIndex && activeCell.column === columnIndex) {
           return (
             <ActiveCell
+              handleContextMenu={handleContextMenu}
               key={`row${rowIndex}col${columnIndex}`}
               changeActiveCell={changeActiveCell}
               column={column}
@@ -67,6 +70,7 @@ export default function Row({
         } else if (isSelectedCell(rowIndex, columnIndex)) {
           return (
             <SelectedCell
+              handleContextMenu={handleContextMenu}
               key={`Row${rowIndex}Col${columnIndex}`}
               changeActiveCell={changeActiveCell}
               column={column}
@@ -100,7 +104,7 @@ export default function Row({
           return (<td key={`row${rowIndex}col${columnIndex}`} onMouseDown={(e) => {
             e.preventDefault();
             if (contextMenuOpen) {
-              dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen: 'hide' })
+              dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen: false, colHeaderContext: false })
             }
             selectCell(rowIndex, columnIndex)
           }}></td>)

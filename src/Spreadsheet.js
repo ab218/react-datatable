@@ -39,6 +39,7 @@ function BlankClickableRow({
   createNewColumns,
   createNewRows,
   finishCurrentSelectionRange,
+  handleContextMenu,
   isSelectedCell,
   modifyCellSelectionRange,
   numberOfRows,
@@ -73,6 +74,7 @@ function BlankClickableRow({
               columns={columns}
               createNewColumns={createNewColumns}
               createNewRows={createNewRows}
+              handleContextMenu={handleContextMenu}
               numberOfRows={numberOfRows}
               rowIndex={rowIndex}
               rows={rows}
@@ -88,6 +90,7 @@ function BlankClickableRow({
               column={column}
               columnIndex={columnIndex}
               finishCurrentSelectionRange={finishCurrentSelectionRange}
+              handleContextMenu={handleContextMenu}
               modifyCellSelectionRange={modifyCellSelectionRange}
               numberOfRows={numberOfRows}
               rowIndex={rowIndex}
@@ -100,7 +103,7 @@ function BlankClickableRow({
             onMouseDown={(event) => {
               event.preventDefault();
               if (contextMenuOpen) {
-                dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen: 'hide' })
+                dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen: false })
               }
               selectCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
             }}
@@ -128,7 +131,9 @@ function Spreadsheet({eventBus}) {
     cellSelectionRanges,
     currentCellSelectionRange,
     groupedColumns,
+    layout,
     physicalRows,
+    physicalRowPositions,
     performAnalysis,
     rowPositions,
     rows,
@@ -150,10 +155,21 @@ function Spreadsheet({eventBus}) {
     return {...acc, [position]: id};
   }, {});
   const rowCount = rowMap ? Math.max(...Object.keys(rowMap)) + 1 : 0;
-  const visibleRowCount = Math.max(rowCount, 20); // 50 rows should be enough to fill the screen
+  const visibleRowCount = Math.max(rowCount, 35); // 50 rows should be enough to fill the screen
   const rowIDs = Array(rowCount).fill(undefined).map((_, index) => {
     return rowMap[index];
   });
+
+  const groupedRowMap = Object.entries(physicalRowPositions).reduce((acc, [id, position]) => {
+    return {...acc, [position]: id};
+  }, {});
+  const groupedRowCount = groupedRowMap ? Math.max(...Object.keys(groupedRowMap)) + 1 : 0;
+  const groupedVisibleRowCount = Math.max(groupedRowCount, 20);
+  const groupedRowIDs = Array(groupedRowCount).fill(undefined).map((_, index) => {
+    return groupedRowMap[index];
+  });
+
+  // console.log('rowIDs: ', rowIDs, 'groupedRowIDs: ', groupedRowIDs)
 
   // We add one more column header as the capstone for the column of row headers
   const visibleColumnCount = Math.max(26, columns.length);
@@ -166,6 +182,16 @@ function Spreadsheet({eventBus}) {
       content={String.fromCharCode(index + 'A'.charCodeAt(0))}
     />
   ))
+  const spreadsheetHeaders = Array(26).fill(undefined).map((_, index) => (
+    <ColResizer
+      borderRight={tableView && (index === 0 || index === 5) && true}
+      columnIndex={index}
+      key={index}
+      column={allPhysicalColumns[index]}
+      content={String.fromCharCode(index + 'A'.charCodeAt(0))}
+    />
+  ))
+
   const visibleRows = Array(visibleRowCount).fill(undefined).map((_, index) => {
       if (rowIDs[index]) {
         return (
@@ -179,6 +205,7 @@ function Spreadsheet({eventBus}) {
             createNewColumns={createNewColumns}
             createNewRows={createNewRows}
             finishCurrentSelectionRange={finishCurrentSelectionRange}
+            handleContextMenu={handleContextMenu}
             isSelectedCell={isSelectedCell}
             modifyCellSelectionRange={modifyCellSelectionRange}
             numberOfRows={rowCount}
@@ -195,6 +222,7 @@ function Spreadsheet({eventBus}) {
             key={'Row' + index}
             cellCount={visibleColumnCount + 1}
             activeCell={activeCell}
+            handleContextMenu={handleContextMenu}
             changeActiveCell={changeActiveCell}
             columns={columns}
             createNewRows={createNewRows}
@@ -244,6 +272,57 @@ function Spreadsheet({eventBus}) {
     dispatchSpreadsheetAction({type: ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS});
   }
 
+  const visibleSpreadsheetRows = Array(groupedVisibleRowCount).fill(undefined).map((_, index) => {
+    if (groupedRowIDs[index]) {
+      return (
+        <Row
+          key={'Row' + index}
+          activeCell={activeCell}
+          cellCount={26 + 1}
+          changeActiveCell={changeActiveCell}
+          columns={allPhysicalColumns}
+          createNewColumns={createNewColumns}
+          createNewRows={createNewRows}
+          finishCurrentSelectionRange={finishCurrentSelectionRange}
+          handleContextMenu={handleContextMenu}
+          isSelectedCell={isSelectedCell}
+          modifyCellSelectionRange={modifyCellSelectionRange}
+          numberOfRows={groupedRowCount}
+          row={physicalRows.find(({id}) => id === groupedRowIDs[index])}
+          rowIDs={groupedRowIDs}
+          rowIndex={index}
+          rows={index - groupedRowCount + 1}
+          selectCell={selectCell}
+        />
+      )
+    } else if (groupedRowIDs[index-1]) {
+      return (
+        <BlankClickableRow
+          key={'Row' + index}
+          cellCount={26 + 1}
+          activeCell={activeCell}
+          changeActiveCell={changeActiveCell}
+          columns={allPhysicalColumns}
+          createNewRows={createNewRows}
+          createNewColumns={createNewColumns}
+          finishCurrentSelectionRange={finishCurrentSelectionRange}
+          handleContextMenu={handleContextMenu}
+          isSelectedCell={isSelectedCell}
+          modifyCellSelectionRange={modifyCellSelectionRange}
+          numberOfRows={groupedRowCount}
+          rowIndex={index}
+          rows={index - groupedRowCount + 1}
+          selectCell={selectCell}
+        />
+      )
+    } else { return <BlankRow key={'BlankRow' + index} cellCount={26 + 1} />}
+});
+
+function handleContextMenu(e) {
+  e.preventDefault();
+  dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen: true, contextMenuPosition: {left: e.pageX, top: e.pageY}});
+}
+
   return (
     <div>
       <ContextMenu />
@@ -251,38 +330,29 @@ function Spreadsheet({eventBus}) {
       {selectedColumn && <ColumnTypeModal selectedColumn={selectedColumn}/>}
       {analysisModalOpen && <AnalysisModal />}
       <FormulaBar />
-      <table>
-        <thead>
-          <tr className={(tableView && 'move-row-down').toString()}><th></th>{headers}</tr>
-          <tr className={(tableView ? 'move-row-up' : 'display-none').toString()}>
-            <td></td>
-            <td className={'border-right'}></td>
-            <td className={'border-right'} colSpan={5}>Group 1</td>
-          </tr>
-        </thead>
-        <tbody>{visibleRows}</tbody>
-      </table>
-      <table>
-        <thead>
-          <tr>
-        {Object.keys(groupedColumns).map(col => {
-          return <th key={col} colSpan={2}>{col}</th>
-        })}
-        </tr>
-        <tr>
-          {allPhysicalColumns.map(p => {
-          return <th key={p.id}>{p.label}</th>
-          })}
-        </tr>
-        </thead>
-        <tbody>
-          {physicalRows.map(phys =>{
-            return <tr key={phys.id}>{allPhysicalColumns.map(p => {
-              return <td key={p.id}>{phys[p.id]}</td>
-            })}</tr>
-          })}
-        </tbody>
-      </table>
+      {layout
+        ? <table>
+          <thead>
+            <tr><th></th>{headers}</tr>
+          </thead>
+          <tbody>{visibleRows}</tbody>
+        </table>
+        : <table>
+          <thead>
+            <tr className={'move-row-down'}>
+              <th></th>{spreadsheetHeaders}
+            </tr>
+            <tr className={'move-row-up'}><th></th>
+              {Object.entries(groupedColumns).map(col => {
+                return <th key={col[0]} colSpan={Object.keys(col[1][0]).length - 1}>{col[0]}</th>
+              })}
+            </tr>
+          </thead>
+          <tbody>
+          {visibleSpreadsheetRows}
+          </tbody>
+        </table>
+      }
     </div>
   );
 }
