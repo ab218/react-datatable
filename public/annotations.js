@@ -187,9 +187,10 @@
       input.style.top = e.pageY + 'px';
 			document.body.appendChild(input);
 			input.querySelectorAll('input')[0].focus();
-			button = input.querySelectorAll('button')[0];
-			button.onclick = function () {
+      button = input.querySelectorAll('button')[0];
 
+      // Done button for text input
+			button.onclick = function () {
 				var parent = this.parentNode;
 
 				ann.update({
@@ -199,7 +200,12 @@
 				});
 				parent.parentNode.removeChild(parent);
 			};
-			chart.annotationInputIndex++;
+      chart.annotationInputIndex++;
+      // deactivate button
+      chart.annotations.selected = -1;
+      // not sure what this does
+      var self = chart.annotations.buttons[index][3];
+      self.setState(0);
 		}
 	};
 
@@ -243,7 +249,7 @@
 	}
 
 
-	function defatultMainOptions() {
+	function defaultMainOptions() {
 		var buttons = [],
 			shapes = ['circle', 'line', 'square', 'text'],
 			types = ['circle', 'path', 'rect', null],
@@ -1076,7 +1082,7 @@
 		if (isArray(options) && options.length > 0) {
 			chart.addAnnotation(chart.options.annotations);
 		}
-		chart.annotations.options = merge(defatultMainOptions(), chart.options.annotationsOptions ? chart.options.annotationsOptions : {});
+		chart.annotations.options = merge(defaultMainOptions(), chart.options.annotationsOptions ? chart.options.annotationsOptions : {});
 
 		if (chart.annotations.options.enabledButtons) {
 			renderButtons(chart);

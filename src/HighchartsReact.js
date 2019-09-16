@@ -6,8 +6,6 @@ import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { jStat } from 'jstat';
 
-// import ttest from 'ttest';
-
 /*
 Linear regression and correlation (Yes to all of these)
 Calculate slope and intercept with 95% confidence intervals.
@@ -31,9 +29,13 @@ export default function HighchartsDemo () {
     const t_score = (meanA - meanB)/Math.sqrt(S2/t_array1.length+S2/t_array2.length);
     const t_pval = jStat.studentt.cdf(-Math.abs(t_score), t_array1.length+t_array2.length-2) * 2;
     return [t_score, t_pval];
-}
-   // TODO: Think of a way to only have one window open at a time.
-   useEffect(() => {
+  }
+  // function tdist(df, conf_lvl) {
+  //   return jStat.studentt.inv((1 - (1 - conf_lvl) / 2), df)
+  // }
+  // console.log('thing: ', tdist(1, 0.95));
+  // TODO: Think of a way to only have one window open at a time.
+  useEffect(() => {
     const colX = xColData || columns[0];
     const colY = yColData || columns[2];
     const colXLabel = colX.label;
@@ -41,25 +43,28 @@ export default function HighchartsDemo () {
     function mapColumnValues(colID) { return rows.map(row => Number(row[colID])).filter(x=>x) }
     const colA = mapColumnValues(colX.id);
     const colB = mapColumnValues(colY.id);
-    console.log(colA, colB)
+    const jObj = jStat([colA, colB])
+    console.log(jObj)
+    // console.log(colA, colB)
     const tempABVals = colA.map((_, i) => {
-      return [(colA[i]), (colB[i])]
+    return [(colA[i]), (colB[i])]
     }).sort();
-    console.log(get_t_test(colA, colB))
-    const jTest = jStat(colB);
+    console.log('get-t-test: ', get_t_test(colA, colB))
+    // const jTest = jStat(colB);
     // colA.forEach(t => {
     //   console.log(jStat.tscore(colA));
     // })
-    console.log('jTest t-score for 3.25 given:', colB, 'is:', jTest.tscore(3.25));
-    console.log('t test', jStat.ttest(colB, 4));
+    // console.log('jTest t-score for 3.25 given:', colB, 'is:', jTest.tscore(3.25));
+    // console.log('t test', jStat.ttest(colB, 4));
     const linearRegressionLine = regression.linear(tempABVals, { precision: 5 });
     const corrcoeff = jStat.corrcoeff(colA, colB).toFixed(5);
     // const spearman = jStat.spearmancoeff(colA, colB);
-    const covariance = jStat.covariance(colB, colA);
+    const covariance = jStat.covariance(colB, colA).toFixed(4);
     const colAMean = jStat.mean(colA).toFixed(3);
     const colBMean = jStat.mean(colB).toFixed(3);
     const colAStdev = jStat.stdev(colA).toFixed(4);
     const colBStdev = jStat.stdev(colB).toFixed(4);
+    let pValue = get_t_test(colA, colB)[1].toFixed(6);
 
     dispatchSpreadsheetAction({
       type: 'OPEN_ANALYSIS_WINDOW',
@@ -72,6 +77,7 @@ export default function HighchartsDemo () {
         colYLabel,
         colBMean,
         colBStdev,
+        pValue,
         tempABVals,
         linearRegressionLinePoints: linearRegressionLine.points,
         linearRegressionLineR2: linearRegressionLine.r2,

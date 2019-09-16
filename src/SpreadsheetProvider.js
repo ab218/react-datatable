@@ -170,7 +170,7 @@ function spreadsheetReducer(state, action) {
           window.removeEventListener("message", receiveMessage);
         }
       }
-      const popup = window.open(window.location.href + "postmessage_test.html", "", "left=9999,top=100,width=450,height=850");
+      const popup = window.open(window.location.href + "analysis.html", "", "left=9999,top=100,width=450,height=850");
       window.addEventListener("message", receiveMessage, false);
       return {...state, performAnalysis: false};
     }
@@ -285,10 +285,10 @@ export function useSpreadsheetDispatch() {
 
 export function SpreadsheetProvider({children}) {
   const statsColumns = [
-    {type: 'Number', label: 'Distance', id: 'abc123'},
-    {type: 'Number', label: 'Trial'},
-    {type: 'Number', label: 'Bubbles'},
-    {type: 'Formula', label: 'Trial * Bubbles', formula: 'Trial * Bubbles'},
+    {modelingType: 'Continuous', type: 'Number', label: 'Distance', id: '_abc123_'},
+    {modelingType: 'Nominal', type: 'Number', label: 'Trial'},
+    {modelingType: 'Continuous', type: 'Number', label: 'Bubbles'},
+    {modelingType: 'Continuous', type: 'Formula', label: 'Trial * Bubbles', formula: 'Trial * Bubbles'},
   ]
 
   const columns = statsColumns.map((metadata) => ({id: metadata.id || createRandomLetterString(), ...metadata}))
@@ -354,7 +354,7 @@ export function SpreadsheetProvider({children}) {
     return rowCopy;
   });
   const rowPositions = rows.reduce((acc, row, index) => ({...acc, [row.id]: index}), {});
-  const groupByColumnID = 'abc123';
+  const groupByColumnID = '_abc123_';
   const groupedColumns = rows.reduce((acc, row) => {
     const {[groupByColumnID]: _, ...restRow} = row;
     return {...acc, [row[groupByColumnID]]: (acc[row[groupByColumnID]] || []).concat(restRow)}

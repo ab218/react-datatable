@@ -19,7 +19,6 @@ export default function ContextMenu() {
   }
 
   const toggleMenu = contextMenuOpen => {
-    if (colHeaderContext) {console.log('ooga booga')}
     dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen })
   };
 
@@ -27,8 +26,9 @@ export default function ContextMenu() {
     const menu = document.querySelector(".menu");
     menu.style.display = contextMenuOpen ? 'block' : 'none';
     if (contextMenuPosition) {
-      menu.style.left = `${contextMenuPosition.left}px`;
-      menu.style.top = `${contextMenuPosition.top}px`;
+      const { left, top } = contextMenuPosition;
+      menu.style.left = `${left}px`;
+      menu.style.top = `${top}px`;
     }
   })
   return (
@@ -43,9 +43,8 @@ export default function ContextMenu() {
           <ul className="menu-options">
             <li className="menu-option">Cut</li>
             <li className="menu-option">Copy</li>
-            <li className="menu-option">Paste</li>
-            <li onClick={() => dispatchSpreadsheetAction({type: PERFORM_ANALYSIS })} className="menu-option">Perform Quick Analysis</li>
-            <li onClick={() => dispatchSpreadsheetAction({type: TOGGLE_ANALYSIS_MODAL, analysisModalOpen: true })} className="menu-option">Analysis</li>
+            <li onClick={() => dispatchSpreadsheetAction({type: PERFORM_ANALYSIS })} className="menu-option">Paste</li>
+            <li onClick={() => dispatchSpreadsheetAction({type: TOGGLE_ANALYSIS_MODAL, analysisModalOpen: true })} className="menu-option">Fit Y By X</li>
           </ul>
         </div>
   )

@@ -159,13 +159,12 @@ function Spreadsheet({eventBus}) {
   const rowIDs = Array(rowCount).fill(undefined).map((_, index) => {
     return rowMap[index];
   });
-
   const groupedRowMap = Object.entries(physicalRowPositions).reduce((acc, [id, position]) => {
     return {...acc, [position]: id};
   }, {});
   const groupedRowCount = groupedRowMap ? Math.max(...Object.keys(groupedRowMap)) + 1 : 0;
   const groupedVisibleRowCount = Math.max(groupedRowCount, 20);
-  const groupedRowIDs = Array(groupedRowCount).fill(undefined).map((_, index) => {
+  const groupedRowIDs = groupedRowCount !== -Infinity && Array(groupedRowCount).fill(undefined).map((_, index) => {
     return groupedRowMap[index];
   });
 

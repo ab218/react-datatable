@@ -12,6 +12,16 @@
   <body>
     <div id="container">Loading</div>
     <script>
+      function evaluatePValue(pValue) {
+        if (pValue < 0.0001) {
+          return `<td style=color:red;><0.0001</td>`
+        } else if (pValue < 0.001) {
+          return `<td style=color:orange;>${pValue}</td>`
+        } else if (pValue < 0.01) {
+          return `<td style=color:#666600;>${pValue}</td>`
+        }
+        return `<td style=color:green;>${pValue}</td>`
+      }
       window.opener.postMessage('ready', '*');
       const container = document.getElementById('container');
       function receiveMessage(event) {
@@ -26,6 +36,7 @@
           colAStdev,
           colBMean,
           colBStdev,
+          pValue,
           linearRegressionLinePoints,
           linearRegressionLineEquation,
           linearRegressionLineSlope,
@@ -59,12 +70,13 @@
           plotOptions: {
             series: {
               jitter: {
-                x: 0.4,
-                y: 0.4
+                x: 0.3,
+                y: 0.3
               },
               label: {
                 connectorAllowed: false
               },
+              stickyTracking: false,
               events: {
                 legendItemClick: function () {
                   if (this.visible) {
@@ -107,9 +119,9 @@
             {
               name: 'Histogram',
               type: 'column',
-              zIndex: -1,
               visible: false,
               data: tempABVals,
+              borderWidth: 0,
             },
           ],
 
@@ -137,8 +149,16 @@
                   <td>${corrcoeff}</td>
                 </tr>
                 <tr>
+                  <td>P-Value:</td>
+                  ${evaluatePValue(pValue)}
+                </tr>
+                <tr>
                   <td>Covariance:</td>
                   <td>${covariance}</td>
+                </tr>
+                <tr>
+                  <td>Count:</td>
+                  <td>${tempABVals.length}</td>
                 </tr>
               </table>
               <br>
