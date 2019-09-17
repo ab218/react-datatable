@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { TOGGLE_COLUMN_TYPE_MODAL, TOGGLE_CONTEXT_MENU, REMOVE_SELECTED_CELLS } from './constants'
+import { TOGGLE_COLUMN_TYPE_MODAL, OPEN_CONTEXT_MENU, REMOVE_SELECTED_CELLS } from './constants'
 
 export default function ColumnResizer({borderRight, column, content}) {
 
@@ -55,7 +55,7 @@ export default function ColumnResizer({borderRight, column, content}) {
 
   const onContextMenu = (e) => {
     e.preventDefault();
-    dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, colHeaderContext: true, contextMenuOpen: true, contextMenuPosition: {left: e.pageX, top: e.pageY}});
+    dispatchSpreadsheetAction({type: OPEN_CONTEXT_MENU, colName: e.target.innerHTML, colHeaderContext: true, contextMenuPosition: {left: e.pageX, top: e.pageY}});
   }
 
   return (

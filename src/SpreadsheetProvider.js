@@ -14,7 +14,7 @@ import {
   REMOVE_SELECTED_CELLS,
   SET_ROW_POSITION,
   SELECT_CELL,
-  TOGGLE_CONTEXT_MENU,
+  OPEN_CONTEXT_MENU,
   TOGGLE_COLUMN_TYPE_MODAL,
   TOGGLE_ANALYSIS_MODAL,
   TOGGLE_LAYOUT,
@@ -61,11 +61,11 @@ function spreadsheetReducer(state, action) {
     cellValue,
     contextMenuPosition,
     colHeaderContext,
+    colName,
     column,
     columnCount,
     columnIndex,
     columnTypeModalOpen,
-    contextMenuOpen,
     endRangeRow,
     endRangeColumn,
     layout,
@@ -74,6 +74,7 @@ function spreadsheetReducer(state, action) {
     rowIndex,
     rowCount,
     selectionActive,
+    setColName,
     type,
     updatedColumn,
     xColData,
@@ -194,8 +195,55 @@ function spreadsheetReducer(state, action) {
     case TOGGLE_LAYOUT: {
       return {...state, layout};
     }
-    case TOGGLE_CONTEXT_MENU: {
-      return {...state, contextMenuOpen, contextMenuPosition, colHeaderContext };
+    case 'SET_GROUPED_COLUMNS': {
+      const matchColNameWithID = state.columns.find(col => {
+        return col.label === setColName;
+      })
+
+      const groupByColumnID = (matchColNameWithID && matchColNameWithID.id) || '_abc123_';
+      const groupedColumns = state.rows.reduce((acc, row) => {
+        const {[groupByColumnID]: _, ...restRow} = row;
+        return {...acc, [row[groupByColumnID]]: (acc[row[groupByColumnID]] || []).concat(restRow)}
+      }, {});
+
+      const groupCount = Object.keys(groupedColumns).length;
+      const sortedNonGroupedColumns = state.columns.filter(({id}) => id !== groupByColumnID).sort((colA, colB) => {
+        return state.columnPositions[colA.id] - state.columnPositions[colB.id];
+      });
+
+      // Given m logical columns and n different values in our group by column,
+      // we should have (m - 1) * n number of physical columns
+      const allPhysicalColumns = Array.from({length: groupCount}).flatMap(_ => {
+            return sortedNonGroupedColumns.map((logicalColumn) => {
+              return {...logicalColumn, id: createRandomID(), logicalColumn: logicalColumn.id};
+            });
+          });
+      const logicalRowGroups = Object.values(groupedColumns);
+      // the size of the largest group is the maximum number of physical rows
+      const physicalRowTotal = Math.max(...logicalRowGroups.map(group => group.length));
+      // We have to translate the logical rows into physical rows
+      const physicalRows = state.rows.slice(0, physicalRowTotal).reduce((acc, _, index) => {
+        return acc.concat(logicalRowGroups.reduce((physicalRow, group, groupIndex) => {
+          const logicalRow = group[index];
+          // If we have a valid logical row from our group, we then map the row values
+          // for all its logical column ids to refer to physical column ids
+          return logicalRow ? sortedNonGroupedColumns.reduce((acc, column, columnIndex, array) => {
+            // We compute the offset bvecause allPhysicalColumns is a flat list
+            const physicalColumn = allPhysicalColumns[columnIndex + (groupIndex * array.length)];
+            const result = {...acc, [physicalColumn.id]: logicalRow[column.id]};
+            return result;
+          }, physicalRow) : physicalRow;
+        }, {id: createRandomID()}));
+      }, []);
+
+      const physicalRowPositions = physicalRows.reduce((acc, row, index) => ({...acc, [row.id]: index}), {});
+      return {...state, setColName, physicalRowPositions, physicalRows, groupedColumns, groupByColumnID, allPhysicalColumns }
+    }
+    case OPEN_CONTEXT_MENU: {
+      return {...state, colName, contextMenuOpen: true, contextMenuPosition, colHeaderContext };
+    }
+    case 'CLOSE_CONTEXT_MENU': {
+      return {...state, contextMenuOpen: false };
     }
     case TOGGLE_ANALYSIS_MODAL: {
       return {...state, analysisModalOpen}
@@ -288,7 +336,7 @@ export function SpreadsheetProvider({children}) {
     {modelingType: 'Continuous', type: 'Number', label: 'Distance', id: '_abc123_'},
     {modelingType: 'Nominal', type: 'Number', label: 'Trial'},
     {modelingType: 'Continuous', type: 'Number', label: 'Bubbles'},
-    {modelingType: 'Continuous', type: 'Formula', label: 'Trial * Bubbles', formula: 'Trial * Bubbles'},
+    // {modelingType: 'Continuous', type: 'Formula', label: 'Trial * Bubbles', formula: 'Trial * Bubbles'},
   ]
 
   const columns = statsColumns.map((metadata) => ({id: metadata.id || createRandomLetterString(), ...metadata}))
@@ -354,49 +402,9 @@ export function SpreadsheetProvider({children}) {
     return rowCopy;
   });
   const rowPositions = rows.reduce((acc, row, index) => ({...acc, [row.id]: index}), {});
-  const groupByColumnID = '_abc123_';
-  const groupedColumns = rows.reduce((acc, row) => {
-    const {[groupByColumnID]: _, ...restRow} = row;
-    return {...acc, [row[groupByColumnID]]: (acc[row[groupByColumnID]] || []).concat(restRow)}
-  }, {});
-
-  const groupCount = Object.keys(groupedColumns).length;
-  const sortedNonGroupedColumns = columns.filter(({id}) => id !== groupByColumnID).sort((colA, colB) => {
-    return columnPositions[colA.id] - columnPositions[colB.id];
-  });
-
-  // Given m logical columns and n different values in our group by column,
-  // we should have (m - 1) * n number of physical columns
-  const allPhysicalColumns = Array.from({length: groupCount}).flatMap(_ => {
-        return sortedNonGroupedColumns.map((logicalColumn) => {
-          return {...logicalColumn, id: createRandomID(), logicalColumn: logicalColumn.id};
-        });
-      });
-  const logicalRowGroups = Object.values(groupedColumns);
-  // the size of the largest group is the maximum number of physical rows
-  const physicalRowTotal = Math.max(...logicalRowGroups.map(group => group.length));
-  // We have to translate the logical rows into physical rows
-  const physicalRows = rows.slice(0, physicalRowTotal).reduce((acc, _, index) => {
-    return acc.concat(logicalRowGroups.reduce((physicalRow, group, groupIndex) => {
-      const logicalRow = group[index];
-      // If we have a valid logical row from our group, we then map the row values
-      // for all its logical column ids to refer to physical column ids
-      return logicalRow ? sortedNonGroupedColumns.reduce((acc, column, columnIndex, array) => {
-        // We compute the offset bvecause allPhysicalColumns is a flat list
-        const physicalColumn = allPhysicalColumns[columnIndex + (groupIndex * array.length)];
-        const result = {...acc, [physicalColumn.id]: logicalRow[column.id]};
-        return result;
-      }, physicalRow) : physicalRow;
-    }, {id: createRandomID()}));
-  }, []);
-
-  const physicalRowPositions = physicalRows.reduce((acc, row, index) => ({...acc, [row.id]: index}), {});
-  // console.log(physicalRowPositions);
-
-  // console.log('physicalRows:', physicalRows, 'allPhysicalColumns:', allPhysicalColumns);
 
   const initialState = {
-    allPhysicalColumns,
+    // allPhysicalColumns,
     analysisModalOpen: false,
     analysisWindowOpen: false,
     columnTypeModalOpen: false,
@@ -409,13 +417,14 @@ export function SpreadsheetProvider({children}) {
     colHeaderContext: false,
     columns,
     columnPositions,
+    colName: null,
     contextMenuOpen: false,
-    groupByColumnID,
-    groupedColumns,
+    // groupByColumnID,
+    // groupedColumns,
     layout: true,
     performAnalysis: false,
-    physicalRows,
-    physicalRowPositions,
+    // physicalRows,
+    // physicalRowPositions,
     xColData: null,
     yColData: null,
     lastSelection: {row: 1, column: 1},

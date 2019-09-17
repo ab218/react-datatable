@@ -15,7 +15,7 @@ import {
   CREATE_ROWS,
   MODIFY_CURRENT_SELECTION_CELL_RANGE,
   SELECT_CELL,
-  TOGGLE_CONTEXT_MENU,
+  OPEN_CONTEXT_MENU,
   UPDATE_CELL,
 } from './constants'
 import HighchartsReact from './HighchartsReact';
@@ -103,7 +103,7 @@ function BlankClickableRow({
             onMouseDown={(event) => {
               event.preventDefault();
               if (contextMenuOpen) {
-                dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen: false })
+                dispatchSpreadsheetAction({type: 'CLOSE_CONTEXT_MENU' })
               }
               selectCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
             }}
@@ -129,6 +129,7 @@ function Spreadsheet({eventBus}) {
     columnPositions,
     columns,
     cellSelectionRanges,
+    setColName,
     currentCellSelectionRange,
     groupedColumns,
     layout,
@@ -159,7 +160,7 @@ function Spreadsheet({eventBus}) {
   const rowIDs = Array(rowCount).fill(undefined).map((_, index) => {
     return rowMap[index];
   });
-  const groupedRowMap = Object.entries(physicalRowPositions).reduce((acc, [id, position]) => {
+  const groupedRowMap = groupedColumns && Object.entries(physicalRowPositions).reduce((acc, [id, position]) => {
     return {...acc, [position]: id};
   }, {});
   const groupedRowCount = groupedRowMap ? Math.max(...Object.keys(groupedRowMap)) + 1 : 0;
@@ -186,7 +187,7 @@ function Spreadsheet({eventBus}) {
       borderRight={tableView && (index === 0 || index === 5) && true}
       columnIndex={index}
       key={index}
-      column={allPhysicalColumns[index]}
+      column={allPhysicalColumns && allPhysicalColumns[index]}
       content={String.fromCharCode(index + 'A'.charCodeAt(0))}
     />
   ))
@@ -237,15 +238,6 @@ function Spreadsheet({eventBus}) {
         )
       } else { return <BlankRow key={'BlankRow' + index} cellCount={visibleColumnCount + 1} />}
   });
-
-  // const spreadsheetHeaders = Array(visibleColumnCount).fill(undefined).map((_, index) => (
-  //   <ColResizer
-  //     columnIndex={index}
-  //     key={index}
-  //     column={columns[index]}
-  //     content={String.fromCharCode(index + 'A'.charCodeAt(0))}
-  //   />
-  // ))
 
   function createNewRows(rowCount) {
     dispatchSpreadsheetAction({type: CREATE_ROWS, rowCount});
@@ -318,8 +310,9 @@ function Spreadsheet({eventBus}) {
 });
 
 function handleContextMenu(e) {
+  console.log(e.target)
   e.preventDefault();
-  dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen: true, contextMenuPosition: {left: e.pageX, top: e.pageY}});
+  dispatchSpreadsheetAction({type: OPEN_CONTEXT_MENU, contextMenuPosition: {left: e.pageX, top: e.pageY}});
 }
 
   return (
@@ -342,8 +335,8 @@ function handleContextMenu(e) {
               <th></th>{spreadsheetHeaders}
             </tr>
             <tr className={'move-row-up'}><th></th>
-              {Object.entries(groupedColumns).map(col => {
-                return <th key={col[0]} colSpan={Object.keys(col[1][0]).length - 1}>{col[0]}</th>
+              {groupedColumns && Object.entries(groupedColumns).map(col => {
+                return <th key={col[0]} colSpan={Object.keys(col[1][0]).length - 1}>{setColName} {col[0]}</th>
               })}
             </tr>
           </thead>
