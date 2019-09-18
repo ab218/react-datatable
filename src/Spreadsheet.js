@@ -11,6 +11,7 @@ import { SelectedCell } from './Cell';
 import {
   ACTIVATE_CELL,
   ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS,
+  CLOSE_CONTEXT_MENU,
   CREATE_COLUMNS,
   CREATE_ROWS,
   MODIFY_CURRENT_SELECTION_CELL_RANGE,
@@ -103,7 +104,7 @@ function BlankClickableRow({
             onMouseDown={(event) => {
               event.preventDefault();
               if (contextMenuOpen) {
-                dispatchSpreadsheetAction({type: 'CLOSE_CONTEXT_MENU' })
+                dispatchSpreadsheetAction({type: CLOSE_CONTEXT_MENU })
               }
               selectCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
             }}

@@ -1,6 +1,6 @@
 import React, {useEffect} from 'react';
 import { useSpreadsheetDispatch, useSpreadsheetState } from './SpreadsheetProvider';
-import { DELETE_VALUES, TRANSLATE_SELECTED_CELL, ACTIVATE_CELL } from './constants'
+import { CLOSE_CONTEXT_MENU, DELETE_VALUES, TRANSLATE_SELECTED_CELL, ACTIVATE_CELL } from './constants'
 
 export function RowNumberCell({rowIndex}) { return <td>{rowIndex + 1}</td> }
 
@@ -70,7 +70,7 @@ export function SelectedCell({
       onContextMenu={e => handleContextMenu(e)}
       onMouseDown={(event) => {
         if (contextMenuOpen) {
-          dispatchSpreadsheetAction({type: 'CLOSE_CONTEXT_MENU', colHeaderContext: false })
+          dispatchSpreadsheetAction({type: CLOSE_CONTEXT_MENU })
         }
         if (!isFormulaColumn) {
           changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
@@ -106,7 +106,7 @@ export function NormalCell({
       // prevent text from being highlighted
       event.preventDefault();
       if (contextMenuOpen) {
-        dispatchSpreadsheetAction({type: 'CLOSE_CONTEXT_MENU' })
+        dispatchSpreadsheetAction({type: CLOSE_CONTEXT_MENU })
       }
       selectCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
     }}

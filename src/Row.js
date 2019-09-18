@@ -1,7 +1,7 @@
 import React from 'react';
 import ActiveCell from './ActiveCell';
 import { NormalCell, RowNumberCell, SelectedCell } from './Cell';
-import { UPDATE_CELL } from './constants';
+import { CLOSE_CONTEXT_MENU, UPDATE_CELL } from './constants';
 import { useSpreadsheetDispatch, useSpreadsheetState } from './SpreadsheetProvider';
 
 export default function Row({
@@ -104,7 +104,7 @@ export default function Row({
           return (<td key={`row${rowIndex}col${columnIndex}`} onMouseDown={(e) => {
             e.preventDefault();
             if (contextMenuOpen) {
-              dispatchSpreadsheetAction({type: 'CLOSE_CONTEXT_MENU' })
+              dispatchSpreadsheetAction({type: CLOSE_CONTEXT_MENU })
             }
             selectCell(rowIndex, columnIndex)
           }}></td>)

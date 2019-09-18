@@ -5,6 +5,7 @@ import {
   ACTIVATE_CELL,
   ADD_CELL_TO_SELECTIONS,
   ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS,
+  CLOSE_CONTEXT_MENU,
   CREATE_COLUMNS,
   CREATE_ROWS,
   DELETE_VALUES,
@@ -12,6 +13,7 @@ import {
   OPEN_ANALYSIS_WINDOW,
   PERFORM_ANALYSIS,
   REMOVE_SELECTED_CELLS,
+  SET_GROUPED_COLUMNS,
   SET_ROW_POSITION,
   SELECT_CELL,
   OPEN_CONTEXT_MENU,
@@ -96,9 +98,6 @@ function spreadsheetReducer(state, action) {
       const {currentCellSelectionRange, cellSelectionRanges} = state;
       return {...state, cellSelectionRanges: cellSelectionRanges.concat(currentCellSelectionRange || []), currentCellSelectionRange: null};
     }
-    case 'COL_HEADER_CONTEXT': {
-      return {...state, colHeaderContext};
-    }
     case CREATE_COLUMNS: {
       const newColumns = Array(columnCount).fill(undefined).map(_ => {
         const id = createRandomID();
@@ -118,9 +117,6 @@ function spreadsheetReducer(state, action) {
         return {...acc, [id]: state.rows.length + offset};
       }, state.rowPositions);
       return {...state, rows: state.rows.concat(newRows), rowPositions: newRowPositions};
-    }
-    case 'CLEAR_CLICKED_LOCATION': {
-      return {...state, contextMenuPosition: null};
     }
     case DELETE_VALUES: {
       const { cellSelectionRanges, columnPositions, rowPositions } = state;
@@ -195,7 +191,7 @@ function spreadsheetReducer(state, action) {
     case TOGGLE_LAYOUT: {
       return {...state, layout};
     }
-    case 'SET_GROUPED_COLUMNS': {
+    case SET_GROUPED_COLUMNS: {
       const matchColNameWithID = state.columns.find(col => {
         return col.label === setColName;
       })
@@ -242,7 +238,7 @@ function spreadsheetReducer(state, action) {
     case OPEN_CONTEXT_MENU: {
       return {...state, colName, contextMenuOpen: true, contextMenuPosition, colHeaderContext };
     }
-    case 'CLOSE_CONTEXT_MENU': {
+    case CLOSE_CONTEXT_MENU: {
       return {...state, contextMenuOpen: false };
     }
     case TOGGLE_ANALYSIS_MODAL: {

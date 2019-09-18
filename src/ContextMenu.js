@@ -1,9 +1,11 @@
 import React, { useEffect } from 'react';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import {
+  CLOSE_CONTEXT_MENU,
+  PERFORM_ANALYSIS,
+  SET_GROUPED_COLUMNS,
   TOGGLE_ANALYSIS_MODAL,
   TOGGLE_LAYOUT,
-  PERFORM_ANALYSIS,
 } from './constants'
 import './App.css';
 
@@ -13,7 +15,7 @@ export default function ContextMenu() {
 
   const onClick = (e) => {
     if (contextMenuOpen) {
-      dispatchSpreadsheetAction({type: 'CLOSE_CONTEXT_MENU' })
+      dispatchSpreadsheetAction({type: CLOSE_CONTEXT_MENU })
     }
   }
 
@@ -30,7 +32,7 @@ export default function ContextMenu() {
     colHeaderContext
       ? <div onClick={onClick} className="menu">
           <ul className="menu-options">
-            <li className="menu-option" onClick={() => dispatchSpreadsheetAction({type: 'SET_GROUPED_COLUMNS', setColName: colName })}>Group by</li>
+            <li className="menu-option" onClick={() => dispatchSpreadsheetAction({type: SET_GROUPED_COLUMNS, setColName: colName })}>Group by</li>
             <li className="menu-option" onClick={() => dispatchSpreadsheetAction({type: TOGGLE_LAYOUT, layout: !layout })}>Change Layout</li>
           </ul>
         </div>
