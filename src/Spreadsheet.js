@@ -21,14 +21,14 @@ import {
 } from './constants'
 import HighchartsReact from './HighchartsReact';
 
-function FormulaBar() {
-  return (
-    <div style={{display: 'flex', height: '30px'}}>
-      <div style={{minWidth: '82px', margin: 'auto', fontStyle: 'italic'}}>Fx</div>
-      <input style={{width: '100%', fontSize: '1.2em'}} />
-    </div>
-  )
-}
+// function FormulaBar() {
+//   return (
+//     <div style={{display: 'flex', height: '30px'}}>
+//       <div style={{minWidth: '80px', margin: 'auto', fontStyle: 'italic'}}>Fx</div>
+//       <input style={{width: '100%', fontSize: '1.2em', borderLeft: '0.1px solid lightgray', borderBottom: 'none', borderTop: 'none', borderRight: 'none'}} />
+//     </div>
+//   )
+// }
 
 function BlankRow({cellCount}) { return <tr>{Array(cellCount).fill(undefined).map((_, columnIndex) => <td style={{backgroundColor: '#f9f9f9'}} key={'blankcol' + columnIndex}></td>)}</tr> }
 
@@ -311,7 +311,6 @@ function Spreadsheet({eventBus}) {
 });
 
 function handleContextMenu(e) {
-  console.log(e.target)
   e.preventDefault();
   dispatchSpreadsheetAction({type: OPEN_CONTEXT_MENU, contextMenuPosition: {left: e.pageX, top: e.pageY}});
 }
@@ -322,7 +321,7 @@ function handleContextMenu(e) {
       {performAnalysis && <HighchartsReact />}
       {selectedColumn && <ColumnTypeModal selectedColumn={selectedColumn}/>}
       {analysisModalOpen && <AnalysisModal />}
-      <FormulaBar />
+      {/* <FormulaBar /> */}
       {layout
         ? <table>
           <thead>
@@ -339,6 +338,7 @@ function handleContextMenu(e) {
               {groupedColumns && Object.entries(groupedColumns).map(col => {
                 return <th key={col[0]} colSpan={Object.keys(col[1][0]).length - 1}>{setColName} {col[0]}</th>
               })}
+              <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
             </tr>
           </thead>
           <tbody>

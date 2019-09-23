@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import regression from 'regression';
+import { OPEN_ANALYSIS_WINDOW } from './constants'
 // import PolyRegression from "js-polynomial-regression";
 // import mwu from 'mann-whitney-utest';
 import './App.css';
@@ -11,6 +12,7 @@ Linear regression and correlation (Yes to all of these)
 Calculate slope and intercept with 95% confidence intervals.
 Calculate correlation coefficient (Spearman or Pearson) and its confidence interval.
 Test for departure from linearity with a runs test or the F test for linearity.
+Arrows in modal
 */
 
 export default function HighchartsDemo () {
@@ -30,11 +32,7 @@ export default function HighchartsDemo () {
     const t_pval = jStat.studentt.cdf(-Math.abs(t_score), t_array1.length+t_array2.length-2) * 2;
     return [t_score, t_pval];
   }
-  // function tdist(df, conf_lvl) {
-  //   return jStat.studentt.inv((1 - (1 - conf_lvl) / 2), df)
-  // }
-  // console.log('thing: ', tdist(1, 0.95));
-  // TODO: Think of a way to only have one window open at a time.
+
   useEffect(() => {
     const colX = xColData || columns[0];
     const colY = yColData || columns[2];
@@ -43,19 +41,68 @@ export default function HighchartsDemo () {
     function mapColumnValues(colID) { return rows.map(row => Number(row[colID])).filter(x=>x) }
     const colA = mapColumnValues(colX.id);
     const colB = mapColumnValues(colY.id);
-    const jObj = jStat([colA, colB])
-    console.log(jObj)
-    // console.log(colA, colB)
-    const tempABVals = colA.map((_, i) => {
+    // const jObj = jStat([colA, colB])
+
+  const tempABVals = colA.map((_, i) => {
     return [(colA[i]), (colB[i])]
-    }).sort();
+  }).sort();
+
+  // const numberOfBoxes = Array.from(new Set(colA)).length
+  // const numberOfPoints = colB.length;
+  // const cats = alphaCats(numberOfBoxes);
+  const outliers = [];
+
+    //-----------------------------------------------------
+    //build the data and add the series to the chart
+    // const boxData = [],
+      // meanData = [];
+    // for (var i = 0; i < numberOfBoxes; i++) {
+      //generate random data, then calculate box plot values
+      // const data = randomData(
+      //   numberOfPoints, //how many points
+      //   false, //restrict to positive?
+      //   (10 * Math.random()) //random multiplication factor
+      // );
+      // const data = [];
+      // console.log(data, 'what data looks like: ')
+      // const boxValues = getBoxValues(data, i);
+      // boxData.push(boxValues.values);
+      // meanData.push([i, mean(data)]);
+    // }
+    // console.log(jStat.quantiles(colB, [.25, .5, .75]))
+  //-----------------------------------------------
+  //wrap the percentile calls in one method
+    function getBoxValues(data, x) {
+      x = typeof x === 'undefined' ? 0 : x;
+      const quantiles = jStat.quantiles(data, [.25, .5, .75])
+      const boxData = {},
+        min = Math.min.apply(Math, data),
+        max = Math.max.apply(Math, data),
+        q1 = quantiles[0],
+        median = quantiles[1],
+        q3 = quantiles[2],
+        iqr = q3 - q1,
+        lowerFence = q1 - (iqr * 1.5),
+        upperFence = q3 + (iqr * 1.5);
+
+      for (var i = 0; i < data.length; i++) {
+        if (data[i] < lowerFence || data[i] > upperFence) {
+          outliers.push(data[i]);
+        }
+      }
+      boxData.values = {};
+      boxData.values.x = x;
+      boxData.values.low = min;
+      boxData.values.q1 = q1;
+      boxData.values.median = median;
+      boxData.values.q3 = q3;
+      boxData.values.high = max;
+      boxData.outliers = outliers;
+      return boxData;
+    }
+    // getBoxValues(colB)
+
     console.log('get-t-test: ', get_t_test(colA, colB))
-    // const jTest = jStat(colB);
-    // colA.forEach(t => {
-    //   console.log(jStat.tscore(colA));
-    // })
-    // console.log('jTest t-score for 3.25 given:', colB, 'is:', jTest.tscore(3.25));
-    // console.log('t test', jStat.ttest(colB, 4));
     const linearRegressionLine = regression.linear(tempABVals, { precision: 5 });
     const corrcoeff = jStat.corrcoeff(colA, colB).toFixed(5);
     // const spearman = jStat.spearmancoeff(colA, colB);
@@ -67,7 +114,7 @@ export default function HighchartsDemo () {
     let pValue = get_t_test(colA, colB)[1].toFixed(6);
 
     dispatchSpreadsheetAction({
-      type: 'OPEN_ANALYSIS_WINDOW',
+      type: OPEN_ANALYSIS_WINDOW,
       outputData: {
         corrcoeff,
         covariance,
@@ -79,6 +126,7 @@ export default function HighchartsDemo () {
         colBStdev,
         pValue,
         tempABVals,
+        boxPlotData: getBoxValues(colB),
         linearRegressionLinePoints: linearRegressionLine.points,
         linearRegressionLineR2: linearRegressionLine.r2,
         linearRegressionLineSlope: linearRegressionLine.equation[0],

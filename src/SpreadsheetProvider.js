@@ -233,6 +233,7 @@ function spreadsheetReducer(state, action) {
       }, []);
 
       const physicalRowPositions = physicalRows.reduce((acc, row, index) => ({...acc, [row.id]: index}), {});
+      console.log(groupedColumns)
       return {...state, setColName, physicalRowPositions, physicalRows, groupedColumns, groupByColumnID, allPhysicalColumns }
     }
     case OPEN_CONTEXT_MENU: {
@@ -329,8 +330,8 @@ export function useSpreadsheetDispatch() {
 
 export function SpreadsheetProvider({children}) {
   const statsColumns = [
-    {modelingType: 'Continuous', type: 'Number', label: 'Distance', id: '_abc123_'},
-    {modelingType: 'Nominal', type: 'Number', label: 'Trial'},
+    {modelingType: 'Continuous', type: 'Number', label: 'Distance'},
+    {modelingType: 'Nominal', type: 'Number', label: 'Trial', id: '_abc123_'},
     {modelingType: 'Continuous', type: 'Number', label: 'Bubbles'},
     // {modelingType: 'Continuous', type: 'Formula', label: 'Trial * Bubbles', formula: 'Trial * Bubbles'},
   ]
@@ -348,7 +349,7 @@ export function SpreadsheetProvider({children}) {
   })
 
   const statsRows = [
-    [10, 1, 12],
+    [10, 1, 22],
     [20, 1, 10],
     [30, 1, 7],
     [40, 1, 6],

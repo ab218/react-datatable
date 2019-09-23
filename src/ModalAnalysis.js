@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Card, Icon, Modal, Radio } from 'antd';
+import { Button, Card, Modal, Radio } from 'antd';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { TOGGLE_ANALYSIS_MODAL, PERFORM_ANALYSIS } from './constants';
 
@@ -11,7 +11,9 @@ const styles = {
 },
   flexColumn: {
     display: 'flex',
-    flexDirection: 'column'
+    flexDirection: 'column',
+    width: 100
+
   },
   flexSpaced: {
     display: 'flex',
@@ -26,6 +28,7 @@ const styles = {
     border: '1px solid lightgray'
   },
   radioGroup: {
+    width: '100%',
     display: 'flex',
     flexDirection: 'column',
     textAlign: 'center',
@@ -61,12 +64,14 @@ export default function AnalysisModal() {
 
   function openAnalysisWindow() {
     dispatchSpreadsheetAction({type: PERFORM_ANALYSIS, xColData: xColData[0], yColData: yColData[0] })
+    dispatchSpreadsheetAction({type: TOGGLE_ANALYSIS_MODAL, analysisModalOpen: false });
   }
 
   function RadioGroup({data, setData, styleProps}) {
     return (
       <Card bordered style={{...styles.cardWithBorder, ...styleProps}}>
         <Radio.Group style={styles.radioGroup} buttonStyle='solid'>
+          {data.length === 0 ? <em>Required</em> : <></>}
           {data.map(column => <Radio.Button style={styles.radioButton} key={column.id} onClick={() => setData(column)} value={column}>{column.label}</Radio.Button>)}
         </Radio.Group>
       </Card>
@@ -75,13 +80,11 @@ export default function AnalysisModal() {
 
   function CaratButtons({data, setData, axis}) {
     return (
-      <div style={styles.flexColDataumn}>
-        <Button onClick={() => addColumnToList(data, setData)}>{axis}
-          <Icon type="right" />
+      <div style={styles.flexColumn}>
+        <Button disabled={data.length !== 0} style={{marginBottom: 5}}onClick={() => addColumnToList(data, setData)}>Add {axis}
         </Button>
         {data.length !== 0 &&
-          <Button onClick={() => removeColumnFromList(setData)}>{axis}
-            <Icon type="left" />
+          <Button onClick={() => removeColumnFromList(setData)}>Remove {axis}
           </Button>
         }
       </div>
@@ -101,7 +104,7 @@ export default function AnalysisModal() {
         bodyStyle={{background: '#ECECEC'}}
       >
         <div style={styles.flexSpaced}>
-          <div>Select Column <em>({columns.length} columns)</em>
+          <div>Select Column
             <Card bordered style={{ marginTop: 20, ...styles.cardWithBorder}}>
               <Radio.Group style={styles.radioGroup} buttonStyle='solid'>
                 {/* only map columns with labels */}
@@ -110,7 +113,7 @@ export default function AnalysisModal() {
             </Card>
             {/* <RadioGroup data={columns} setData={setSelectedColumn} /> */}
           </div>
-          <div style={{width: 300}}>Cast Selected Columns into Roles
+          <div style={{width: 310}}>Cast Selected Columns into Roles
             <div style={{marginBottom: 20, marginTop: 20, ...styles.flexSpaced }}>
               <CaratButtons data={yColData} setData={setYColData} axis='Y' />
               <RadioGroup data={yColData} setData={setSelectedRightColumn} />
