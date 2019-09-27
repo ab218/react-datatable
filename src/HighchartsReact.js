@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import regression from 'regression';
-import { OPEN_ANALYSIS_WINDOW } from './constants'
+import { OPEN_ANALYSIS_WINDOW } from './constants';
+import axios from 'axios';
 // import PolyRegression from "js-polynomial-regression";
 // import mwu from 'mann-whitney-utest';
 import './App.css';
@@ -41,7 +42,34 @@ export default function HighchartsDemo () {
     function mapColumnValues(colID) { return rows.map(row => Number(row[colID])).filter(x=>x) }
     const colA = mapColumnValues(colX.id);
     const colB = mapColumnValues(colY.id);
+
+    // function listToMatrix(list, elementsPerSubArray) {
+    //   var matrix = [], i, k;
+    //   for (i = 0, k = -1; i < list.length; i++) {
+    //       if (i % elementsPerSubArray === 0) {
+    //           k++;
+    //           matrix[k] = [];
+    //       }
+    //       matrix[k].push(list[i]);
+    //   }
+    //   return matrix;
+    // }
+    // const randomColA = Array.from({length: 10000}, () => Math.floor(Math.random() * 40));
+    // const randomColB = Array.from({length: 10000}, () => Math.floor(Math.random() * 40));
     // const jObj = jStat([colA, colB])
+    async function getPyVals() {
+      const result = await axios.post('https://us-central1-optimum-essence-210921.cloudfunctions.net/function-2', {
+        // x: listToMatrix(colA, 1),
+        // y: listToMatrix(colB, 1),
+        x: colA,
+        y: colB
+      }, {
+        crossDomain: true,
+      })
+      console.log(result.data);
+    }
+
+    getPyVals();
 
   const tempABVals = colA.map((_, i) => {
     return [(colA[i]), (colB[i])]
@@ -85,21 +113,21 @@ export default function HighchartsDemo () {
         lowerFence = q1 - (iqr * 1.5),
         upperFence = q3 + (iqr * 1.5);
 
-      for (var i = 0; i < data.length; i++) {
-        if (data[i] < lowerFence || data[i] > upperFence) {
-          outliers.push(data[i]);
+        for (var i = 0; i < data.length; i++) {
+          if (data[i] < lowerFence || data[i] > upperFence) {
+            outliers.push(data[i]);
+          }
         }
-      }
-      boxData.values = {};
-      boxData.values.x = x;
-      boxData.values.low = min;
-      boxData.values.q1 = q1;
-      boxData.values.median = median;
-      boxData.values.q3 = q3;
-      boxData.values.high = max;
-      boxData.outliers = outliers;
-      return boxData;
-    }
+          boxData.values = {};
+          boxData.values.x = x;
+          boxData.values.low = min;
+          boxData.values.q1 = q1;
+          boxData.values.median = median;
+          boxData.values.q3 = q3;
+          boxData.values.high = max;
+          boxData.outliers = outliers;
+          return boxData;
+       }
     // getBoxValues(colB)
 
     console.log('get-t-test: ', get_t_test(colA, colB))
@@ -111,7 +139,7 @@ export default function HighchartsDemo () {
     const colBMean = jStat.mean(colB).toFixed(3);
     const colAStdev = jStat.stdev(colA).toFixed(4);
     const colBStdev = jStat.stdev(colB).toFixed(4);
-    let pValue = get_t_test(colA, colB)[1].toFixed(6);
+    const pValue = get_t_test(colA, colB)[1].toFixed(6);
 
     dispatchSpreadsheetAction({
       type: OPEN_ANALYSIS_WINDOW,

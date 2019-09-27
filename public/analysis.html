@@ -127,63 +127,63 @@
               data: tempABVals,
               borderWidth: 0,
             },
-            // {
-            //   id: 'boxplot',
-            //   name: 'Boxplot',
-            //   type: 'boxplot',
-            //   visible: false,
-            //   medianColor: 'red',
-            //   // data: [boxPlotData.values]
-            //   data: [
-            //   {
-            //     high: 22,
-            //     q3: 10.625,
-            //     median: 7,
-            //     q1: 4.75,
-            //     low: 2,
-            //   },{
-            //     high: 10,
-            //     q3: 9.3125,
-            //     median: 6,
-            //     q1: 4,
-            //     low: 4,
-            //   },{
-            //     high: 12,
-            //     q3: 11.625,
-            //     median: 9,
-            //     q1: 5.5625,
-            //     low: 3,
-            //   },{
-            //     high: 11,
-            //     q3: 9.9375,
-            //     median: 8,
-            //     q1: 4.375,
-            //     low: 2,
-            //   },
-            //   {
-            //     high: 11,
-            //     q3: 10.3125,
-            //     median: 7,
-            //     q1: 4.375,
-            //     low: 3,
-            //   }
-            //   ]
-            // },
-            // {
-            //   id: 'outliers',
-            //   name: 'Outliers',
-            //   type: 'scatter',
-            //   linkedTo: 'boxplot',
-            //   color: Highcharts.getOptions().colors[2],
-            //   marker: {
-            //     enabled: true,
-            //     radius: 2,
-            //     fillColor: 'transparent',
-            //     lineColor: 'rgba(40,40,56,0.5)',
-            //     lineWidth: 1
-            //   },
-            //   data: [boxPlotData.outliers]
-            // }
+            {
+              id: 'boxplot',
+              name: 'Boxplot',
+              type: 'boxplot',
+              visible: false,
+              medianColor: 'red',
+              // data: [boxPlotData.values]
+              data: [
+              {
+                high: 12,
+                q3: 10.625,
+                median: 7,
+                q1: 4.75,
+                low: 2,
+              },{
+                high: 10,
+                q3: 9.3125,
+                median: 6,
+                q1: 4,
+                low: 4,
+              },{
+                high: 12,
+                q3: 11.625,
+                median: 9,
+                q1: 5.5625,
+                low: 3,
+              },{
+                high: 11,
+                q3: 9.9375,
+                median: 8,
+                q1: 4.375,
+                low: 2,
+              },
+              {
+                high: 11,
+                q3: 10.3125,
+                median: 7,
+                q1: 4.375,
+                low: 3,
+              }
+              ]
+            },
+            {
+              id: 'outliers',
+              name: 'Outliers',
+              type: 'scatter',
+              linkedTo: 'boxplot',
+              color: Highcharts.getOptions().colors[2],
+              marker: {
+                enabled: true,
+                radius: 2,
+                fillColor: 'transparent',
+                lineColor: 'rgba(40,40,56,0.5)',
+                lineWidth: 1
+              },
+              data: [boxPlotData.outliers]
+            }
           ],
 
           responsive: {
@@ -201,40 +201,6 @@
             }]
           }
         }
-        /*
-        {
-        high: 12,
-        q3: 10,
-        median: 7,
-        q1: 2,
-        low: 2,
-      },{
-        high: 10,
-        q3: 9,
-        median: 6,
-        q1: 4,
-        low: 4,
-      },{
-        high: 12,
-        q3: 9,
-        median: 8,
-        q1: 3,
-        low: 3,
-      },{
-        high: 11,
-        q3: 8,
-        median: 7,
-        q1: 2,
-        low: 2,
-      },
-      {
-        high: 11,
-        q3: 10,
-        median: 7,
-        q1: 3,
-        low: 3,
-      }
-        */
         const chart = Highcharts.chart(container, options);
         // Hack to fix the ticks not appearing correctly on first render
         chart.series[0].hide();

@@ -130,8 +130,9 @@ function Spreadsheet({eventBus}) {
     columnPositions,
     columns,
     cellSelectionRanges,
-    setColName,
     currentCellSelectionRange,
+    setColName,
+    groupByColumnID,
     groupedColumns,
     layout,
     physicalRows,
@@ -264,6 +265,8 @@ function Spreadsheet({eventBus}) {
     dispatchSpreadsheetAction({type: ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS});
   }
 
+  console.log(groupedRowIDs)
+
   const visibleSpreadsheetRows = Array(groupedVisibleRowCount).fill(undefined).map((_, index) => {
     if (groupedRowIDs[index]) {
       return (
@@ -315,6 +318,11 @@ function handleContextMenu(e) {
   dispatchSpreadsheetAction({type: OPEN_CONTEXT_MENU, contextMenuPosition: {left: e.pageX, top: e.pageY}});
 }
 
+function getGroupedByColumnIDLabel(id) {
+  const found = columns.find(col => col.id === id);
+  return found.label
+}
+
   return (
     <div>
       <ContextMenu />
@@ -336,7 +344,7 @@ function handleContextMenu(e) {
             </tr>
             <tr className={'move-row-up'}><th></th>
               {groupedColumns && Object.entries(groupedColumns).map(col => {
-                return <th key={col[0]} colSpan={Object.keys(col[1][0]).length - 1}>{setColName} {col[0]}</th>
+                return <th key={col[0]} colSpan={Object.keys(col[1][0]).length - 1}>{getGroupedByColumnIDLabel(groupByColumnID)} {col[0]}</th>
               })}
               <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
             </tr>

@@ -197,6 +197,7 @@ function spreadsheetReducer(state, action) {
       })
 
       const groupByColumnID = (matchColNameWithID && matchColNameWithID.id) || '_abc123_';
+      // Maybe we can make groupedColumns keep track of column properties such as label, etc
       const groupedColumns = state.rows.reduce((acc, row) => {
         const {[groupByColumnID]: _, ...restRow} = row;
         return {...acc, [row[groupByColumnID]]: (acc[row[groupByColumnID]] || []).concat(restRow)}
@@ -349,7 +350,7 @@ export function SpreadsheetProvider({children}) {
   })
 
   const statsRows = [
-    [10, 1, 22],
+    [10, 1, 12],
     [20, 1, 10],
     [30, 1, 7],
     [40, 1, 6],
