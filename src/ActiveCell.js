@@ -36,7 +36,6 @@ function ActiveCell({
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
   const onKeyDown = (event) => {
-    console.log('event key:', event.key);
     switch (event.key) {
       // TODO: implement key shortcuts from: https://www.ddmcomputing.com/excel/keys/xlsk05.html
       case 'ArrowDown':

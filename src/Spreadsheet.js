@@ -265,8 +265,6 @@ function Spreadsheet({eventBus}) {
     dispatchSpreadsheetAction({type: ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS});
   }
 
-  console.log(groupedRowIDs)
-
   const visibleSpreadsheetRows = Array(groupedVisibleRowCount).fill(undefined).map((_, index) => {
     if (groupedRowIDs[index]) {
       return (

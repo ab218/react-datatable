@@ -6,9 +6,11 @@ import {
   ADD_CELL_TO_SELECTIONS,
   ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS,
   CLOSE_CONTEXT_MENU,
+  CLOSE_FILTER_MODAL,
   CREATE_COLUMNS,
   CREATE_ROWS,
   DELETE_VALUES,
+  FILTER_COLUMN,
   MODIFY_CURRENT_SELECTION_CELL_RANGE,
   OPEN_ANALYSIS_WINDOW,
   PERFORM_ANALYSIS,
@@ -16,7 +18,9 @@ import {
   SET_GROUPED_COLUMNS,
   SET_ROW_POSITION,
   SELECT_CELL,
+  SORT_COLUMN,
   OPEN_CONTEXT_MENU,
+  OPEN_FILTER_MODAL,
   TOGGLE_COLUMN_TYPE_MODAL,
   TOGGLE_ANALYSIS_MODAL,
   TOGGLE_LAYOUT,
@@ -120,8 +124,6 @@ function spreadsheetReducer(state, action) {
     }
     case DELETE_VALUES: {
       const { cellSelectionRanges, columnPositions, rowPositions } = state;
-      console.log(state)
-
       function removeKeyReducer(container, key) {
         const {[key]: value, ...rest} = container;
         return rest;
@@ -234,7 +236,6 @@ function spreadsheetReducer(state, action) {
       }, []);
 
       const physicalRowPositions = physicalRows.reduce((acc, row, index) => ({...acc, [row.id]: index}), {});
-      console.log(groupedColumns)
       return {...state, setColName, physicalRowPositions, physicalRows, groupedColumns, groupByColumnID, allPhysicalColumns }
     }
     case OPEN_CONTEXT_MENU: {
@@ -276,8 +277,27 @@ function spreadsheetReducer(state, action) {
         }, rowCopy);
       }
       const changedRows = newRows.filter(newRow => newRow.id !== rowCopy.id).concat(rowCopy);
-
       return  {...state, rows: changedRows };
+    }
+    case SORT_COLUMN: {
+      function getCol(colName) {
+        return state.columns.find(col => col.label === colName)
+      }
+      const columnID = getCol(action.colName).id;
+      const sortedRows = state.rows.sort((a,b) => {
+        return [a[columnID]] - [b[columnID]]
+      })
+      const sortedPositions = sortedRows.reduce((obj, item, i) => Object.assign(obj, { [item.id]: i }), {});
+      return { ...state, rowPositions: sortedPositions }
+    }
+    case OPEN_FILTER_MODAL: {
+      return { ...state, filterModalOpen: true }
+    }
+    case CLOSE_FILTER_MODAL: {
+      return { ...state, filterModalOpen: false }
+    }
+    case FILTER_COLUMN: {
+      return { ...state }
     }
     case UPDATE_COLUMN: {
       // TODO: Make it so a formula cannot refer to itself. Detect formula cycles. Use a stack?
@@ -300,8 +320,10 @@ function spreadsheetReducer(state, action) {
           });
           return formulaColumnsToUpdate.reduce((acc, column) => {
             row = acc;
-            const {result, error} = formulaParser.parse(column.formula);
-            console.log('formula parsed result:', result, 'error:', error, 'formula:', column.formula);
+            const {
+              result,
+              // error
+            } = formulaParser.parse(column.formula);
             return {...acc, [column.id]: result};
           }, row);
         });
@@ -402,7 +424,6 @@ export function SpreadsheetProvider({children}) {
   const rowPositions = rows.reduce((acc, row, index) => ({...acc, [row.id]: index}), {});
 
   const initialState = {
-    // allPhysicalColumns,
     analysisModalOpen: false,
     analysisWindowOpen: false,
     columnTypeModalOpen: false,
@@ -417,12 +438,9 @@ export function SpreadsheetProvider({children}) {
     columnPositions,
     colName: null,
     contextMenuOpen: false,
-    // groupByColumnID,
-    // groupedColumns,
+    filterModalOpen: false,
     layout: true,
     performAnalysis: false,
-    // physicalRows,
-    // physicalRowPositions,
     xColData: null,
     yColData: null,
     lastSelection: {row: 1, column: 1},

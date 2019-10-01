@@ -58,7 +58,9 @@ export default function HighchartsDemo () {
     // const randomColB = Array.from({length: 10000}, () => Math.floor(Math.random() * 40));
     // const jObj = jStat([colA, colB])
     async function getPyVals() {
-      const result = await axios.post('https://us-central1-optimum-essence-210921.cloudfunctions.net/function-2', {
+      const lambda = 'https://8gf5s84idd.execute-api.us-east-2.amazonaws.com/test/scipytest';
+      const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/statsmodels';
+      const result = await axios.post(gcloud, {
         // x: listToMatrix(colA, 1),
         // y: listToMatrix(colB, 1),
         x: colA,
@@ -66,7 +68,8 @@ export default function HighchartsDemo () {
       }, {
         crossDomain: true,
       })
-      console.log(result.data);
+      console.log(result.data) // gcloud
+      // console.log(result.data.body); // Lambda
     }
 
     getPyVals();
@@ -129,8 +132,6 @@ export default function HighchartsDemo () {
           return boxData;
        }
     // getBoxValues(colB)
-
-    console.log('get-t-test: ', get_t_test(colA, colB))
     const linearRegressionLine = regression.linear(tempABVals, { precision: 5 });
     const corrcoeff = jStat.corrcoeff(colA, colB).toFixed(5);
     // const spearman = jStat.spearmancoeff(colA, colB);
