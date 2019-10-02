@@ -21,6 +21,7 @@ export default function Row({
   rows,
   rowIndex,
   selectCell,
+  selectedRow
 }) {
   columnPositions && columns.sort((colA, colB) => {
     return columnPositions[colA.id] - columnPositions[colB.id];
@@ -67,7 +68,7 @@ export default function Row({
               value={column && row ? row[column.id] : ''}
             />
           )
-        } else if (isSelectedCell(rowIndex, columnIndex)) {
+        } else if ((selectedRow && column) || isSelectedCell(rowIndex, columnIndex)) {
           return (
             <SelectedCell
               handleContextMenu={handleContextMenu}

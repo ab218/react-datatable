@@ -58,7 +58,7 @@ export default function HighchartsDemo () {
     // const randomColB = Array.from({length: 10000}, () => Math.floor(Math.random() * 40));
     // const jObj = jStat([colA, colB])
     async function getPyVals() {
-      const lambda = 'https://8gf5s84idd.execute-api.us-east-2.amazonaws.com/test/scipytest';
+      // const lambda = 'https://8gf5s84idd.execute-api.us-east-2.amazonaws.com/test/scipytest';
       const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/statsmodels';
       const result = await axios.post(gcloud, {
         // x: listToMatrix(colA, 1),

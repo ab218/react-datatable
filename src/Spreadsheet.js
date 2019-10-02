@@ -5,6 +5,7 @@ import AnalysisModal from './ModalAnalysis';
 import ActiveCell from './ActiveCell';
 import ColResizer from './ColResizer';
 import ContextMenu from './ContextMenu';
+import FilterModal from './ModalFilter';
 import ColumnTypeModal from './ModalColumnType';
 import Row from './Row';
 import { SelectedCell } from './Cell';
@@ -131,7 +132,8 @@ function Spreadsheet({eventBus}) {
     columns,
     cellSelectionRanges,
     currentCellSelectionRange,
-    setColName,
+    // setColName,
+    filterModalOpen,
     groupByColumnID,
     groupedColumns,
     layout,
@@ -141,6 +143,7 @@ function Spreadsheet({eventBus}) {
     rowPositions,
     rows,
     selectedColumn,
+    selectedRowIDs,
     tableView
    } = useSpreadsheetState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
@@ -198,6 +201,7 @@ function Spreadsheet({eventBus}) {
       if (rowIDs[index]) {
         return (
           <Row
+            selectedRow={selectedRowIDs && selectedRowIDs.includes(rowIDs[index])}
             key={'Row' + index}
             activeCell={activeCell}
             cellCount={visibleColumnCount + 1}
@@ -327,6 +331,7 @@ function getGroupedByColumnIDLabel(id) {
       {performAnalysis && <HighchartsReact />}
       {selectedColumn && <ColumnTypeModal selectedColumn={selectedColumn}/>}
       {analysisModalOpen && <AnalysisModal />}
+      {filterModalOpen && <FilterModal selectedColumn={selectedColumn}/>}
       {/* <FormulaBar /> */}
       {layout
         ? <table>

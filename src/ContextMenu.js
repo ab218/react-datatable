@@ -7,6 +7,7 @@ import {
   SORT_COLUMN,
   TOGGLE_ANALYSIS_MODAL,
   TOGGLE_COLUMN_TYPE_MODAL,
+  TOGGLE_FILTER_MODAL,
   TOGGLE_LAYOUT,
 } from './constants'
 import './App.css';
@@ -40,10 +41,11 @@ export default function ContextMenu() {
     colHeaderContext
       ? <div onClick={onClick} className="menu">
           <ul className="menu-options">
-            <li className="menu-option" onClick={() => dispatchSpreadsheetAction({type: TOGGLE_COLUMN_TYPE_MODAL, modalOpen: false, selectedColumn: null})}>Column Info...</li>
+            <li className="menu-option" onClick={() => dispatchSpreadsheetAction({type: TOGGLE_COLUMN_TYPE_MODAL, columnTypeModalOpen: true, colName})}>Column Info...</li>
             <li className="menu-option" onClick={setGroupedColumns}>Split by <span style={{fontWeight: 'bold'}}>{colName}</span></li>
             <li className="menu-option" onClick={() => dispatchSpreadsheetAction({type: TOGGLE_LAYOUT, layout: !layout })}>Change Layout</li>
             <li className="menu-option modal-span" onClick={() => dispatchSpreadsheetAction({type: SORT_COLUMN, colName })}><div>Sort</div><i style={{marginTop: 5}} className="fas fa-caret-right"></i></li>
+            <li className="menu-option" onClick={() => dispatchSpreadsheetAction({type: TOGGLE_FILTER_MODAL, filterModalOpen: true, colName })}><div>Filter</div></li>
           </ul>
         </div>
       : <div onClick={onClick} className="menu">

@@ -6,7 +6,6 @@ import {
   ADD_CELL_TO_SELECTIONS,
   ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS,
   CLOSE_CONTEXT_MENU,
-  CLOSE_FILTER_MODAL,
   CREATE_COLUMNS,
   CREATE_ROWS,
   DELETE_VALUES,
@@ -20,9 +19,9 @@ import {
   SELECT_CELL,
   SORT_COLUMN,
   OPEN_CONTEXT_MENU,
-  OPEN_FILTER_MODAL,
-  TOGGLE_COLUMN_TYPE_MODAL,
   TOGGLE_ANALYSIS_MODAL,
+  TOGGLE_COLUMN_TYPE_MODAL,
+  TOGGLE_FILTER_MODAL,
   TOGGLE_LAYOUT,
   TRANSLATE_SELECTED_CELL,
   UPDATE_CELL,
@@ -74,6 +73,7 @@ function spreadsheetReducer(state, action) {
     columnTypeModalOpen,
     endRangeRow,
     endRangeColumn,
+    filterModalOpen,
     layout,
     outputData,
     row,
@@ -86,12 +86,15 @@ function spreadsheetReducer(state, action) {
     xColData,
     yColData,
    } = action;
+   function getCol(colName) {
+    return state.columns.find(col => col.label === colName)
+  }
   console.log('dispatched:', type, 'with action:', action);
   switch (type) {
     // On text input of a selected cell, value is cleared, cell gets new value and cell is activated
     case ACTIVATE_CELL: {
       const activeCell = {row, column};
-      return {...state, activeCell, cellSelectionRanges: [] }
+      return {...state, activeCell, cellSelectionRanges: [], selectedRowIDs: [] }
     }
     case ADD_CELL_TO_SELECTIONS: {
       const {cellSelectionRanges = []} = state;
@@ -185,7 +188,7 @@ function spreadsheetReducer(state, action) {
       const lastSelection = {row, column};
       const selectedCell = {top: row, bottom: row, left: column, right: column};
       const addSelectedCellToSelectionArray = cellSelectionRanges.concat(cellSelectionRanges.some(cell => (cell.top === selectedCell.top) && (cell.right === selectedCell.right)) ? [] : selectedCell);
-      return {...state, activeCell: null, lastSelection, cellSelectionRanges: selectionActive ? addSelectedCellToSelectionArray : [], currentCellSelectionRange: selectedCell }
+      return {...state, activeCell: null, lastSelection, selectedRowIDs: selectionActive ? addSelectedCellToSelectionArray : [], cellSelectionRanges: selectionActive ? addSelectedCellToSelectionArray : [], currentCellSelectionRange: selectedCell }
     }
     case SET_ROW_POSITION: {
       return {...state, rowPositions: {...state.rowPositions, [action.rowID]: action.row} };
@@ -248,7 +251,16 @@ function spreadsheetReducer(state, action) {
       return {...state, analysisModalOpen}
     }
     case TOGGLE_COLUMN_TYPE_MODAL: {
-      return {...state, columnTypeModalOpen, selectedColumn: column}
+      return {...state, columnTypeModalOpen, selectedColumn: colName ? getCol(colName) : column}
+    }
+    case TOGGLE_FILTER_MODAL: {
+      const selectedColumn = getCol(state.colName);
+      if (!selectedColumn) return { ...state }
+      // this assumes continuous values
+      const colVals = state.rows.map(row => row[selectedColumn.id])
+      const colMax = Math.max(...colVals);
+      const colMin = Math.min(...colVals);
+      return {...state, filterModalOpen, selectedColumn, colMax, colMin }
     }
     case TRANSLATE_SELECTED_CELL: {
       const newCellSelectionRanges = [{top: rowIndex, bottom: rowIndex, left: columnIndex, right: columnIndex}];
@@ -280,9 +292,6 @@ function spreadsheetReducer(state, action) {
       return  {...state, rows: changedRows };
     }
     case SORT_COLUMN: {
-      function getCol(colName) {
-        return state.columns.find(col => col.label === colName)
-      }
       const columnID = getCol(action.colName).id;
       const sortedRows = state.rows.sort((a,b) => {
         return [a[columnID]] - [b[columnID]]
@@ -290,14 +299,11 @@ function spreadsheetReducer(state, action) {
       const sortedPositions = sortedRows.reduce((obj, item, i) => Object.assign(obj, { [item.id]: i }), {});
       return { ...state, rowPositions: sortedPositions }
     }
-    case OPEN_FILTER_MODAL: {
-      return { ...state, filterModalOpen: true }
-    }
-    case CLOSE_FILTER_MODAL: {
-      return { ...state, filterModalOpen: false }
-    }
     case FILTER_COLUMN: {
-      return { ...state }
+      const selectedRowIDs = action.filteredRows.map(row => {
+        return row.id;
+      })
+      return { ...state, selectedRowIDs }
     }
     case UPDATE_COLUMN: {
       // TODO: Make it so a formula cannot refer to itself. Detect formula cycles. Use a stack?
