@@ -293,9 +293,7 @@ function spreadsheetReducer(state, action) {
     }
     case SORT_COLUMN: {
       const columnID = getCol(action.colName).id;
-      const sortedRows = state.rows.sort((a,b) => {
-        return [a[columnID]] - [b[columnID]]
-      })
+      const sortedRows = state.rows.sort((a,b) => action.descending ? [b[columnID]] - [a[columnID]] : [a[columnID]] - [b[columnID]])
       const sortedPositions = sortedRows.reduce((obj, item, i) => Object.assign(obj, { [item.id]: i }), {});
       return { ...state, rowPositions: sortedPositions }
     }

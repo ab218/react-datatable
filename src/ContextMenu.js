@@ -48,8 +48,8 @@ export default function ContextMenu() {
             <Menu.Item key="2" onClick={setGroupedColumns}>Split by <span style={{fontWeight: 'bold'}}>{colName}</span></Menu.Item>
             <Menu.Item key="3" onClick={() => dispatchSpreadsheetAction({type: TOGGLE_LAYOUT, layout: !layout })}>Change Layout</Menu.Item>
             <SubMenu key="sub1" title="Sort">
-              <Menu.Item key="4" onClick={() => dispatchSpreadsheetAction({type: SORT_COLUMN, colName })}>Descending</Menu.Item>
-              <Menu.Item key="5" onClick={() => dispatchSpreadsheetAction({type: SORT_COLUMN, colName })}>Ascending</Menu.Item>
+              <Menu.Item key="4" onClick={() => dispatchSpreadsheetAction({type: SORT_COLUMN, colName, descending: true })}>Descending</Menu.Item>
+              <Menu.Item key="5" onClick={() => dispatchSpreadsheetAction({type: SORT_COLUMN, colName, descending: false })}>Ascending</Menu.Item>
             </SubMenu>
             <Menu.Item key="6" onClick={() => dispatchSpreadsheetAction({type: TOGGLE_FILTER_MODAL, filterModalOpen: true, colName })}>Filter</Menu.Item>
           </Menu>
