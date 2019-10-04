@@ -180,7 +180,7 @@ function spreadsheetReducer(state, action) {
       return {...state, performAnalysis: true, xColData, yColData};
     }
     case REMOVE_SELECTED_CELLS: {
-      return {...state, cellSelectionRanges: [] }
+      return {...state, cellSelectionRanges: [], selectedRowIDs: [] }
     }
     case SELECT_CELL: {
       const {cellSelectionRanges = []} = state;

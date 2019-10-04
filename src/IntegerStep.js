@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Slider, Row, Col } from 'antd';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
+import { FILTER_COLUMN } from './constants';
 
 export default function IntegerStep({column }) {
 
@@ -21,7 +22,7 @@ export default function IntegerStep({column }) {
   const onChange = value => {
     setMinVal(value[0]);
     setMaxVal(value[1]);
-    dispatchSpreadsheetAction({type: 'FILTER_COLUMN', filteredRows: filterRows(column.id, value[0], value[1])});
+    dispatchSpreadsheetAction({type: FILTER_COLUMN, filteredRows: filterRows(column.id, value[0], value[1])});
   };
 
   return (

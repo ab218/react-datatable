@@ -2,7 +2,7 @@ import React from 'react';
 import { Modal } from 'antd';
 import IntegerStep from './IntegerStep';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { TOGGLE_FILTER_MODAL } from './constants';
+import { TOGGLE_FILTER_MODAL, REMOVE_SELECTED_CELLS } from './constants';
 
 export default function AntModal({selectedColumn}) {
 
@@ -13,12 +13,17 @@ export default function AntModal({selectedColumn}) {
     dispatchSpreadsheetAction({type: TOGGLE_FILTER_MODAL, filterModalOpen: false, selectedColumn: null})
   }
 
+  function handleCancel() {
+    dispatchSpreadsheetAction({type: REMOVE_SELECTED_CELLS })
+    dispatchSpreadsheetAction({type: TOGGLE_FILTER_MODAL, filterModalOpen: false, selectedColumn: null})
+  }
+
   return  (
     <div>
       <Modal
         className="ant-modal"
         destroyOnClose
-        onCancel={handleClose}
+        onCancel={handleCancel}
         onOk={handleClose}
         title={`Filter ${selectedColumn.label}`}
         visible={filterModalOpen}
