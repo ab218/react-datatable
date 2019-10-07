@@ -28,6 +28,16 @@ import {
   UPDATE_COLUMN
 } from './constants'
 
+function filterRows(selectedColumns, rows) {
+  return selectedColumns.map(col => {
+    return rows.filter(row => {
+      if (row[col.id] >= col.min && row[col.id] <= col.max) {
+        return row;
+      } return null;
+    })
+  })
+}
+
 function translateLabelToID(columns, formula) {
   return columns.filter((someColumn) => formula.includes(someColumn.label)).reduce((changedFormula, someColumn) => {
     return changedFormula.replace(new RegExp(`\\b${someColumn.label}\\b`, 'g'), `${someColumn.id}`);
@@ -254,13 +264,13 @@ function spreadsheetReducer(state, action) {
       return {...state, columnTypeModalOpen, selectedColumn: colName ? getCol(colName) : column}
     }
     case TOGGLE_FILTER_MODAL: {
-      const selectedColumn = getCol(state.colName);
-      if (!selectedColumn) return { ...state }
-      // this assumes continuous values
-      const colVals = state.rows.map(row => row[selectedColumn.id])
+      return {...state, filterModalOpen, selectedColumn: null }
+    }
+    case 'SET_SELECTED_COLUMN': {
+      const colVals = state.rows.map(row => row[action.selectedColumn.id])
       const colMax = Math.max(...colVals);
       const colMin = Math.min(...colVals);
-      return {...state, filterModalOpen, selectedColumn, colMax, colMin }
+      return {...state, selectedColumn: action.selectedColumn, colMax, colMin}
     }
     case TRANSLATE_SELECTED_CELL: {
       const newCellSelectionRanges = [{top: rowIndex, bottom: rowIndex, left: columnIndex, right: columnIndex}];
@@ -298,7 +308,10 @@ function spreadsheetReducer(state, action) {
       return { ...state, rowPositions: sortedPositions }
     }
     case FILTER_COLUMN: {
-      const selectedRowIDs = action.filteredRows.map(row => {
+      const filteredRows = filterRows(action.unfilteredRows, state.rows);
+      const flattened = filteredRows.flat();
+      const uniques = Array.from(new Set(flattened));
+      const selectedRowIDs = uniques.map(row => {
         return row.id;
       })
       return { ...state, selectedRowIDs }

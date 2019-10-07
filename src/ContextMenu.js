@@ -51,7 +51,6 @@ export default function ContextMenu() {
               <Menu.Item key="4" onClick={() => dispatchSpreadsheetAction({type: SORT_COLUMN, colName, descending: true })}>Descending</Menu.Item>
               <Menu.Item key="5" onClick={() => dispatchSpreadsheetAction({type: SORT_COLUMN, colName, descending: false })}>Ascending</Menu.Item>
             </SubMenu>
-            <Menu.Item key="6" onClick={() => dispatchSpreadsheetAction({type: TOGGLE_FILTER_MODAL, filterModalOpen: true, colName })}>Filter</Menu.Item>
           </Menu>
         </div>
       : <div onClick={onClick} className="menu">
@@ -68,7 +67,7 @@ export default function ContextMenu() {
               <Menu.Item key="17">Cut</Menu.Item>
               <Menu.Item key="18">Copy</Menu.Item>
               <Menu.Item key="19" onClick={() => dispatchSpreadsheetAction({type: PERFORM_ANALYSIS })}>Paste</Menu.Item>
-              <Menu.Item key="20">Add Filter</Menu.Item>
+              <Menu.Item key="20" onClick={() => dispatchSpreadsheetAction({type: TOGGLE_FILTER_MODAL, filterModalOpen: true })}>Add Filter</Menu.Item>
               <Menu.Item key="21">Distribution</Menu.Item>
               <Menu.Item key="22" onClick={() => dispatchSpreadsheetAction({type: TOGGLE_ANALYSIS_MODAL, analysisModalOpen: true })}>Fit Y By X</Menu.Item>
           </Menu>
