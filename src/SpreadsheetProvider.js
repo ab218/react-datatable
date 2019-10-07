@@ -16,6 +16,7 @@ import {
   REMOVE_SELECTED_CELLS,
   SET_GROUPED_COLUMNS,
   SET_ROW_POSITION,
+  SET_SELECTED_COLUMN,
   SELECT_CELL,
   SORT_COLUMN,
   OPEN_CONTEXT_MENU,
@@ -28,14 +29,17 @@ import {
   UPDATE_COLUMN
 } from './constants'
 
-function filterRows(selectedColumns, rows) {
-  return selectedColumns.map(col => {
-    return rows.filter(row => {
-      if (row[col.id] >= col.min && row[col.id] <= col.max) {
-        return row;
-      } return null;
-    })
-  })
+function rowValueWithinTheseColumnRanges(row) {
+  const columns = this;
+  return columns.every(column => row[column.id] >= (column.min || column.colMin) && row[column.id] <= (column.max || column.colMax));
+}
+
+function filterRowsByColumnRange(selectedColumns, rows) {
+  // return selectedColumns.map(function (column) {
+  //   return rows.filter(rowValueWithinThisColumnRange, column);
+  // });
+  return rows.filter(rowValueWithinTheseColumnRanges, selectedColumns);
+  // return selectedColumns.map(col => rows.filter(row => row[col.id] >= col.min && row[col.id] <= col.max));
 }
 
 function translateLabelToID(columns, formula) {
@@ -258,19 +262,16 @@ function spreadsheetReducer(state, action) {
       return {...state, contextMenuOpen: false };
     }
     case TOGGLE_ANALYSIS_MODAL: {
-      return {...state, analysisModalOpen}
+      return {...state, analysisModalOpen, activeCell: null}
     }
     case TOGGLE_COLUMN_TYPE_MODAL: {
-      return {...state, columnTypeModalOpen, selectedColumn: colName ? getCol(colName) : column}
+      return {...state, activeCell: null, columnTypeModalOpen, selectedColumn: colName ? getCol(colName) : column}
     }
     case TOGGLE_FILTER_MODAL: {
-      return {...state, filterModalOpen, selectedColumn: null }
+      return {...state, filterModalOpen, selectedColumn: null, activeCell: null }
     }
-    case 'SET_SELECTED_COLUMN': {
-      const colVals = state.rows.map(row => row[action.selectedColumn.id])
-      const colMax = Math.max(...colVals);
-      const colMin = Math.min(...colVals);
-      return {...state, selectedColumn: action.selectedColumn, colMax, colMin}
+    case SET_SELECTED_COLUMN: {
+      return {...state, selectedColumns: action.selectedColumns}
     }
     case TRANSLATE_SELECTED_CELL: {
       const newCellSelectionRanges = [{top: rowIndex, bottom: rowIndex, left: columnIndex, right: columnIndex}];
@@ -308,13 +309,8 @@ function spreadsheetReducer(state, action) {
       return { ...state, rowPositions: sortedPositions }
     }
     case FILTER_COLUMN: {
-      const filteredRows = filterRows(action.unfilteredRows, state.rows);
-      const flattened = filteredRows.flat();
-      const uniques = Array.from(new Set(flattened));
-      const selectedRowIDs = uniques.map(row => {
-        return row.id;
-      })
-      return { ...state, selectedRowIDs }
+      const selectedRowIDs = filterRowsByColumnRange(action.selectedColumns, state.rows).map(({id}) => id);
+      return { ...state, selectedRowIDs, selectedColumns: action.selectedColumns }
     }
     case UPDATE_COLUMN: {
       // TODO: Make it so a formula cannot refer to itself. Detect formula cycles. Use a stack?
@@ -458,6 +454,7 @@ export function SpreadsheetProvider({children}) {
     filterModalOpen: false,
     layout: true,
     performAnalysis: false,
+    selectedColumns: [],
     xColData: null,
     yColData: null,
     lastSelection: {row: 1, column: 1},

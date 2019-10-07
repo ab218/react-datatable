@@ -3,15 +3,15 @@ import { Modal, Button } from 'antd';
 import IntegerStep from './IntegerStep';
 import { SelectColumn } from './ModalAnalysis';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { TOGGLE_FILTER_MODAL, REMOVE_SELECTED_CELLS } from './constants';
+import { SET_SELECTED_COLUMN, TOGGLE_FILTER_MODAL, REMOVE_SELECTED_CELLS } from './constants';
 
 export default function AntModal() {
 
   const [clickedColumn, setClickedColumn] = useState(null);
-  const [selectedColumns, setSelectedColumns] = useState([]);
+  // const [selectedColumns, setSelectedColumns] = useState([]);
 
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-  const { filterModalOpen, columns, rows } = useSpreadsheetState();
+  const { filterModalOpen, columns, rows, selectedColumns } = useSpreadsheetState();
 
   function handleClose() {
     dispatchSpreadsheetAction({type: TOGGLE_FILTER_MODAL, filterModalOpen: false, selectedColumn: null})
@@ -23,20 +23,21 @@ export default function AntModal() {
   }
 
   function handleColumnPickOk() {
-    if (!clickedColumn) return;
-    const colVals = rows.map(row => row[clickedColumn.id])
-    const colMax = Math.max(...colVals);
-    const colMin = Math.min(...colVals);
-    const columnObject = {
-      ...clickedColumn,
-      colMin,
-      colMax
-    }
-    setSelectedColumns(old => {
-      const found = old.find(col => col.id === clickedColumn.id);
-      return found ? old : old.concat(columnObject);
-    })
+    // disable button until col is selected
+    console.log(selectedColumns);
+
+    if (!selectedColumns.some(({id}) => id === clickedColumn.id)) {
+      const colVals = rows.map(row => row[clickedColumn.id])
+      const colMax = Math.max(...colVals);
+      const colMin = Math.min(...colVals);
+      const columnObject = {
+        ...clickedColumn,
+        colMin,
+        colMax
+      }
+      dispatchSpreadsheetAction({type: SET_SELECTED_COLUMN, selectedColumns: selectedColumns.concat(columnObject)});
   }
+}
 
   return  (
     <div>
@@ -56,7 +57,7 @@ export default function AntModal() {
           style={{width: '300px'}}
         />
         <Button style={{width: 100, marginTop:10}} onClick={handleColumnPickOk}>Add</Button>
-        {selectedColumns.length > 0 && selectedColumns.map(col => <IntegerStep column={col} colMin={col.colMin} colMax={col.colMax} setSelectedColumns={setSelectedColumns} selectedColumns={selectedColumns} />)}
+        {selectedColumns.length > 0 && selectedColumns.map(col => <IntegerStep key={col.id} column={col} colMin={col.colMin} colMax={col.colMax} selectedColumns={selectedColumns} />)}
         </div>
       </Modal>
     </div>
