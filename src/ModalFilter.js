@@ -23,9 +23,6 @@ export default function AntModal() {
   }
 
   function handleColumnPickOk() {
-    // disable button until col is selected
-    console.log(selectedColumns);
-
     if (!selectedColumns.some(({id}) => id === clickedColumn.id)) {
       const colVals = rows.map(row => row[clickedColumn.id])
       const colMax = Math.max(...colVals);
@@ -56,7 +53,7 @@ export default function AntModal() {
           setSelectedColumn={setClickedColumn}
           style={{width: '300px'}}
         />
-        <Button style={{width: 100, marginTop:10}} onClick={handleColumnPickOk}>Add</Button>
+        <Button disabled={!clickedColumn} style={{width: 100, marginTop:10}} onClick={handleColumnPickOk}>Add</Button>
         {selectedColumns.length > 0 && selectedColumns.map(col => <IntegerStep key={col.id} column={col} colMin={col.colMin} colMax={col.colMax} selectedColumns={selectedColumns} />)}
         </div>
       </Modal>

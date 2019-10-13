@@ -1,9 +1,7 @@
 import { useEffect } from 'react';
-import regression from 'regression';
+// import regression from 'regression';
 import { OPEN_ANALYSIS_WINDOW } from './constants';
 import axios from 'axios';
-// import PolyRegression from "js-polynomial-regression";
-// import mwu from 'mann-whitney-utest';
 import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { jStat } from 'jstat';
@@ -25,14 +23,6 @@ export default function HighchartsDemo () {
     yColData
    } = useSpreadsheetState();
    const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-  function get_t_test(t_array1, t_array2){
-    const meanA = jStat.mean(t_array1);
-    const meanB = jStat.mean(t_array2);
-    const S2=(jStat.sum(jStat.pow(jStat.subtract(t_array1,meanA),2)) + jStat.sum(jStat.pow(jStat.subtract(t_array2,meanB),2)))/(t_array1.length+t_array2.length-2);
-    const t_score = (meanA - meanB)/Math.sqrt(S2/t_array1.length+S2/t_array2.length);
-    const t_pval = jStat.studentt.cdf(-Math.abs(t_score), t_array1.length+t_array2.length-2) * 2;
-    return [t_score, t_pval];
-  }
 
   useEffect(() => {
     const colX = xColData || columns[0];
@@ -43,26 +33,10 @@ export default function HighchartsDemo () {
     const colA = mapColumnValues(colX.id);
     const colB = mapColumnValues(colY.id);
 
-    // function listToMatrix(list, elementsPerSubArray) {
-    //   var matrix = [], i, k;
-    //   for (i = 0, k = -1; i < list.length; i++) {
-    //       if (i % elementsPerSubArray === 0) {
-    //           k++;
-    //           matrix[k] = [];
-    //       }
-    //       matrix[k].push(list[i]);
-    //   }
-    //   return matrix;
-    // }
-    // const randomColA = Array.from({length: 10000}, () => Math.floor(Math.random() * 40));
-    // const randomColB = Array.from({length: 10000}, () => Math.floor(Math.random() * 40));
-    // const jObj = jStat([colA, colB])
     async function getPyVals() {
       // const lambda = 'https://8gf5s84idd.execute-api.us-east-2.amazonaws.com/test/scipytest';
       const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/statsmodels';
       const result = await axios.post(gcloud, {
-        // x: listToMatrix(colA, 1),
-        // y: listToMatrix(colB, 1),
         x: colA,
         y: colB
       }, {
@@ -70,9 +44,38 @@ export default function HighchartsDemo () {
       })
       console.log(result.data) // gcloud
       // console.log(result.data.body); // Lambda
+      function mapBand(position) {
+        return result.data.predictions.map(point => {
+          return [point.x, point[position]]
+        })
+      }
+      const { mean_x, mean_y, std_x, std_y, pvalues, fitted_values, rsquared, corrcoef, cov, slope, intercept } = result.data
+      await dispatchSpreadsheetAction({
+        type: OPEN_ANALYSIS_WINDOW,
+        outputData: {
+          upperBand: mapBand('upper'),
+          lowerBand: mapBand('lower'),
+          corrcoef: corrcoef[1][0],
+          covariance: cov[1][0],
+          colXLabel,
+          colAMean: mean_x,
+          colAStdev: std_x,
+          colYLabel,
+          colBMean: mean_y,
+          colBStdev: std_y,
+          pValue: pvalues[1],
+          tempABVals,
+          boxPlotData: getBoxValues(colB),
+          linearRegressionLinePoints: fitted_values,
+          linearRegressionLineR2: rsquared,
+          linearRegressionLineSlope: slope,
+          linearRegressionLineYIntercept: intercept,
+          linearRegressionLineEquation: `${colYLabel} = ${slope.toFixed(4)}*(${colXLabel}) + ${intercept}`,
+        }
+      })
     }
 
-    getPyVals();
+    getPyVals()
 
   const tempABVals = colA.map((_, i) => {
     return [(colA[i]), (colB[i])]
@@ -132,37 +135,15 @@ export default function HighchartsDemo () {
           return boxData;
        }
     // getBoxValues(colB)
-    const linearRegressionLine = regression.linear(tempABVals, { precision: 5 });
-    const corrcoeff = jStat.corrcoeff(colA, colB).toFixed(5);
-    // const spearman = jStat.spearmancoeff(colA, colB);
-    const covariance = jStat.covariance(colB, colA).toFixed(4);
-    const colAMean = jStat.mean(colA).toFixed(3);
-    const colBMean = jStat.mean(colB).toFixed(3);
-    const colAStdev = jStat.stdev(colA).toFixed(4);
-    const colBStdev = jStat.stdev(colB).toFixed(4);
-    const pValue = get_t_test(colA, colB)[1].toFixed(6);
+    // const linearRegressionLine = regression.linear(tempABVals, { precision: 5 });
+    // const corrcoeff = jStat.corrcoeff(colA, colB).toFixed(5);
+    // const covariance = jStat.covariance(colB, colA).toFixed(4);
+    // const colAMean = jStat.mean(colA).toFixed(3);
+    // const colBMean = jStat.mean(colB).toFixed(3);
+    // const colAStdev = jStat.stdev(colA).toFixed(4);
+    // const colBStdev = jStat.stdev(colB).toFixed(4);
+    // const pValue = get_t_test(colA, colB)[1];
 
-    dispatchSpreadsheetAction({
-      type: OPEN_ANALYSIS_WINDOW,
-      outputData: {
-        corrcoeff,
-        covariance,
-        colXLabel,
-        colAMean,
-        colAStdev,
-        colYLabel,
-        colBMean,
-        colBStdev,
-        pValue,
-        tempABVals,
-        boxPlotData: getBoxValues(colB),
-        linearRegressionLinePoints: linearRegressionLine.points,
-        linearRegressionLineR2: linearRegressionLine.r2,
-        linearRegressionLineSlope: linearRegressionLine.equation[0],
-        linearRegressionLineYIntercept: linearRegressionLine.equation[1],
-        linearRegressionLineEquation: linearRegressionLine.string,
-      }
-    })
   }, [analysisWindowOpen, columns, dispatchSpreadsheetAction, rows, xColData, yColData])
   return null;
 }

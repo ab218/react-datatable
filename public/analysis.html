@@ -1,5 +1,20 @@
+<!--
+  Analyses that should be done together..
+  Exploratory data analysis:
+    - Distributional properties (depends on kind of data, (eg: nominal, ordinal))
+      - Mean/Median/Mode/Shape, etc
+      - Goodness of fit
+      - Normality - Skew/Kurtosis
+      - Box and whisker/(preferably Violin)
+      - Histogram
+      - Between 10-12 bins is ideal for normal distribution
+ -->
+
 <html>
   <head>
+      <!-- jQuery needed for annotations -->
+    <script src="http://code.highcharts.com/modules/exporting.js"></script>
+    <script src="//rawgithub.com/phpepe/highcharts-regression/master/highcharts-regression.js"></script>
       <script
         src="https://code.jquery.com/jquery-3.4.1.min.js"
         integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
@@ -15,11 +30,11 @@
     <script>
       function evaluatePValue(pValue) {
         if (pValue < 0.0001) {
-          return `<td style=color:red;><0.0001</td>`
+          return `<td><0.0001</td>`
         } else if (pValue < 0.001) {
-          return `<td style=color:orange;>${pValue}</td>`
+          return `<td>${pValue}</td>`
         } else if (pValue < 0.01) {
-          return `<td style=color:#666600;>${pValue}</td>`
+          return `<td>${pValue}</td>`
         }
         return `<td style=color:green;>${pValue}</td>`
       }
@@ -28,11 +43,13 @@
       function receiveMessage(event) {
         console.log('TARGET', event);
         const {
+          upperBand,
+          lowerBand,
           boxPlotData,
           colXLabel,
           colYLabel,
           tempABVals,
-          corrcoeff,
+          corrcoef,
           covariance,
           colAMean,
           colAStdev,
@@ -45,6 +62,7 @@
           linearRegressionLineR2,
           linearRegressionLineYIntercept } = event.data;
           console.log(boxPlotData)
+          console.log(upperBand, lowerBand)
         const options = {
           chart: {
             marginTop: 50,
@@ -118,6 +136,38 @@
               type: 'line',
               linkedTo: 's2',
               data: linearRegressionLinePoints,
+              visible: false,
+            },
+            {
+              name: 'Points with Linear Regression Line and Confidence bands',
+              type: 'scatter',
+              id: 's3',
+              data: tempABVals,
+              visible: false,
+            },
+            {
+              name: 'Linear Regression Line',
+              type: 'line',
+              linkedTo: 's3',
+              data: linearRegressionLinePoints,
+              visible: false,
+            },
+            {
+              name: 'Confidence Band Lower',
+              type: 'line',
+              linkedTo: 's3',
+              stroke: 'red',
+              dashStyle: 'dot',
+              data: lowerBand,
+              visible: false,
+            },
+            {
+              name: 'Confidence Band Upper',
+              type: 'line',
+              linkedTo: 's3',
+              stroke: 'red',
+              dashStyle: 'dot',
+              data: upperBand,
               visible: false,
             },
             {
@@ -210,7 +260,7 @@
               <table style="width: 100%;">
                 <tr>
                   <td>Pearson's Correlation:</td>
-                  <td>${corrcoeff}</td>
+                  <td>${corrcoef}</td>
                 </tr>
                 <tr>
                   <td>P-Value:</td>
