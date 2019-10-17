@@ -178,7 +178,7 @@
 			var ann = this,
 				chart = ann.chart,
 				index = chart.annotationInputIndex = chart.annotationInputIndex ? chart.annotationInputIndex : 1,
-				input = document.createElement('span'),
+        input = document.createElement('span'),
 				button;
 
 			input.innerHTML = '<input type="text" class="annotation-' + index + '" placeholder="Add text"><button class=""> Done </button>';
@@ -446,8 +446,9 @@
 			symbolSize = symbol.size,
 			padding = 8 / 2, // since Highcahrts 5.0, padding = 8 is hardcoded
 			buttonSize = mainButton.size - padding,
-			x = chart.plotWidth + chart.plotLeft - ((i + 1) * offset) - xOffset - userOffset[0],
-			y = chart.plotTop - (chart.rangeSelector ? 23 + buttonSize + padding : 0) + userOffset[1],
+      x = chart.plotWidth + chart.plotLeft - ((i + 1) * offset) - xOffset - userOffset[0],
+      // ab218: Move Annotation buttons up so they don't block tooltips
+			y = chart.plotTop - (chart.rangeSelector ? 23 + buttonSize + padding : 0) + userOffset[1] - 60,
 			callback = mainButton.events && mainButton.events.click ? mainButton.events.click : getButtonCallback(i, chart),
 			selected = mainButton.states.selected,
 			hovered = mainButton.states.hover,

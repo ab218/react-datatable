@@ -9,6 +9,7 @@ import {
   TOGGLE_COLUMN_TYPE_MODAL,
   TOGGLE_FILTER_MODAL,
   TOGGLE_LAYOUT,
+  TOGGLE_DISTRIBUTION_MODAL,
 } from './constants';
 import { Menu } from 'antd';
 import './App.css';
@@ -68,7 +69,7 @@ export default function ContextMenu() {
               <Menu.Item key="18">Copy</Menu.Item>
               <Menu.Item key="19" onClick={() => dispatchSpreadsheetAction({type: PERFORM_ANALYSIS })}>Paste</Menu.Item>
               <Menu.Item key="20" onClick={() => dispatchSpreadsheetAction({type: TOGGLE_FILTER_MODAL, filterModalOpen: true })}>Add Filter</Menu.Item>
-              <Menu.Item key="21">Distribution</Menu.Item>
+              <Menu.Item key="21" onClick={() => dispatchSpreadsheetAction({type: TOGGLE_DISTRIBUTION_MODAL, distributionModalOpen: true })}>Distribution</Menu.Item>
               <Menu.Item key="22" onClick={() => dispatchSpreadsheetAction({type: TOGGLE_ANALYSIS_MODAL, analysisModalOpen: true })}>Fit Y By X</Menu.Item>
           </Menu>
         </div>

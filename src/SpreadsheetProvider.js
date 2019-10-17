@@ -1,5 +1,6 @@
 import React, { useReducer } from 'react';
 import { Parser } from 'hot-formula-parser';
+import { performLinearRegressionAnalysis, performDistributionAnalysis } from './Analyses';
 import './App.css';
 import {
   ACTIVATE_CELL,
@@ -11,8 +12,8 @@ import {
   DELETE_VALUES,
   FILTER_COLUMN,
   MODIFY_CURRENT_SELECTION_CELL_RANGE,
-  OPEN_ANALYSIS_WINDOW,
   PERFORM_ANALYSIS,
+  PERFORM_DISTRIBUTION_ANALYSIS,
   REMOVE_SELECTED_CELLS,
   SET_GROUPED_COLUMNS,
   SET_ROW_POSITION,
@@ -22,6 +23,7 @@ import {
   OPEN_CONTEXT_MENU,
   TOGGLE_ANALYSIS_MODAL,
   TOGGLE_COLUMN_TYPE_MODAL,
+  TOGGLE_DISTRIBUTION_MODAL,
   TOGGLE_FILTER_MODAL,
   TOGGLE_LAYOUT,
   TRANSLATE_SELECTED_CELL,
@@ -35,11 +37,7 @@ function rowValueWithinTheseColumnRanges(row) {
 }
 
 function filterRowsByColumnRange(selectedColumns, rows) {
-  // return selectedColumns.map(function (column) {
-  //   return rows.filter(rowValueWithinThisColumnRange, column);
-  // });
   return rows.filter(rowValueWithinTheseColumnRanges, selectedColumns);
-  // return selectedColumns.map(col => rows.filter(row => row[col.id] >= col.min && row[col.id] <= col.max));
 }
 
 function translateLabelToID(columns, formula) {
@@ -85,11 +83,11 @@ function spreadsheetReducer(state, action) {
     columnCount,
     columnIndex,
     columnTypeModalOpen,
+    distributionModalOpen,
     endRangeRow,
     endRangeColumn,
     filterModalOpen,
     layout,
-    outputData,
     row,
     rowIndex,
     rowCount,
@@ -178,20 +176,19 @@ function spreadsheetReducer(state, action) {
         })
       } : state;
     }
-    case OPEN_ANALYSIS_WINDOW: {
-      function receiveMessage(event) {
-        console.log('ORIGIN', event);
-        if (event.data === 'ready') {
-          popup.postMessage(outputData, '*');
-          window.removeEventListener("message", receiveMessage);
-        }
-      }
-      const popup = window.open(window.location.href + "analysis.html", "", "left=9999,top=100,width=450,height=850");
-      window.addEventListener("message", receiveMessage, false);
-      return {...state, performAnalysis: false};
-    }
     case PERFORM_ANALYSIS: {
-      return {...state, performAnalysis: true, xColData, yColData};
+      const { columns, rows } = state;
+      const colX = xColData || columns[0];
+      const colY = yColData || columns[2];
+      performLinearRegressionAnalysis(colX, colY, rows)
+      return {...state };
+    }
+    case PERFORM_DISTRIBUTION_ANALYSIS: {
+      const { columns, rows } = state;
+      const colX = xColData || columns[0];
+      const colY = yColData || columns[2];
+      performDistributionAnalysis(colX, colY, rows)
+      return {...state }
     }
     case REMOVE_SELECTED_CELLS: {
       return {...state, cellSelectionRanges: [], selectedRowIDs: [] }
@@ -266,6 +263,9 @@ function spreadsheetReducer(state, action) {
     }
     case TOGGLE_COLUMN_TYPE_MODAL: {
       return {...state, activeCell: null, columnTypeModalOpen, selectedColumn: colName ? getCol(colName) : column}
+    }
+    case TOGGLE_DISTRIBUTION_MODAL: {
+      return {...state, distributionModalOpen, activeCell: null }
     }
     case TOGGLE_FILTER_MODAL: {
       return {...state, filterModalOpen, selectedColumn: null, activeCell: null }
@@ -451,9 +451,9 @@ export function SpreadsheetProvider({children}) {
     columnPositions,
     colName: null,
     contextMenuOpen: false,
+    distributionModalOpen: false,
     filterModalOpen: false,
     layout: true,
-    performAnalysis: false,
     selectedColumns: [],
     xColData: null,
     yColData: null,

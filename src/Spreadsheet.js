@@ -5,6 +5,7 @@ import AnalysisModal from './ModalAnalysis';
 import ActiveCell from './ActiveCell';
 import ColResizer from './ColResizer';
 import ContextMenu from './ContextMenu';
+import DistributionModal from './ModalDistribution';
 import FilterModal from './ModalFilter';
 import ColumnTypeModal from './ModalColumnType';
 import Row from './Row';
@@ -20,7 +21,6 @@ import {
   OPEN_CONTEXT_MENU,
   UPDATE_CELL,
 } from './constants'
-import HighchartsReact from './HighchartsReact';
 
 // function FormulaBar() {
 //   return (
@@ -131,15 +131,14 @@ function Spreadsheet({eventBus}) {
     columnPositions,
     columns,
     cellSelectionRanges,
+    distributionModalOpen,
     currentCellSelectionRange,
-    // setColName,
     filterModalOpen,
     groupByColumnID,
     groupedColumns,
     layout,
     physicalRows,
     physicalRowPositions,
-    performAnalysis,
     rowPositions,
     rows,
     selectedColumn,
@@ -328,8 +327,8 @@ function getGroupedByColumnIDLabel(id) {
   return (
     <div>
       <ContextMenu />
-      {performAnalysis && <HighchartsReact />}
       {selectedColumn && <ColumnTypeModal selectedColumn={selectedColumn}/>}
+      {distributionModalOpen && <DistributionModal />}
       {analysisModalOpen && <AnalysisModal />}
       {filterModalOpen && <FilterModal selectedColumn={selectedColumn}/>}
       {/* <FormulaBar /> */}

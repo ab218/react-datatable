@@ -21,63 +21,53 @@
         crossorigin="anonymous">
       </script>
       <script src="./highcharts.js"></script>
+      <script src="https://code.highcharts.com/modules/histogram-bellcurve.js"></script>
       <script src="https://code.highcharts.com/highcharts-more.js"></script>
       <script src="./annotations.js"></script>
-    <title>Data Analysis</title>
+    <title>Distribution Analysis</title>
   </head>
   <body>
     <div style="width:450px;" id="container">Loading</div>
     <script>
-      function evaluatePValue(pValue) {
-        if (pValue < 0.0001) {
-          return `<td><0.0001</td>`
-        } else if (pValue < 0.001) {
-          return `<td>${pValue}</td>`
-        } else if (pValue < 0.01) {
-          return `<td>${pValue}</td>`
-        }
-        return `<td style=color:green;>${pValue}</td>`
-      }
       window.opener.postMessage('ready', '*');
       const container = document.getElementById('container');
       function receiveMessage(event) {
         console.log('TARGET', event);
         const {
-          upperBand,
-          lowerBand,
-          colXLabel,
+          colA,
+          colB,
           colYLabel,
-          tempABVals,
-          corrcoef,
-          covariance,
+          count,
           colAMean,
           colAStdev,
           colBMean,
           colBStdev,
-          pValue,
-          linearRegressionLinePoints,
-          linearRegressionLineEquation,
-          linearRegressionLineSlope,
-          linearRegressionLineR2,
-          linearRegressionLineYIntercept } = event.data;
+          boxPlotData, } = event.data;
+          console.log(boxPlotData[8])
         const options = {
           chart: {
             marginTop: 100,
             height: 400,
-            width: 400
+            width: 400,
+            inverted: true,
           },
           credits: false,
           title: {
-            text: `${colYLabel} by ${colXLabel}`
+            text: `Distribution of ${colYLabel}`
           },
-          xAxis: {
-            title: { text: colXLabel },
-            min: 0
-          },
-          yAxis: {
-            title: { text: colYLabel },
-            min: 0
-          },
+          xAxis: [{
+            title: { text: 'Data' },
+          }, {
+              title: { text: 'Histogram' },
+              opposite: true
+          }],
+
+          yAxis: [{
+              title: { text: 'Data' }
+          }, {
+              title: { text: 'Histogram' },
+              opposite: true
+          }],
           legend: {
             layout: 'vertical',
             align: 'right',
@@ -114,66 +104,55 @@
             }
           },
           series: [
-          {
-              name: 'Points',
-              type: 'scatter',
-              id: 's1',
-              data: tempABVals,
-              visible: true,
-            },
-            {
-              name: 'Points with Linear Regression Line',
-              type: 'scatter',
-              id: 's2',
-              data: tempABVals,
-              visible: false,
-            },
-            {
-              name: 'Linear Regression Line',
-              type: 'line',
-              linkedTo: 's2',
-              data: linearRegressionLinePoints,
-              visible: false,
-            },
-            {
-              name: 'Points with Linear Regression Line and Confidence bands',
-              type: 'scatter',
-              id: 's3',
-              data: tempABVals,
-              visible: false,
-            },
-            {
-              name: 'Linear Regression Line',
-              type: 'line',
-              linkedTo: 's3',
-              data: linearRegressionLinePoints,
-              visible: false,
-            },
-            {
-              name: 'Confidence Band Lower',
-              type: 'line',
-              linkedTo: 's3',
-              stroke: 'red',
-              dashStyle: 'dot',
-              data: lowerBand,
-              visible: false,
-            },
-            {
-              name: 'Confidence Band Upper',
-              type: 'line',
-              linkedTo: 's3',
-              stroke: 'red',
-              dashStyle: 'dot',
-              data: upperBand,
-              visible: false,
-            },
             {
               name: 'Histogram',
-              type: 'column',
+              type: 'histogram',
+              xAxis: 1,
+              yAxis: 1,
+              baseSeries: 's1',
+              borderWidth: 0,
+              // binsNumber: 10,
+            },
+            {
+              name: 'Scatter',
+              type: 'scatter',
+              id: 's1',
+              data: colB,
               visible: false,
-              data: tempABVals,
               borderWidth: 0,
             },
+            {
+              id: 'boxplot',
+              name: 'Boxplot',
+              type: 'boxplot',
+              visible: false,
+              medianColor: 'red',
+              // data: [boxPlotData.values]
+              data: [
+              {
+                high: boxPlotData[8],
+                q3: boxPlotData[5],
+                median: boxPlotData[4],
+                q1: boxPlotData[3],
+                low: boxPlotData[0],
+              },
+              ]
+            },
+            {
+              id: 'outliers',
+              name: 'Outliers',
+              type: 'scatter',
+              linkedTo: 'boxplot',
+              color: Highcharts.getOptions().colors[2],
+              marker: {
+                enabled: true,
+                radius: 2,
+                fillColor: 'transparent',
+                lineColor: 'rgba(40,40,56,0.5)',
+                lineWidth: 1
+              },
+              // data: [boxPlotData.outliers]
+            }
           ],
 
           responsive: {
@@ -196,62 +175,68 @@
         chart.series[0].hide();
         chart.series[0].show();
         const template = `<div style="text-align: center; margin: 0 3em;">
+            <h4>Quantiles</h4>
+              <table style="width: 100%;">
+                <tr>
+                  <td>100.0%:</td>
+                  <td>${boxPlotData[8]}</td>
+                </tr>
+                <tr>
+                  <td>99.5%:</td>
+                  <td>${boxPlotData[8]}</td>
+                </tr>
+                <tr>
+                  <td>97.5%:</td>
+                  <td>${boxPlotData[7]}</td>
+                </tr>
+                <tr>
+                  <td>90.0%:</td>
+                  <td>${boxPlotData[6]}</td>
+                </tr>
+                <tr>
+                  <td>75.0%:</td>
+                  <td>${boxPlotData[5]}</td>
+                </tr>
+                <tr>
+                  <td>50.0%:</td>
+                  <td>${boxPlotData[4]}</td>
+                </tr>
+                <tr>
+                  <td>25.0%:</td>
+                  <td>${boxPlotData[3]}</td>
+                </tr>
+                <tr>
+                  <td>10.0%:</td>
+                  <td>${boxPlotData[2]}</td>
+                </tr>
+                <tr>
+                  <td>2.5%:</td>
+                  <td>${boxPlotData[1]}</td>
+                </tr>
+                <tr>
+                  <td>0.5%:</td>
+                  <td>${boxPlotData[0]}</td>
+                </tr>
+                <tr>
+                  <td>0.0%:</td>
+                  <td>${boxPlotData[0]}</td>
+                </tr>
+              </table>
             <h4>Summary Statistics</h4>
               <table style="width: 100%;">
                 <tr>
-                  <td>Pearson's Correlation:</td>
-                  <td>${corrcoef}</td>
+                  <td>Mean:</td>
+                  <td>${colBMean}</td>
                 </tr>
                 <tr>
-                  <td>P-Value:</td>
-                  ${evaluatePValue(pValue)}
-                </tr>
-                <tr>
-                  <td>Covariance:</td>
-                  <td>${covariance}</td>
+                  <td>Std Dev:</td>
+                  <td>${colBStdev}</td>
                 </tr>
                 <tr>
                   <td>Count:</td>
-                  <td>${tempABVals.length}</td>
+                  <td>${count}</td>
                 </tr>
               </table>
-              <br>
-              <table style="width: 100%;">
-                <tr>
-                  <td style="font-weight: bold;">Variable</td>
-                  <td style="font-weight: bold;">Mean</td>
-                  <td style="font-weight: bold;">Std Dev</td>
-                </tr>
-                <tr>
-                  <td>${colXLabel}</td>
-                  <td>${colAMean}</td>
-                  <td>${colAStdev}</td>
-                </tr>
-                <tr>
-                  <td>${colYLabel}</td>
-                  <td>${colBMean}</td>
-                  <td>${colBStdev}</td>
-                </tr>
-              </table>
-            <h4>Linear Fit</h4>
-            <table style="width: 100%;">
-              <tr>
-                <td>r²:</td>
-                <td>${linearRegressionLineR2}</td>
-              </tr>
-              <tr>
-                <td>slope:</td>
-                <td>${linearRegressionLineSlope}</td>
-              </tr>
-              <tr>
-                <td>y-intercept:</td>
-                <td>${linearRegressionLineYIntercept}</td>
-              </tr>
-              <tr>
-                <td>equation:</td>
-                <td>${linearRegressionLineEquation}</td>
-              </tr>
-            </table>
           </div>`
         const doc = new DOMParser().parseFromString(template, 'text/html');
         container.appendChild(doc.body.firstChild);
