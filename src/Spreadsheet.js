@@ -94,8 +94,6 @@ export default function Spreadsheet() {
       width: copiedValues2dArray[0].length,
     };
     const { top, left } = cellSelectionRanges[0];
-    // quick patch to prevent major bug
-    // if (top === rows.length) return;
     const { height, width } = copiedValues2dArrayDimensions;
     const numberOfColumnsRequired = left + width - columns.length;
     const numberOfRowsRequired = top + height - rows.length;
@@ -108,14 +106,6 @@ export default function Spreadsheet() {
         columnCount: numberOfColumnsRequired,
       });
     }
-    // const { selectedColumnIDs, selectedRowIDs } = selectRowAndColumnIDs(
-    // 	top,
-    // 	left,
-    // 	top + height - 1,
-    // 	left + width - 1,
-    // 	columns,
-    // 	rows,
-    // );
 
     dispatchRowsAction({
       type: PASTE_VALUES,

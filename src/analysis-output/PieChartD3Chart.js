@@ -190,9 +190,6 @@ export default function PieChartD3Chart({
       .attr("fill", function (d) {
         return color(d.data.key);
       })
-      // .on('click', function(groupLabel) {
-      // 	onClickSelectGroupBarChart(groupLabel, colZ);
-      // })
       .on(`mouseover`, function (d) {
         d3.select(this).transition().duration(50).attr("opacity", 0.6);
         svg

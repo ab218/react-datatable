@@ -146,7 +146,6 @@ export async function performLinearRegressionAnalysis({
   XYCols,
 }) {
   try {
-    // const lambda = 'https://8gf5s84idd.execute-api.us-east-2.amazonaws.com/test/scipytest';
     const result = await axios.post(
       "https://us-central1-optimum-essence-210921.cloudfunctions.net/regression",
       { x: colXArr, y: colYArr },
@@ -154,10 +153,6 @@ export async function performLinearRegressionAnalysis({
         crossDomain: true,
       },
     );
-    // console.log(result.data) // gcloud
-    // console.log(result.data.body); // Lambda
-
-    console.log(result.data);
 
     const mean = (numbers) =>
       numbers.reduce((acc, val) => acc + Number(val), 0) / numbers.length;
@@ -191,8 +186,6 @@ export async function performContingencyAnalysis({
         crossDomain: true,
       },
     );
-
-    console.log(result.data);
     return {
       analysisType,
       ...result.data,
@@ -211,7 +204,6 @@ export async function performDistributionAnalysis({
   numberOfBins,
 }) {
   try {
-    // const lambda = 'https://8gf5s84idd.execute-api.us-east-2.amazonaws.com/test/scipytest';
     const gcloud =
       "https://us-central1-optimum-essence-210921.cloudfunctions.net/distribution-1";
     const result = await axios.post(
@@ -223,8 +215,6 @@ export async function performDistributionAnalysis({
         crossDomain: true,
       },
     );
-    console.log(result.data); // gcloud
-    // console.log(result.data.body); // Lambda
     return {
       analysisType,
       numberOfBins,
