@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import * as d3 from "d3";
 import {
   useSelectDispatch,
@@ -50,12 +50,9 @@ function onMouseLeaveSlice(d, thisSlice, legend, sliceTooltip) {
   sliceTooltip.transition().duration(500).style("opacity", 0);
 }
 
-export default function PieChartD3Chart({
-  mainChartContainer,
-  colX,
-  coordinates,
-}) {
+export default function PieChartD3Chart({ colX, coordinates }) {
   const { width, height, clickedBarFill } = chartStyles;
+  const mainChartContainer = useRef(null);
   // set the dimensions and margins of the graph
   const margin = { top: 40, right: 150, bottom: 70, left: 30 };
   const svgWidth = width + margin.left + margin.right;
@@ -226,5 +223,5 @@ export default function PieChartD3Chart({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return null;
+  return <div ref={mainChartContainer}></div>;
 }

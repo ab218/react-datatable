@@ -7,10 +7,15 @@ import GraphBuilder from "./GraphBuilder";
 import ContingencyAnalysis from "./ContingencyAnalysis";
 import { REGRESSION, ONEWAY, CONTINGENCY, DISTRIBUTION } from "../constants";
 import { createRandomID } from "../context/helpers";
-const DISTRIBUTION_URL = process.env.DISTRIBUTION_URL;
-const REGRESSION_URL = process.env.REGRESSION_URL;
-const ONEWAY_URL = process.env.ONEWAY_URL;
-const CONTINGENCY_URL = process.env.CONTINGENCY_URL;
+require("dotenv").config();
+const DISTRIBUTION_URL =
+  "https://us-central1-optimum-essence-210921.cloudfunctions.net/distribution-1";
+const REGRESSION_URL =
+  "https://us-central1-optimum-essence-210921.cloudfunctions.net/regression";
+const ONEWAY_URL =
+  "https://us-central1-optimum-essence-210921.cloudfunctions.net/oneway";
+const CONTINGENCY_URL =
+  "https://us-central1-optimum-essence-210921.cloudfunctions.net/contingency";
 
 export async function analyzeData(analysisProps, setPopup) {
   switch (analysisProps.analysisType) {
