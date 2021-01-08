@@ -432,11 +432,22 @@ export function rowsReducer(state, action) {
     }
     case "SAVE_ANALYSIS": {
       const { colX, colY, analysisType } = action;
-      const title = `${analysisType}: ${colY.label} vs ${colX.label}`;
+      console.log(action);
+      function makeTitle() {
+        if (colY && colX) {
+          return `${analysisType}: ${colY.label} vs ${colX.label}`;
+        } else if (colY) {
+          return `${analysisType}: ${colY.label}`;
+        } else if (colX) {
+          return `${analysisType}: ${colX.label}`;
+        } else {
+          return analysisType;
+        }
+      }
       const newAnalysis = {
         ...action,
         analysisType,
-        title,
+        title: makeTitle(),
         id: createRandomID(),
       };
       return {
@@ -590,7 +601,7 @@ export function rowsReducer(state, action) {
     case UPDATE_CELL: {
       const { rows, columns } = state;
       // TODO: If active cell, use that, if selected cells, use top left corner of it
-      // row from action or last row from state
+      // row from action or last row from stateP
       const column = columns[columnIndex];
       const row = rows[rowIndex] || rows[rows.length - 1];
       const newRows = rows.slice();
