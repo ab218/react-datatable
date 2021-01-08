@@ -13,6 +13,7 @@ import {
 } from "../helpers";
 
 import {
+  CLEAR_ERROR,
   COPY_VALUES,
   CREATE_COLUMNS,
   CREATE_ROWS,
@@ -30,6 +31,7 @@ import {
   REMOVE_FILTERED_ROWS,
   REMOVE_HIGHLIGHTED_FILTERED_ROWS,
   REMOVE_SIDEBAR_FILTER,
+  SAVE_ANALYSIS,
   SAVE_FILTER,
   SAVE_NEW_FILTER,
   SAVE_VALUES_TO_COLUMN,
@@ -65,7 +67,7 @@ export function rowsReducer(state, action) {
   // state.eventBus.fire(type, event);
   // console.log('dispatched:', type, 'with action:', action, 'state: ', state);
   switch (type) {
-    case "CLEAR_ERROR": {
+    case CLEAR_ERROR: {
       return { ...state, modalError: null };
     }
     case COPY_VALUES: {
@@ -430,7 +432,7 @@ export function rowsReducer(state, action) {
     case REMOVE_HIGHLIGHTED_FILTERED_ROWS: {
       return { ...state, filteredRowIDs: [] };
     }
-    case "SAVE_ANALYSIS": {
+    case SAVE_ANALYSIS: {
       const { colX, colY, analysisType } = action;
       console.log(action);
       function makeTitle() {
