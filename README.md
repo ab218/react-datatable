@@ -1,3 +1,11 @@
+## Summary
+
+This is a fully virtualized data table built with React and React Virtualized. It draws inspiration from Google Sheets and JMP 15. Users are able to input and manage data and run several different kinds of statistical analyses with this data.
+
+When an analysis is run, the data table will call a (Python) Google Cloud Function to calculate some statistical output. The analysis consists of a (d3) chart and statistical output which is displayed in a new window.
+
+---
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
