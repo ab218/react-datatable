@@ -9,7 +9,6 @@ import {
   TOGGLE_COLUMN_TYPE_MODAL,
   TOGGLE_DISTRIBUTION_MODAL,
   TOGGLE_FILTER_MODAL,
-  // TOGGLE_LAYOUT,
 } from "../../constants";
 
 export function spreadsheetReducer(state, action) {

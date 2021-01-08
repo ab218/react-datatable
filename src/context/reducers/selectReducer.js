@@ -279,7 +279,6 @@ export function selectReducer(state, action) {
         activeCell: null,
         currentCellSelectionRange: null,
         cellSelectionRanges: [allCells],
-        // cellSelectionObject: rowsObject,
       };
     }
 
