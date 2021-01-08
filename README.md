@@ -19,7 +19,7 @@ REACT_APP_ONEWAY_URL=
 REACT_APP_CONTINGENCY_URL=
 ```
 
-The code for these functions can be found at: https://github.com/nStudy-project/spin-cloud. Deploy this code with a Python Cloud Function and copy the URL into these environment variables.
+The code for these functions can be found at: https://github.com/nStudy-project/spin-cloud. Deploy this code with a Python (3.7) Cloud Function and copy the Trigger URL into these environment variables. Make sure the Executed function is `process_data` and the functions are given enough memory (`Regression` and `Oneway` functions can be quite computationally expensive).
 
 ---
 
