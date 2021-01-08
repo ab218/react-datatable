@@ -10,7 +10,7 @@ When an analysis is performed, the data table will call a (Python) Google Cloud 
 
 2. `npm run start` or `yarn start` from command line.
 
-In order to run analyses, the following environment variables are needed:
+In order to run analyses, the following environment variables (links to cloud functions) are needed:
 
 ```
 REACT_APP_DISTRIBUTION_URL=
@@ -18,6 +18,8 @@ REACT_APP_REGRESSION_URL=
 REACT_APP_ONEWAY_URL=
 REACT_APP_CONTINGENCY_URL=
 ```
+
+The code for these functions can be found at: https://github.com/nStudy-project/spin-cloud. Deploy this code with a Python Cloud Function and copy the URL into these environment variables.
 
 ---
 
